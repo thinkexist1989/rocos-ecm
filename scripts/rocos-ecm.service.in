@@ -1,0 +1,12 @@
+[Unit]
+Description=ROCOS-ECM Service
+
+[Service]
+Type=simple
+User=root
+ExecStartPre=/usr/bin/bash /@CMAKE_BINARY_DIR@/bin/initECM.sh
+ExecStart=/usr/bin/bash /@CMAKE_BINARY_DIR@/bin/runECM.sh
+WorkingDirectory=/@CMAKE_BINARY_DIR@/bin
+
+[Install]
+WantedBy=multi-user.target

@@ -99,10 +99,36 @@ file(COPY ${CMAKE_BINARY_DIR}/runECM.sh
      FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
 )
 
+configure_file(scripts/rocos-ecm.service.in   ${CMAKE_BINARY_DIR}/rocos-ecm.service @ONLY)
+file(COPY ${CMAKE_BINARY_DIR}/rocos-ecm.service
+        DESTINATION ${CMAKE_BINARY_DIR}/bin
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        )
+
 #############
 ## Install ##
 #############
+install(TARGETS ${PROJECT_NAME}
+        EXPORT RocosEcmTargets
+        LIBRARY DESTINATION lib  # 动态库安装路径
+        ARCHIVE DESTINATION lib  # 静态库安装路径
+        RUNTIME DESTINATION bin  # 可执行文件安装路径
+        PUBLIC_HEADER DESTINATION include  # 头文件安装路径
+        )
 
+# 写入库的版本信息
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+        RocosEcmConfigVersion.cmake
+        VERSION ${PACKAGE_VERSION}
+        COMPATIBILITY AnyNewerVersion  # 表示该函数库向下兼容
+)
+
+install(EXPORT RocosEcmTargets
+        FILE RocosEcmTargets.cmake
+#        NAMESPACE rocos::ecm::
+        DESTINATION lib/cmake/rocos-ecm
+        )
 
 
 #############
