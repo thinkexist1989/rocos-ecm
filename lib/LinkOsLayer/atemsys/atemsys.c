@@ -788,7 +788,9 @@ static bool atemsys_irq_is_level(unsigned int irq_id)
     struct irq_desc *desc;
     bool irq_is_level = true;
 
-    desc = irq_to_desc(irq_id);
+    // desc = irq_to_desc(irq_id); // 5.10之后的内核不支持irq_to_desc()
+                                   // 参考https://github.com/gschorcht/i2c-ch341-usb/pull/9/files
+    desc = irq_data_to_desc(irq_get_irq_data(irq_id));
     if (desc)
     {
         irq_is_level = irqd_is_level_type(&desc->irq_data);
