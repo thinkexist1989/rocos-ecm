@@ -739,7 +739,7 @@ static EC_T_VOID ShowSyntax(EC_T_VOID)
  * Cyclically sets an event for thread synchronization purposes.
  * Either use OsSleep() or use the aux clock by means of:
  * - Enable AUX clock if selected.
- * - Wait for IRQ, aknowledge IRQ, SetEvent in loop until shutdown
+ * - Wait for IRQ, acknowledge IRQ, SetEvent in loop until shutdown
  * - Disable AUX clock
  * Return: N/A
  */
