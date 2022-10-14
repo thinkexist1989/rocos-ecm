@@ -1,3 +1,4 @@
+#include <regex>
 #include "EcFlags.h"
 
 DEFINE_string(config, "/etc/rocos-ecm/ecat_config.yaml", "Path to ecat_config file in YAML format.");
@@ -22,10 +23,21 @@ DEFINE_string(log, "", "Use given file name prefix for log files.");
 
 
 
-static bool Validate8254x(const char* flagname, string value) {
-    std::regex ws_re()
-   printf("Invalid value for --%s: %d\n", flagname, (int)value);
-   return false;
-}
 DEFINE_string(i8254x, "1 1", "<instance>: Device instance 1=first, 2=second; <mode>: Mode 0 = Interrupt mode, 1= Polling mode");
+static bool Validate8254x(const char* flagname, const std::string& value) {
+    std::regex ws_re("\\s+"); // whitespace
+    std::vector<std::string> v(std::sregex_token_iterator(value.begin(), value.end(), ws_re, -1), std::sregex_token_iterator());
+    if(v.size() != 2) {
+        printf("Invalid value for --%s: %s\n", flagname, value.c_str());
+        return false;
+    }
+    int instance = std::stoi(v[0]);
+    int mode = std::stoi(v[1]);
+    if((instance < 1) || (instance > 2) || (mode < 0) || (mode > 1)) {
+        printf("Invalid value for --%s: %s\n", flagname, value.c_str());
+        return false;
+    }
+    else
+        return true;
+}
 DEFINE_validator(i8254x, &Validate8254x);

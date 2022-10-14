@@ -39,6 +39,8 @@ find_package(Boost REQUIRED COMPONENTS date_time filesystem system chrono)
 find_package(yaml-cpp REQUIRED)
 find_package(Threads REQUIRED)
 
+add_subdirectory(3rdparty/gflags)
+
 ###########
 ## Build ##
 ###########
@@ -74,6 +76,7 @@ set(DEP_LIBS
         Boost::system
         Boost::chrono
         yaml-cpp
+        gflags::gflags
 )
 
 ## Specify libraries to link a library or executable target against
