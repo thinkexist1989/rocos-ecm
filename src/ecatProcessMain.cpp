@@ -11,6 +11,8 @@
 #include "ecatProcess.h"
 #include "selectLinkLayer.h"
 
+#include "EcFlags.h" //!< gflags definition
+
 #if (defined ATEMRAS_SERVER)
 #include "AtEmRasSrv.h"
 #endif
@@ -908,6 +910,17 @@ extern "C" int EcMasterDemo(EC_T_CHAR* pszCommandLine)
 int main(int nArgc, char* ppArgv[])
 #endif
 {
+    //!< gflags parsing parameters
+    gflags::ParseCommandLineFlags(&nArgc, &ppArgv, false);
+
+    printf("The configuration file(-config): %s\n", FLAGS_config.c_str());
+    printf("The ethercat network information(eni) file(-eni): %s\n", FLAGS_eni.c_str());
+    printf("The performance measure: %s\n", FLAGS_perf ? "true" : "false");
+
+//    EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "The configuration file(-config): %s\n", FLAGS_config.c_str()));
+//    EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "The ethercat network information(eni) file(-eni): %s\n", FLAGS_eni.c_str()));
+//    EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "The performance measure: %s\n", FLAGS_perf ? "true" : "false"));
+
 
     int                     nRetVal             = APP_ERROR;
     EC_T_DWORD              dwRes               = EC_E_ERROR;
