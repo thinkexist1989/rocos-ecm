@@ -301,11 +301,8 @@ static void SignalHandler(int nSignal)
 #endif
 
 #if (defined LINUX) && !(defined XENOMAI)
-/********************************************************************************/
-/** Enable real-time environment
-*
-* Return: EC_E_NOERROR in case of success, EC_E_ERROR in case of failure.
-*/
+//! @brief Enable real-time environment
+//! @return EC_E_NOERROR in case of success, EC_E_ERROR in case of failure.
 EC_T_DWORD EnableRealtimeEnvironment( EC_T_VOID )
 {
    struct utsname SystemName;
@@ -468,12 +465,8 @@ VOID RTFCNDCL RtxAuxClkIsr(PVOID pvEvent)
 #endif
 
 #if (defined ECWIN_RTOS32)
-/*******************************************************************************
-*
-* RdDbgPortChar - Read character from Debug PORT
-*
-* Return: TRUE if character was available, FALSE if not.
-*/
+//! @brief RdDbgPortChar - Read character from Debug PORT
+//! @return TRUE if character was available, FALSE if not.
 BOOL RdDbgPortChar( UINT8* pbyData )
 {
 UINT32 dwNumRead;
