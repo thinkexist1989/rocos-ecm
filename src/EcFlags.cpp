@@ -32,7 +32,7 @@ DEFINE_int32(sp, 6000, "If platform has support for IP Sockets, this commandline
 DEFINE_string(log, "", "Use given file name prefix for log files.");
 
 
-
+//! @brief Intel network card instances and mode
 DEFINE_string(i8254x, "1 1", "<instance>: Device instance 1=first, 2=second; <mode>: Mode 0 = Interrupt mode, 1= Polling mode");
 static bool Validate8254x(const char* flagname, const std::string& value) {
     std::regex ws_re("\\s+"); // whitespace
