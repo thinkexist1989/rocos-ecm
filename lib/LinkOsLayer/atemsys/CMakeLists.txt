@@ -37,7 +37,7 @@ include_directories(
 
 set(DRIVER_FILE ${PROJECT_NAME}.ko)
 #set(BUILD_CMD $(MAKE) -C ${KERNELHEADERS_DIR} modules M=${CMAKE_CURRENT_BINARY_DIR} src=${CMAKE_CURRENT_SOURCE_DIR})
-set(BUILD_CMD make -C ${KERNELHEADERS_DIR} modules M=${CMAKE_CURRENT_BINARY_DIR} src=${CMAKE_CURRENT_SOURCE_DIR}) // build with ninja will not parse $(MAKE) to make
+set(BUILD_CMD make -C ${KERNELHEADERS_DIR} modules M=${CMAKE_CURRENT_BINARY_DIR} src=${CMAKE_CURRENT_SOURCE_DIR}) # build with ninja will not parse $(MAKE) to make
 
 # Generate the Kbuild file through cmake.
 #FILE(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/Kbuild "obj-m := hello.o")
