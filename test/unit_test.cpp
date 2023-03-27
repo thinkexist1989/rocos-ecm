@@ -25,7 +25,7 @@ Shenyang Institute of Automation, Chinese Academy of Sciences.
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <test/doctest.h>
 
-#include <ecat_config.hpp>
+#include "include/rocos_ecm/ecat_config.h"
 #include <iostream>
 
 TEST_CASE("Shared memory test") {

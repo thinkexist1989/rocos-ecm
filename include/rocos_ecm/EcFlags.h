@@ -1,7 +1,7 @@
 #ifndef EC_FLAGS_H
 #define EC_FLAGS_H
 
-#include <gflags/gflags.h>
+#include "3rdparty/gflags/include/gflags/gflags.h"
 
 DECLARE_string(config);
 

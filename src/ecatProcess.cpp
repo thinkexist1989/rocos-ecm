@@ -29,7 +29,7 @@
 //#define LICENSE_KEY "FB3B37E5-014B554C-F51CA7DF"
 
 /*-EtherCAT Configuration------------------------------------------------------*/
-#include <ecat_config.hpp>
+#include "include/rocos_ecm/ecat_config.h"
 
 static EcatConfig *pEcatConfig = new EcatConfig();
 
