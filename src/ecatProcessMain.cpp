@@ -729,15 +729,13 @@ static EC_T_VOID ShowSyntax(EC_T_VOID)
     return;
 }
 
-/********************************************************************************/
-/* \brief Set event according to periodical sleep or aux clock
- * Cyclically sets an event for thread synchronization purposes.
- * Either use OsSleep() or use the aux clock by means of:
- * - Enable AUX clock if selected.
- * - Wait for IRQ, acknowledge IRQ, SetEvent in loop until shutdown
- * - Disable AUX clock
- * Return: N/A
- */
+/// \brief Set event according to periodical sleep or aux clock
+/// Cyclically sets an event for thread synchronization purposes.
+/// Either use OsSleep() or use the aux clock by means of:
+/// - Enable AUX clock if selected.
+/// - Wait for IRQ, acknowledge IRQ, SetEvent in loop until shutdown
+/// - Disable AUX clock
+/// Return: N/A
 static EC_T_VOID tEcTimingTask(EC_T_VOID* pvThreadParamDesc)
 {
     EC_T_TIMING_DESC* pTimingDesc = (EC_T_TIMING_DESC*)pvThreadParamDesc;
@@ -938,7 +936,7 @@ int main(int nArgc, char* ppArgv[])
     CAtEmLogging            oLogging;
     EC_T_DWORD              dwCpuIndex          = 0;
     EC_T_CPUSET             CpuSet;
-    EC_T_BOOL               bEnaPerfJobs        = EC_FALSE;  /* enable job measurements */
+    EC_T_BOOL               bEnaPerfJobs        = EC_FALSE;  /* enable job measurements （在1140行，如果有-perf参数，就EC_TRUE）*/
     EC_T_INT                nFlashAddress       = 0xFFFF;
     EC_T_TIMING_DESC        TimingDesc;
     EC_T_BOOL               bStartTimingTask    = EC_FALSE;
@@ -1177,7 +1175,7 @@ int main(int nArgc, char* ppArgv[])
     /* Initialize Timing Event descriptor */
     TimingDesc.bShutdown          = EC_FALSE;
     TimingDesc.bIsRunning         = EC_FALSE;
-    TimingDesc.dwBusCycleTimeUsec = CYCLE_TIME * 1000;
+    TimingDesc.dwBusCycleTimeUsec = CYCLE_TIME * 1000; //在1415行，如果-b参数，就TimingDesc.dwBusCycleTimeUsec设置为相应值
 
     /* prepare command line */
 #if (defined VXWORKS) && (!defined __RTP__)
