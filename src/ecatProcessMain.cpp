@@ -12,6 +12,7 @@
 #include "selectLinkLayer.h"
 
 #include "EcFlags.h" //!< gflags definition
+#include "ver.h"
 
 #if (defined ATEMRAS_SERVER)
 #include "AtEmRasSrv.h"
@@ -902,6 +903,7 @@ int main(int nArgc, char* ppArgv[])
 #endif
 {
     //!< gflags parsing parameters
+    gflags::SetVersionString(ROCOS_ECM_VERSION);
     gflags::ParseCommandLineFlags(&nArgc, &ppArgv, false);
 
     printf("The configuration file(-config): %s\n", FLAGS_config.c_str());

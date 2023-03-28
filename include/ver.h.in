@@ -1,0 +1,13 @@
+//
+// Created by think on 3/28/23.
+//
+
+#ifndef ROCOS_ECM_VER_H
+#define ROCOS_ECM_VER_H
+
+#define ROCOS_ECM_VERSION_MAJOR @rocos_ecm_VERSION_MAJOR@
+#define ROCOS_ECM_VERSION_MINOR @rocos_ecm_VERSION_MINOR@
+#define ROCOS_ECM_VERSION_PATCH @rocos_ecm_VERSION_PATCH@
+#define ROCOS_ECM_VERSION       "@rocos_ecm_VERSION@"
+
+#endif //ROCOS_ECM_VER_H

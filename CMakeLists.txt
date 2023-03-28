@@ -108,6 +108,8 @@ file(COPY ${CMAKE_BINARY_DIR}/rocos-ecm.service
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
         )
 
+configure_file(include/ver.h.in ver.h) # Version Definition
+
 #############
 ## Install ##
 #############
