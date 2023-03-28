@@ -22,7 +22,7 @@ email: luoyang@sia.cn
 ]]
 
 cmake_minimum_required(VERSION 3.10)
-project(rocos_ecm)
+project(rocos_ecm VERSION 0.0.2)
 
 # add_compile_options(-std=c++11)
 set(CMAKE_CXX_STANDARD 11)
