@@ -112,11 +112,13 @@ struct EcatSlaveInfo {
 
     /** Struct store the EtherCAT process data input  **/
     struct PDInput {
-        uint16_t status_word{0};          //  Size: 2.0 unsigned
-        int32_t position_actual_value{0}; // Size: 4.0 signed
-        int32_t velocity_actual_value{0}; // Size: 4.0 signed
-        int16_t torque_actual_value{0};   // Size: 2.0 signed
-        int16_t load_torque_value{0};     // Size: 2.0 signed
+        uint16_t status_word{0};             // Size: 2.0 unsigned
+        int32_t position_actual_value{0};    // Size: 4.0 signed
+        int32_t velocity_actual_value{0};    // Size: 4.0 signed
+        int16_t torque_actual_value{0};      // Size: 2.0 signed
+        int16_t load_torque_value{0};        // Size: 2.0 signed
+        int32_t secondary_position_value{0}; // Size: 4.0 signed -> Synapticon Driver Compat
+        int32_t secondary_velocity_value{0}; // Size: 4.0 signed -> Synapticon Driver Compat
     };
 
     PDInput inputs;
@@ -177,6 +179,8 @@ public:
         ecInpMap[VELOCITY_ACTUAL_VALUE] = "Velocity actual value";
         ecInpMap[TORQUE_ACTUAL_VALUE] = "Torque actual value";
         ecInpMap[LOAD_TORQUE_VALUE] = "Analog Input 1";
+        ecInpMap[SECONDARY_POSITION_VALUE] = "Secondary position value"; // Synapticon Driver Compat
+        ecInpMap[SECONDARY_VELOCITY_VALUE] = "Secondary velocity value"; // Synapticon Driver Compat
 
         ecInpOffsets[STATUS_WORD] = 0;
         ecInpOffsets[POSITION_ACTUAL_VALUE] = 0;
@@ -292,6 +296,14 @@ public:
     inline int16_t getLoadTorqueEC(int id) const { return ecatSlaveVec->at(id).inputs.load_torque_value; }
 
     inline uint16_t getStatusWordEC(int id) const { return ecatSlaveVec->at(id).inputs.status_word; }
+
+    inline uint16_t getSecondaryPositionEC(int id) const {
+        return ecatSlaveVec->at(id).inputs.secondary_position_value;
+    }
+
+    inline uint16_t getSecondaryVelocityEC(int id) const {
+        return ecatSlaveVec->at(id).inputs.secondary_velocity_value;
+    }
 
     ////////////// Get joints info for Ec Input /////////////////////
 

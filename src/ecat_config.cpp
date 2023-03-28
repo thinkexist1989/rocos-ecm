@@ -79,6 +79,10 @@ bool EcatConfig::parserYamlFile(const std::string &configFile) {
             slaveCfg[id].ecInpMap[TORQUE_ACTUAL_VALUE] = slaves[i]["inputs"]["torque_actual_value"].as<std::string>();
         if (slaves[i]["inputs"]["load_torque_value"])
             slaveCfg[id].ecInpMap[LOAD_TORQUE_VALUE] = slaves[i]["inputs"]["load_torque_value"].as<std::string>();
+        if (slaves[i]["inputs"]["secondary_position_value"])
+            slaveCfg[id].ecInpMap[SECONDARY_POSITION_VALUE] = slaves[i]["inputs"]["secondary_position_value"].as<std::string>();
+        if (slaves[i]["inputs"]["secondary_velocity_value"])
+            slaveCfg[id].ecInpMap[SECONDARY_VELOCITY_VALUE] = slaves[i]["inputs"]["secondary_velocity_value"].as<std::string>();
 
         /// Process Data Out Mapping
         if (slaves[i]["outputs"]["group_name"])
