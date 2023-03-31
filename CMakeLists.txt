@@ -22,7 +22,7 @@ email: luoyang@sia.cn
 ]]
 
 cmake_minimum_required(VERSION 3.10)
-project(rocos_ecm VERSION 0.0.2)
+project(rocos_ecm VERSION 0.0.3)
 
 # add_compile_options(-std=c++11)
 set(CMAKE_CXX_STANDARD 11)
@@ -32,6 +32,14 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# rocos-ecm install path
+include(GNUInstallDirs)
+set(CMAKE_INSTALL_PREFIX /opt/rocos/ecm)
+message(STATUS "INSTALL PREFIX: ${CMAKE_INSTALL_PREFIX}")
+#message(STATUS "INSTALL INCLUDE DIR: ${CMAKE_INSTALL_INCLUDEDIR}")
+#message(STATUS "INSTALL LIB DIR: ${CMAKE_INSTALL_LIBDIR}")
+#message(STATUS "INSTALL BIN DIR: ${CMAKE_INSTALL_BINDIR}")
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -46,13 +54,13 @@ add_subdirectory(3rdparty/gflags)
 ###########
 
 include_directories(
-  include
-  include/${PROJECT_NAME}
-  include/sdk
+        include
+        include/${PROJECT_NAME}
+        include/sdk
 )
 
 link_directories(
-  lib
+        lib
 )
 
 file(GLOB_RECURSE SRCS src/*.cpp)
@@ -77,32 +85,32 @@ set(DEP_LIBS
         Boost::chrono
         yaml-cpp
         gflags::gflags
-)
+        )
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}
         PRIVATE
         ${DEP_LIBS}
-)
+        )
 
 add_subdirectory(lib/LinkOsLayer/atemsys)
 
 file(COPY lib/libemllI8254x.so DESTINATION ${CMAKE_BINARY_DIR}/bin)
 file(COPY ${ENI_FILE} ${CONFIG_FILE} DESTINATION ${CMAKE_BINARY_DIR}/bin)
 
-configure_file(scripts/initECM.sh.in  ${CMAKE_BINARY_DIR}/initECM.sh @ONLY)
+configure_file(scripts/initECM.sh.in ${CMAKE_BINARY_DIR}/initECM.sh @ONLY)
 file(COPY ${CMAKE_BINARY_DIR}/initECM.sh
-     DESTINATION ${CMAKE_BINARY_DIR}/bin
-     FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-)
+        DESTINATION ${CMAKE_BINARY_DIR}/bin
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        )
 
-configure_file(scripts/runECM.sh.in   ${CMAKE_BINARY_DIR}/runECM.sh @ONLY)
+configure_file(scripts/runECM.sh.in ${CMAKE_BINARY_DIR}/runECM.sh @ONLY)
 file(COPY ${CMAKE_BINARY_DIR}/runECM.sh
-     DESTINATION ${CMAKE_BINARY_DIR}/bin
-     FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-)
+        DESTINATION ${CMAKE_BINARY_DIR}/bin
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        )
 
-configure_file(scripts/rocos-ecm.service.in   ${CMAKE_BINARY_DIR}/rocos-ecm.service @ONLY)
+configure_file(scripts/rocos-ecm.service.in ${CMAKE_BINARY_DIR}/rocos-ecm.service @ONLY)
 file(COPY ${CMAKE_BINARY_DIR}/rocos-ecm.service
         DESTINATION ${CMAKE_BINARY_DIR}/bin
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
@@ -113,27 +121,71 @@ configure_file(include/ver.h.in ver.h) # Version Definition
 #############
 ## Install ##
 #############
-#install(TARGETS ${PROJECT_NAME}
-#        EXPORT RocosEcmTargets
-#        LIBRARY DESTINATION lib  # 动态库安装路径
-#        ARCHIVE DESTINATION lib  # 静态库安装路径
-#        RUNTIME DESTINATION bin  # 可执行文件安装路径
-#        PUBLIC_HEADER DESTINATION include  # 头文件安装路径
-#        )
-#
-## 写入库的版本信息
-#include(CMakePackageConfigHelpers)
-#write_basic_package_version_file(
-#        RocosEcmConfigVersion.cmake
-#        VERSION ${PACKAGE_VERSION}
-#        COMPATIBILITY AnyNewerVersion  # 表示该函数库向下兼容
-#)
-#
-#install(EXPORT RocosEcmTargets
-#        FILE RocosEcmTargets.cmake
-##        NAMESPACE rocos::ecm::
-#        DESTINATION lib/cmake/rocos-ecm
-#        )
+
+# Add support for installation
+include(CMakePackageConfigHelpers)
+
+# Install headers
+install(DIRECTORY include/rocos_ecm
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+        )
+
+install(DIRECTORY include/sdk
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+        )
+
+install(FILES ${CMAKE_BINARY_DIR}/ver.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        )
+
+# Install binaries
+install(TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}-targets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}  # 动态库安装路径
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}  # 静态库安装路径
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}  # 可执行文件安装路径
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}  # 头文件安装路径
+        )
+
+# Install config files
+file(GLOB SO_FILES  ${CMAKE_BINARY_DIR}/bin/*.so)
+file(GLOB KO_FILES  ${CMAKE_BINARY_DIR}/bin/*.ko)
+file(GLOB SH_FILES  ${CMAKE_BINARY_DIR}/bin/*.sh)
+install(FILES ${SO_FILES} ${KO_FILES} ${SH_FILES}
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        )
+
+set(${PROJECT_NAME}_INSTALL_CONFIGDIR ${CMAKE_INSTALL_PREFIX}/config)
+install(FILES  ${ENI_FILE} ${CONFIG_FILE}
+        DESTINATION ${PROJECT_NAME}_INSTALL_CONFIGDIR
+        )
+
+
+# install CMake config files
+set(${PROJECT_NAME}_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+install(EXPORT ${PROJECT_NAME}-targets
+        FILE ${PROJECT_NAME}-targets.cmake
+        NAMESPACE ${PROJECT_NAME}::
+        DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
+        )
+
+
+# 生成并安装配置文件
+configure_package_config_file(
+        cmake/${PROJECT_NAME}-config.cmake.in
+        ${PROJECT_NAME}-config.cmake
+        INSTALL_DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
+        PATH_VARS CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR
+)
+
+# 写入库的版本信息
+write_basic_package_version_file(
+        rocos-ecm-config-version.cmake
+        VERSION ${PACKAGE_VERSION}
+        COMPATIBILITY AnyNewerVersion  # 表示该函数库向下兼容
+)
 
 
 #############
