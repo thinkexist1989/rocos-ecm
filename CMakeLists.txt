@@ -63,35 +63,39 @@ link_directories(
         lib
 )
 
-file(GLOB_RECURSE SRCS src/*.cpp)
+file(GLOB_RECURSE SRCS src/*.cpp EXCLUDE src/ecat_config.cpp)
 file(GLOB_RECURSE HDRS include/*.h include/*.hpp)
 file(GLOB_RECURSE ENI_FILE config/*.xml)
 file(GLOB_RECURSE CONFIG_FILE config/*.yaml)
 
-
-add_executable(${PROJECT_NAME} ${SRCS})
-
-set(DEP_LIBS
-        AtemRasSrv
-        EcMaster
-        emllI8254x
-        dl
-        rt
-        Threads::Threads
+# ecat_config library
+add_library(ecat_config SHARED src/ecat_config.cpp)
+target_link_libraries(ecat_config
+        PUBLIC
         Boost::boost
         Boost::date_time
         Boost::filesystem
         Boost::system
         Boost::chrono
         yaml-cpp
-        gflags::gflags
+        rt
         )
 
-## Specify libraries to link a library or executable target against
+# rocos_ecm executable
+add_executable(${PROJECT_NAME} ${SRCS})
 target_link_libraries(${PROJECT_NAME}
         PRIVATE
-        ${DEP_LIBS}
+        AtemRasSrv
+        EcMaster
+        emllI8254x
+        dl
+        rt
+        Threads::Threads
+        gflags::gflags
+        ecat_config
         )
+
+
 
 add_subdirectory(lib/LinkOsLayer/atemsys)
 
@@ -126,18 +130,18 @@ configure_file(include/ver.h.in ver.h) # Version Definition
 include(CMakePackageConfigHelpers)
 
 # Install headers
-install(DIRECTORY include/rocos_ecm
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
-        )
+#install(DIRECTORY include/rocos_ecm
+#        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+#        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+#        )
 
-install(DIRECTORY include/sdk
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
-        )
+#install(DIRECTORY include/sdk
+#        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+#        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+#        )
 
-install(FILES ${CMAKE_BINARY_DIR}/ver.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+install(FILES ${CMAKE_BINARY_DIR}/ver.h include/rocos_ecm/ecat_config.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocos_ecm
         )
 
 # Install binaries
@@ -159,7 +163,7 @@ install(FILES ${SO_FILES} ${KO_FILES} ${SH_FILES}
 
 set(${PROJECT_NAME}_INSTALL_CONFIGDIR ${CMAKE_INSTALL_PREFIX}/config)
 install(FILES  ${ENI_FILE} ${CONFIG_FILE}
-        DESTINATION ${PROJECT_NAME}_INSTALL_CONFIGDIR
+        DESTINATION ${${PROJECT_NAME}_INSTALL_CONFIGDIR}
         )
 
 
@@ -196,6 +200,6 @@ enable_testing()
 add_executable(unit_test test/unit_test.cpp)
 target_link_libraries(unit_test
         PRIVATE
-        ${DEP_LIBS}
+        ecat_config
         )
 add_test(NAME unit_test COMMAND unit_test)
