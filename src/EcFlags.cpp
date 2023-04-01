@@ -2,10 +2,10 @@
 #include "EcFlags.h"
 
 //! @brief the path of EtherCAT configuration file(YAML). Default value is "/etc/rocos-ecm/ecat_config.yaml"
-DEFINE_string(config, "/etc/rocos-ecm/ecat_config.yaml", "Path to ecat_config file in YAML format.");
+DEFINE_string(config, "/opt/rocos/ecm/config/ecat_config.yaml", "Path to ecat_config file in YAML format.");
 
 //! @brief the path of eni file(EtherCAT Network Information). Default value is "/etc/rocos-ecm/eni.xml"
-DEFINE_string(eni, "/etc/rocos-ecm/eni.xml", "Path to ENI file in XML format.");
+DEFINE_string(eni, "/opt/rocos/ecm/config/eni.xml", "Path to ENI file in XML format.");
 
 //! @brief the running duration of Ec-Master in msec, 0 is forever
 DEFINE_int32(t, 0, "Time in msec, 0 = forever, Running duration in msec. When the time expires, the application exits completely.");
