@@ -13,6 +13,7 @@
 
 #include "EcFlags.h" //!< gflags definition
 #include "ver.h"
+#include <glog/logging.h>
 
 #if (defined ATEMRAS_SERVER)
 
@@ -234,14 +235,24 @@ static EC_T_VOID tEcTimingTask(EC_T_VOID *pvThreadParamDesc) {
 //! \brief  The application entry point.
 //! \return  Value 0 is returned.
 int main(int nArgc, char *ppArgv[]) {
-    //!< gflags parsing parameters
+    /// gflags parsing parameters
     gflags::SetVersionString(ROCOS_ECM_VERSION);
     gflags::ParseCommandLineFlags(&nArgc, &ppArgv, false);
+    google::InitGoogleLogging(ppArgv[0]);
 
-    printf("The configuration file(-config): %s\n", FLAGS_config.c_str());
-    printf("The ethercat network information(eni) file(-eni): %s\n", FLAGS_eni.c_str());
-    printf("The performance measure: %s\n", FLAGS_perf ? "true" : "false");
+    LOG(INFO)  << "Configuration file(-config): " << FLAGS_config;
+    LOG(INFO)  << "EtherCAT network information file(-eni): " << FLAGS_eni;
+    LOG(INFO)  << "Performance measure: " << FLAGS_perf;
+    LOG(INFO)  << "Running duration(ms, 0 is forever): " << FLAGS_duration;
+    LOG(INFO)  << "Bus cycle time(us): " << FLAGS_cycle;
+    LOG(INFO)  << "Verbose level: " << FLAGS_verbose;
+    LOG(INFO)  << "CPU index: " << FLAGS_cpuidx;
+    LOG(INFO)  << "Clock period(us, 0 is disable): " << FLAGS_auxclk;
+    LOG(INFO)  << "Remote API server port: " << FLAGS_sp;
+    LOG(INFO)  << "Log file prefix: " << FLAGS_log;
 
+
+    /// Variables Definition
     int nRetVal = APP_ERROR;
     EC_T_DWORD dwRes = EC_E_ERROR;
     EC_T_BOOL bLogInitialized = EC_FALSE;
@@ -305,8 +316,7 @@ int main(int nArgc, char *ppArgv[]) {
 #endif
     szCommandLine[0] = '\0';
 
-    /* OS specific initialization */
-
+    /// OS specific initialization
 #if (defined LINUX)
     dwRes = EnableRealtimeEnvironment(); // Enabling Realtime Env by think 2023.4.1 21:29
     if (EC_E_NOERROR != dwRes) {

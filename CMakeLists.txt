@@ -47,7 +47,11 @@ find_package(Boost REQUIRED COMPONENTS date_time filesystem system chrono)
 find_package(yaml-cpp REQUIRED)
 find_package(Threads REQUIRED)
 
-add_subdirectory(3rdparty/gflags)
+
+find_package(gflags REQUIRED)
+#add_subdirectory(3rdparty/gflags)
+
+add_subdirectory(3rdparty/glog)
 
 ###########
 ## Build ##
@@ -91,7 +95,8 @@ target_link_libraries(${PROJECT_NAME}
         dl
         rt
         Threads::Threads
-        gflags::gflags
+        gflags
+        glog::glog
         ecat_config
         )
 

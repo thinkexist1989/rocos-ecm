@@ -12,7 +12,6 @@
 /*-DEFINES-------------------------------------------------------------------*/
 
 /*-FUNCTION-DEFINITIONS------------------------------------------------------*/
-/********************************************************************************/
 /** \brief  Parse for the ip-address and return an byte array (EC_T_BYTE[4])
 *
 * \return  EC_TRUE in case of success, EC_FALSE in case of an invalid parameter or
@@ -58,7 +57,6 @@ EC_T_BOOL ParseIpAddress
     return bRetVal;
 }
 
-/********************************************************************************/
 /** Parse next command line argument
 *
 * Return: pointer to the next argument.
@@ -75,7 +73,6 @@ EC_T_CHAR* GetNextWord(EC_T_CHAR **ppCmdLine, EC_T_CHAR *pStorage)
     return pWord;
 }
 
-/***************************************************************************************************/
 /**
 \brief  Parses string parameter value from the command line.
 
@@ -95,7 +92,6 @@ static EC_T_BOOL ParseString(
     return EC_TRUE;
 }
 
-/***************************************************************************************************/
 /**
 \brief  Parses EC_T_DWORD parameter value from the command line.
 
@@ -116,12 +112,9 @@ static EC_T_BOOL ParseDword(
     return EC_TRUE;
 }
 
-/***************************************************************************************************/
-/**
-\brief  Parses EC_T_LINKMODE parameter value from the command line.
 
-\return EC_TRUE if successfully parsed, EC_FALSE on syntax errors.
-*/
+//! \brief  Parses EC_T_LINKMODE parameter value from the command line.
+//! \return EC_TRUE if successfully parsed, EC_FALSE on syntax errors.
 EC_T_BOOL ParseLinkMode(
     EC_T_CHAR**     ptcWord,
     EC_T_CHAR**     lpCmdLine,
@@ -151,10 +144,7 @@ EC_T_BOOL ParseLinkMode(
     return bRes;
 }
 
-/***************************************************************************************************/
-/**
-\brief  Fill common link layer parameters
-*/
+//! \brief  Fill common link layer parameters
 static EC_T_VOID LinkParmsInit(EC_T_LINK_PARMS* pLinkParms,
                                const EC_T_DWORD dwSignature, const EC_T_DWORD dwSize, const char* szDriverIdent,
                                const EC_T_DWORD dwInstance, const EC_T_LINKMODE eLinkMode, const EC_T_DWORD dwIstPriority = 0)
@@ -217,14 +207,11 @@ Exit:
 
 #if (defined INCLUDE_EMLLALTERATSE)
 
-/***************************************************************************************************/
-/**
-\brief  Try to create Altera TSE link layer parameters according to current command line parsing
+//! \brief  Try to create Altera TSE link layer parameters according to current command line parsing
+//! \return EC_E_NOERROR     if link layer parameters was created\n
+//! EC_E_NOTFOUND    if command line was not matching\n
+//! EC_E_INVALIDPARM if syntax error
 
-\return EC_E_NOERROR     if link layer parameters was created
-EC_E_NOTFOUND    if command line was not matching
-EC_E_INVALIDPARM if syntax error
-*/
 static EC_T_DWORD CreateLinkParmsFromCmdLineAlteraTse(EC_T_CHAR** ptcWord,
     EC_T_CHAR** lpCmdLine, EC_T_CHAR* tcStorage,
     EC_T_BOOL*  pbGetNextWord,
@@ -289,14 +276,10 @@ Exit:
 #endif /* INCLUDE_EMLLALTERATSE */
 
 #if (defined INCLUDE_EMLLCCAT)
-/***************************************************************************************************/
-/**
-\brief  Try to create CCAT link layer parameters according to current command line parsing
-
-\return EC_E_NOERROR     if link layer parameters was created
-        EC_E_NOTFOUND    if command line was not matching
-        EC_E_INVALIDPARM if syntax error
-*/
+//! \brief  Try to create CCAT link layer parameters according to current command line parsing
+//! \return EC_E_NOERROR     if link layer parameters was created\n
+//!        EC_E_NOTFOUND    if command line was not matching\n
+//!        EC_E_INVALIDPARM if syntax error
 static EC_T_DWORD CreateLinkParmsFromCmdLineCCAT(EC_T_CHAR** ptcWord, EC_T_CHAR** lpCmdLine, EC_T_CHAR* tcStorage, EC_T_BOOL* pbGetNextWord,
                                                  EC_T_LINK_PARMS** ppLinkParms)
 {

@@ -13,8 +13,8 @@
 #ifndef INC_ECOS
 #include "EcOs.h"
 #endif
-#include "stdio.h"
-#include "stdlib.h"
+#include <cstdio>
+#include <cstdlib>
 #ifndef INC_ECLINK
 #include "EcLink.h"
 #endif
