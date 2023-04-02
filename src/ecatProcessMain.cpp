@@ -22,15 +22,14 @@
 
 #include <sys/mman.h>
 #include <sys/utsname.h>
-#include <signal.h>
+#include <csignal>
 
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
-#include <stdlib.h>
-#include <sys/syscall.h>
-#include <string.h>
+//#include <sys/syscall.h>
+#include <cstring>
 
 
 /*-DEFINES-------------------------------------------------------------------*/
@@ -39,7 +38,7 @@
 #define AUXCLOCK_SUPPORTED
 
 /*-TYPEDEFS------------------------------------------------------------------*/
-typedef struct _EC_T_TIMING_DESC {
+typedef struct {
     EC_T_VOID *pvTimingEvent;      /* event handle */
     EC_T_DWORD dwBusCycleTimeUsec; /* cycle time in usec */
     EC_T_BOOL bShutdown;          /* EC_TRUE if aux thread shall shut down */
@@ -52,11 +51,8 @@ typedef struct _EC_T_TIMING_DESC {
 } EC_T_TIMING_DESC;
 
 /*-LOCAL FUNCTIONS-----------------------------------------------------------*/
-/********************************************************************************/
-/** \brief  signal handler.
-*
-* \return N/A
-*/
+//! \brief  signal handler.
+//! \return N/A
 static void SignalHandler(int nSignal) {
     bRun = EC_FALSE;
 }
@@ -80,7 +76,13 @@ EC_T_DWORD EnableRealtimeEnvironment(EC_T_VOID) {
         dwResult = EC_E_ERROR;
         goto Exit;
     }
-    sscanf(SystemName.release, "%d.%d.%d", &nMaj, &nMin, &nSub);
+
+//    sscanf(SystemName.release, "%d.%d.%d", &nMaj, &nMin, &nSub); // clang推荐用strtol来替代sscanf
+    char* end;
+    nMaj = (int)strtol(SystemName.release, &end, 10);
+    nMin = (int)strtol(end + 1, &end , 10);
+    nSub = (int)strtol(end + 1, &end, 10);
+
     if (!(((nMaj == 2) && (nMin == 6)) || (nMaj >= 3))) {
         EcLogMsg(EC_LOG_LEVEL_ERROR,
                  (pEcLogContext, EC_LOG_LEVEL_ERROR, "ERROR - detected kernel = %d.%d.%d, required Linux kernel >= 2.6\n", nMaj, nMin, nSub));
@@ -126,11 +128,8 @@ EC_T_DWORD EnableRealtimeEnvironment(EC_T_VOID) {
     return dwResult;
 }
 
-/********************************************************************************/
-/** Show syntax
-*
-* Return: N/A
-*/
+//! \brief Show syntax
+//!  \return: N/A
 static EC_T_VOID ShowSyntax(EC_T_VOID) {
     EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "Syntax:\n"));
     EcLogMsg(EC_LOG_LEVEL_ERROR,
@@ -173,7 +172,7 @@ static EC_T_VOID ShowSyntax(EC_T_VOID) {
     EcLogMsg(EC_LOG_LEVEL_ERROR,
              (pEcLogContext, EC_LOG_LEVEL_ERROR, "     port            port (default = %d)\n", ATEMRAS_DEFAULT_PORT));
 #endif
-#if (defined VLAN_FRAME_SUPPORT)
+#if (defined VLAN_FRAME_SUPPORT) //这个定义在EcFeatures.h中，默认关闭，暂时不清楚用途 by think 2023.4.1 21:22
     EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -vlan             use VLAN\n"));
     EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     id              id (0...4095)\n"));
     EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     priority        priority (0...7)\n"));
@@ -194,8 +193,6 @@ static EC_T_VOID ShowSyntax(EC_T_VOID) {
              (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -ctloff           Disable DCM control loop for diagnosis\n"));
 
     ShowLinkLayerSyntax2();
-
-    return;
 }
 
 /// \brief Set event according to periodical sleep or aux clock
@@ -206,31 +203,12 @@ static EC_T_VOID ShowSyntax(EC_T_VOID) {
 /// - Disable AUX clock
 /// Return: N/A
 static EC_T_VOID tEcTimingTask(EC_T_VOID *pvThreadParamDesc) {
-    EC_T_TIMING_DESC *pTimingDesc = (EC_T_TIMING_DESC *) pvThreadParamDesc;
+    auto *pTimingDesc = (EC_T_TIMING_DESC *) pvThreadParamDesc;
     EC_T_CPUSET CpuSet;
-#if (defined __INTIME__)
-    RTHANDLE hTimingAlarm;
-#endif
 
     EC_CPUSET_ZERO(CpuSet);
     EC_CPUSET_SET(CpuSet, pTimingDesc->dwCpuIndex);
     OsSetThreadAffinity(EC_NULL, CpuSet);
-
-#if ((defined UNDER_CE) && (_WIN32_WCE >= 0x600))
-    /* enable auxilary clock */
-    if (pTimingDesc->bUseAuxClock)
-    {
-        DWORD dwAuxClkFreq = 1000000 / pTimingDesc->dwBusCycleTimeUsec;
-
-        if (!KernelIoControl((DWORD)IOCTL_AUXCLK_ENABLE, &dwAuxClkFreq, sizeof(DWORD), NULL, 0, NULL))
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "Error calling KernelIoControl(IOCTL_AUXCLK_ENABLE) (0x%08X)!\n", GetLastError()));
-            goto Exit;
-        }
-    }
-#elif (defined __INTIME__)
-    hTimingAlarm = CreateRtAlarm(KN_REPEATER, pTimingDesc->dwBusCycleTimeUsec);
-#endif
 
     /* timing task started */
     pTimingDesc->bIsRunning = EC_TRUE;
@@ -238,7 +216,6 @@ static EC_T_VOID tEcTimingTask(EC_T_VOID *pvThreadParamDesc) {
     /* periodically generate events as long as the application runs */
     while (!pTimingDesc->bShutdown) {
         /* wait for the next cycle */
-
 
         {
             /* wait for next cycle (no cycle below 1ms) */
@@ -252,17 +229,11 @@ static EC_T_VOID tEcTimingTask(EC_T_VOID *pvThreadParamDesc) {
 
     pTimingDesc->bIsRunning = EC_FALSE;
 
-    return;
 }
 
-/********************************************************************************/
-/** \brief  Demo Application entry point.
-*
-* \return  Value 0 is returned.
-*/
-
-int main(int nArgc, char *ppArgv[])
-{
+//! \brief  The application entry point.
+//! \return  Value 0 is returned.
+int main(int nArgc, char *ppArgv[]) {
     //!< gflags parsing parameters
     gflags::SetVersionString(ROCOS_ECM_VERSION);
     gflags::ParseCommandLineFlags(&nArgc, &ppArgv, false);
@@ -270,11 +241,6 @@ int main(int nArgc, char *ppArgv[])
     printf("The configuration file(-config): %s\n", FLAGS_config.c_str());
     printf("The ethercat network information(eni) file(-eni): %s\n", FLAGS_eni.c_str());
     printf("The performance measure: %s\n", FLAGS_perf ? "true" : "false");
-
-//    EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "The configuration file(-config): %s\n", FLAGS_config.c_str()));
-//    EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "The ethercat network information(eni) file(-eni): %s\n", FLAGS_eni.c_str()));
-//    EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "The performance measure: %s\n", FLAGS_perf ? "true" : "false"));
-
 
     int nRetVal = APP_ERROR;
     EC_T_DWORD dwRes = EC_E_ERROR;
@@ -285,9 +251,9 @@ int main(int nArgc, char *ppArgv[])
     EC_T_CHAR *ptcWord = EC_NULL;
     EC_T_CHAR tcStorage = '\0';
 
-    EC_T_CHAR szLogFileprefix[256] = {'\0'};
+    EC_T_CHAR szLogFilePrefix[256] = {'\0'};
     EC_T_CNF_TYPE eCnfType = eCnfType_Unknown;
-    EC_T_PBYTE pbyCnfData = 0;
+    EC_T_PBYTE pbyCnfData = nullptr;
     EC_T_DWORD dwCnfDataLen = 0;
     EC_T_CHAR szENIFilename[256] = {'\0'};
     EC_T_DWORD dwDuration = 120000;
@@ -341,19 +307,8 @@ int main(int nArgc, char *ppArgv[])
 
     /* OS specific initialization */
 
-
-#if ((defined EC_VERSION_UC3) && (defined NO_OS))
-    dwRes = OsInit(pOsParms);
-    if (EC_E_NOERROR != dwRes)
-    {
-        EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "Cannot initialize OS!\n"));
-
-        goto Exit;
-    }
-#endif
-
 #if (defined LINUX)
-    dwRes = EnableRealtimeEnvironment();
+    dwRes = EnableRealtimeEnvironment(); // Enabling Realtime Env by think 2023.4.1 21:29
     if (EC_E_NOERROR != dwRes) {
         goto Exit;
     }
@@ -368,26 +323,6 @@ int main(int nArgc, char *ppArgv[])
     }
 #endif /* LINUX */
 
-#if (defined __INTEGRITY)
-    WaitForFileSystemInitialization();
-#endif
-
-#if (defined EC_VERSION_GO32)
-    if (!io_Init())
-    {
-        EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "Fail to initialize Vortex86 I/O library\n"));
-        nRetVal = APP_ERROR;
-        goto Exit;
-    }
-    if (!irq_Init())
-    {
-        EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "Fail to initialize Vortex86 IRQ library\n"));
-        io_Close();     /* Deinit IOs */
-        nRetVal = APP_ERROR;
-        goto Exit;
-    }
-#endif
-
 #if !(defined UNDER_RTSS)
     /* Seed the random-number generator with current time so that
      * the numbers will be different every time we run.
@@ -395,13 +330,6 @@ int main(int nArgc, char *ppArgv[])
     srand((unsigned) OsQueryMsecCount());
 #endif
 
-#if (defined EC_VERSION_RTXC)
-    hccInit();
-    f_enterFS();   
-    PMU_WritePerformanceCounterEvent(THIS_PMU_COUNTER_ID, 0x11u); // 0x11: CPU Cycles (250 MHz)
-    PMU_WritePerformanceCounter(THIS_PMU_COUNTER_ID, 0x1); /* reset counter */
-    PMU_EnablePerformanceCounter(THIS_PMU_COUNTER_ID);
-#endif
 
     /* set running flag */
     bRun = EC_TRUE;
@@ -412,65 +340,14 @@ int main(int nArgc, char *ppArgv[])
     TimingDesc.dwBusCycleTimeUsec = CYCLE_TIME * 1000; //在1415行，如果-b参数，就TimingDesc.dwBusCycleTimeUsec设置为相应值
 
     /* prepare command line */
-#if (defined VXWORKS) && (!defined __RTP__)
-    OsStrncpy(szCommandLine, lpCmdLine, sizeof(szCommandLine) - 1);
-#elif (defined RTOS_32)
-#if (defined ECWIN_RTOS32)
-    {
-    VMF_HANDLE hEcatKey;
-    VMF_CONFIG_ADDDATA AddData;
-    UINT32 dwLength = 0;
 
-        dwRes = vmfConfigRegKeyOpenA(VMF_CONFIGREG_HKEY_OS_CURRENT, "Ecat", &hEcatKey);
-        if (RTE_SUCCESS == dwRes)
-        {
-
-            dwLength = sizeof(szCommandLine);
-            vmfConfigRegValueQueryA(hEcatKey, "CommandLine", NULL, NULL, (UINT8*)&szCommandLine[0], &dwLength );
-            vmfConfigRegKeyClose(hEcatKey);
-        }
-        if ('\0' == szCommandLine[0])
-        {
-            /* for compatibility */
-            dwLength = sizeof(szCommandLine);
-            dwRes = vmfConfigQueryValue( "Ecat", "CommandLine", VMF_CONFIG_SZ_TYPE, (UINT8*)&szCommandLine[0], &dwLength, &AddData);
-            if (RTE_SUCCESS != dwRes)
-            {
-                EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "Cannot read EtherCAT demo command line, (EcatShm.config)\n"));
-                EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "Please, enter command line (e.g. atemDemo -v 2 -i8255x 1 1):\n"));
-            }
-        }
-    }
-#else
-    OsStrncpy(szCommandLine, GetCommandLine(), sizeof(szCommandLine) - 1);
-#endif /* !ECWIN_RTOS32 */
-#elif (defined __TKERNEL) && (defined __arm__)
-    /*-fixed command line for T-Kernel on ARM */
-    OsStrncpy(szCommandLine, "-l9218i 1 -v 1 -t 0 -f eni.xml", sizeof(szCommandLine) - 1);
-#elif (defined EC_VERSION_SYSBIOS) || (defined EC_VERSION_RIN32M3) || (defined EC_VERSION_XILINX_STANDALONE) || \
-    (defined EC_VERSION_ETKERNEL) || (defined EC_VERSION_RZT1) || (defined EC_VERSION_RZGNOOS) || (defined EC_VERSION_JSLWARE) || \
-    (defined EC_VERSION_UCOS) || (defined EC_VERSION_RTXC)
-    OsStrncpy(szCommandLine, DEMO_PARAMETERS, sizeof(szCommandLine) - 1);
-#elif (defined EC_VERSION_UC3)
-    OsStrncpy(szCommandLine, pszCommandLine, sizeof(szCommandLine) - 1);
-#elif (defined EC_VERSION_FREERTOS)
-    OsStrncpy(szCommandLine, pszCommandLine, sizeof(szCommandLine) - 1);
-#elif (defined EC_VERSION_RTEMS)
-    /* copy cmdline without the applications name(first token) */
-    OsStrncpy(szCommandLine, strchr(bsp_boot_cmdline,' '),sizeof(szCommandLine) - 1);
-#elif (defined EC_VERSION_ECOS) && (defined __arm__)
-    /*copy cmdline */
-    OsStrncpy(szCommandLine, pCmdLine, sizeof(szCommandLine));
-#else
     /* build szCommandLine from argument list */
     {
         EC_T_CHAR *pcStrCur = szCommandLine;
         EC_T_INT nStrRemain = COMMAND_LINE_BUFFER_LENGTH;
-#if (defined UNDER_CE)
-        EC_T_CHAR  szStrFormat[] = "%S"; /* convert UNICODE to multibyte */
-#else
+
         EC_T_CHAR szStrFormat[] = "%s";
-#endif
+
         /* build szCommandLine from argument list, skipping executable name */
         for (nArgc--, ppArgv++; nArgc > 0; nArgc--, ppArgv++) {
             EC_T_BOOL bIsFileName = EC_FALSE;
@@ -513,7 +390,6 @@ int main(int nArgc, char *ppArgv[])
             }
         }
     }
-#endif
     /* backup full command line */
     OsStrncpy(szFullCommandLine, szCommandLine, sizeof(szFullCommandLine) - 1);
 
@@ -585,7 +461,7 @@ int main(int nArgc, char *ppArgv[])
                 nRetVal = SYNTAX_ERROR;
                 goto Exit;
             }
-            OsSnprintf(szLogFileprefix, sizeof(szLogFileprefix) - 1, "%s", ptcWord);
+            OsSnprintf(szLogFilePrefix, sizeof(szLogFilePrefix) - 1, "%s", ptcWord);
         } else if (OsStricmp(ptcWord, "-t") == 0) {
             ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
             if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
@@ -771,7 +647,7 @@ int main(int nArgc, char *ppArgv[])
     }
     /* initialize logging */
     oLogging.InitLogging(INSTANCE_MASTER_DEFAULT, G_pEcLogParms->dwLogLevel, LOG_ROLLOVER, LOG_THREAD_PRIO, dwCpuIndex,
-                         szLogFileprefix, LOG_THREAD_STACKSIZE);
+                         szLogFilePrefix, LOG_THREAD_STACKSIZE);
     G_pEcLogParms->pfLogMsg = CAtEmLogging::LogMsg;
     G_pEcLogParms->pLogContext = (struct _EC_T_LOG_CONTEXT *) &oLogging;
     bLogInitialized = EC_TRUE;
@@ -835,201 +711,21 @@ int main(int nArgc, char *ppArgv[])
 #if (defined AUXCLOCK_SUPPORTED)
     /* initialize auxiliary clock */
     if (TimingDesc.bUseAuxClock) {
-#if (defined VXWORKS)
-        sysAuxClkDisable();
-        if (OK != sysAuxClkRateSet(1000000 / TimingDesc.dwBusCycleTimeUsec))
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "Error calling sysAuxClkRateSet!\n"));
-            goto Exit;
-        }
-#if ( (_WRS_VXWORKS_MAJOR == 6) && (_WRS_VXWORKS_MINOR >= 9) && (_WRS_CONFIG_LP64) ) || (_WRS_VXWORKS_MAJOR > 6)
-        sysAuxClkConnect((FUNCPTR)vxAuxClkIsr, (_Vx_usr_arg_t)TimingDesc.pvTimingEvent);
-#else
-        sysAuxClkConnect((FUNCPTR)vxAuxClkIsr, (EC_T_INT)TimingDesc.pvTimingEvent);
-#endif
-        sysAuxClkEnable( );
-        OsSleep(2000);
-
-#elif ((defined UNDER_CE) && (_WIN32_WCE >= 0x600))
-        /* get auxilary clock sysintr */
-        bRes = KernelIoControl((DWORD)IOCTL_AUXCLK_GET_SYSINTR, (DWORD)NULL, (DWORD)0, &dwAuxClkSysIntr, (DWORD)sizeof(DWORD), &dwWinRes);
-        if (!bRes)
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "Error calling KernelIoControl(IOCTL_AUXCLK_GET_SYSINTR) (0x%08X)!\n", GetLastError()));
-            goto Exit;
-        }
-        /* open VirtualDrv for interrupt management */
-        TimingDesc.hVirtualDrv = CreateFile(TEXT("VIR1:"),
-                                 GENERIC_READ | GENERIC_WRITE,
-                                 FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                 NULL,
-                                 OPEN_EXISTING,
-                                 FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
-                                 INVALID_HANDLE_VALUE);
-        if ((TimingDesc.hVirtualDrv == NULL) || (TimingDesc.hVirtualDrv == INVALID_HANDLE_VALUE))
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "Error calling CreateFile(""VIR1:"") (0x%08X)!\n", GetLastError()));
-            TimingDesc.hVirtualDrv = NULL;
-            goto Exit;
-        }
-        /* connect auxilary clock interrupt */
-        TimingDesc.oIrqDesc.dwSysIrq = dwAuxClkSysIntr;
-        swprintf(TimingDesc.oIrqDesc.szEventName, TEXT("%s"), TEXT("AUXCLK"));
-        bRes = DeviceIoControl(TimingDesc.hVirtualDrv, (DWORD)IOCTL_VIRTDRV_INTERRUPT_INIT, &(TimingDesc.oIrqDesc), sizeof(VI_T_INTERRUPTDESC), NULL, 0, NULL, NULL );
-        if (!bRes)
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "Error calling DeviceIoControl(IOCTL_VIRTDRV_INTERRUPT_INIT) (0x%08X)!\n", GetLastError()));
-            goto Exit;
-        }
-        /* create auxilary clock interrupt event */
-        TimingDesc.pvAuxClkEvent = (VOID*)CreateEvent(NULL, FALSE, FALSE, TEXT("AUXCLK"));
-        if ((TimingDesc.pvAuxClkEvent == NULL) || (TimingDesc.pvTimingEvent == INVALID_HANDLE_VALUE))
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "Error creating AuxClk event (0x%08X)!\n", GetLastError()));
-            TimingDesc.pvAuxClkEvent = NULL;
-            goto Exit;
-        }
-        /* auxiliary clock event handled within timing task */
-        bStartTimingTask = EC_TRUE;
-
-#elif (defined UNDER_RTSS)
-        hTimer = RtCreateTimer(NULL, 0, RtxAuxClkIsr, (PVOID)TimingDesc.pvTimingEvent, RT_PRIORITY_MAX, CLOCK_2);
-        liTimer.QuadPart = (LONGLONG)10*TimingDesc.dwBusCycleTimeUsec;
-        RtSetTimerRelative(hTimer, &liTimer, &liTimer);
-#else /* !UNDER_RTSS */
         dwRes = OsAuxClkInit(dwCpuIndex, 1000000 / TimingDesc.dwBusCycleTimeUsec, TimingDesc.pvTimingEvent);
         if (EC_E_NOERROR != dwRes) {
             EcLogMsg(EC_LOG_LEVEL_ERROR,
                      (pEcLogContext, EC_LOG_LEVEL_ERROR, "ERROR at auxiliary clock initialization!\n"));
             goto Exit;
         }
-#endif /* !UNDER_RTSS */
     } /* TimingDesc.bUseAuxClock */
     else
 #endif
     {
-#if (defined NO_OS)
-        bStartTimingTask = EC_FALSE;
-#elif (defined RTOS_32)
-        CLKSetTimerIntVal(TimingDesc.dwBusCycleTimeUsec);
-        RTKDelay(1);
         bStartTimingTask = EC_TRUE;
-#elif (defined EC_VERSION_RTEMS)
-        status = rtems_timer_create(rtems_build_name('E', 'C', 'T', 'T'), &timerId);
-        if(RTEMS_SUCCESSFUL != status)
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "ATEMDemoMain: cannot create timer\nRTEMS returned: %s\n",
-                rtems_status_text(status)));
-            goto Exit;
-        }
-#if (defined RTEMS_USE_TIMER_SERVER)
-        status = rtems_timer_initiate_server(TIMER_THREAD_PRIO,TIMER_THREAD_STACKSIZE,0);
-        if(RTEMS_SUCCESSFUL != status)
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "ATEMDemoMain: cannot initialise timer\nRTEMS returned: %s\n",
-                rtems_status_text(status)));
-            goto Exit;
-        }
-        status = rtems_timer_server_fire_after(timerId,
-        RTEMS_MICROSECONDS_TO_TICKS(TimingDesc.dwBusCycleTimeUsec),
-        rtemsTimerIsr, TimingDesc.pvTimingEvent);
-#else
-        status = rtems_timer_fire_after(timerId,
-                RTEMS_MICROSECONDS_TO_TICKS(TimingDesc.dwBusCycleTimeUsec),
-                rtemsTimerIsr, TimingDesc.pvTimingEvent);
-#endif /* RTEMS_USE_TIMER_SERVER */
-        if(RTEMS_SUCCESSFUL != status)
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "ATEMDemoMain: cannot initialise timer\nRTEMS returned: %s\n",
-                rtems_status_text(status)));
-            goto Exit;
-        }
-        bStartTimingTask = EC_FALSE; //No timing task needed
-#elif (defined EC_VERSION_QNX)
-        EC_T_INT nRes = 0;
-        EC_T_INT nTimerId = 0;
-        _clockperiod newClockPeriod;
-        sigevent timerSigEvent;
-        itimerspec itime;
-
-        /* calculate and set clock period */
-#if (EC_VERSION_QNX >= 700)
-        nRes = procmgr_ability(0, PROCMGR_ADN_ROOT|PROCMGR_AOP_ALLOW|PROCMGR_AID_CLOCKPERIOD, PROCMGR_AID_EOL);
-        if (nRes != 0)
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "ERROR: procmgr_ability PROCMGR_AID_CLOCKPERIOD failed\n"));
-            goto Exit;
-        }
-#endif
-        OsMemset(&newClockPeriod, 0, sizeof(newClockPeriod));
-        newClockPeriod.nsec = EC_AT_MOST((TimingDesc.dwBusCycleTimeUsec * 1000) / 2, 500000);
-        nRes = ClockPeriod(CLOCK_REALTIME, &newClockPeriod, EC_NULL, 0);
-        if (nRes != 0)
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "ERROR: Set clock period failed\n"));
-            goto Exit;
-        }
-        /* create and attach communication channel */
-        TimingDesc.nTimerChannel = ChannelCreate(0);
-        if (TimingDesc.nTimerChannel == -1)
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "ERROR: Create timer channel failed\n"));
-            goto Exit;
-        }
-        OsMemset(&timerSigEvent, 0, sizeof(timerSigEvent));
-        timerSigEvent.sigev_notify = SIGEV_PULSE;
-        timerSigEvent.sigev_coid = ConnectAttach(ND_LOCAL_NODE, 0, TimingDesc.nTimerChannel, _NTO_SIDE_CHANNEL, 0);
-        if (timerSigEvent.sigev_coid == -1)
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "ERROR: Attach timer channel failed\n"));
-            goto Exit;
-        }
-        /* create timer */
-#if (EC_VERSION_QNX >= 700)
-        nRes = procmgr_ability(0, PROCMGR_ADN_ROOT|PROCMGR_AOP_ALLOW|PROCMGR_AID_TIMER, PROCMGR_AID_EOL);
-        if (nRes != 0)
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "ERROR: procmgr_ability PROCMGR_AID_TIMER failed\n"));
-            goto Exit;
-        }
-#endif
-        timerSigEvent.sigev_priority = TIMER_THREAD_PRIO;
-        timerSigEvent.sigev_code = _PULSE_CODE_MINAVAIL;
-        nRes = timer_create(CLOCK_REALTIME, &timerSigEvent, &nTimerId);
-        if (nRes != 0)
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "ERROR: Create timer failed\n"));
-            goto Exit;
-        }
-#if (EC_VERSION_QNX >= 700)
-        /* use high resolution timer by set timer tolerance */
-        OsMemset(&itime, 0, sizeof(itime));
-        itime.it_value.tv_nsec = 1;
-        nRes = timer_settime(nTimerId, TIMER_TOLERANCE, &itime, EC_NULL);
-        if (nRes != 0)
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "ERROR: Set timer tolerance failed\n"));
-            goto Exit;
-        }
-#endif
-        /* start timer */
-        OsMemset(&itime, 0, sizeof(itime));
-        itime.it_value.tv_nsec = TimingDesc.dwBusCycleTimeUsec * 1000;
-        itime.it_interval.tv_nsec = TimingDesc.dwBusCycleTimeUsec * 1000;
-        nRes = timer_settime(nTimerId, 0, &itime, EC_NULL);
-        if (nRes != 0)
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "ERROR: Start timer failed\n"));
-            goto Exit;
-        }
-        bStartTimingTask = EC_TRUE;
-#else
-        bStartTimingTask = EC_TRUE;
-#endif
     }
 
     /* create timing task if needed */
-    //启动tEcTimingTask
+    //! Start tEcTimingTask
     if (bStartTimingTask) {
         OsCreateThread((EC_T_CHAR *) "tEcTimingTask", (EC_PF_THREADENTRY) tEcTimingTask, TIMER_THREAD_PRIO,
                        LOG_THREAD_STACKSIZE, (EC_T_VOID *) &TimingDesc);
@@ -1043,16 +739,11 @@ int main(int nArgc, char *ppArgv[])
     EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "Using %s\n",
             (TimingDesc.bUseAuxClock ? "AuxClock" : "Sleep")));
 #endif
-#ifdef EC_VERSION_ETKERNEL
-    if (bEnaPerfJobs)
-    {
-        InitPreventCpuIdleTask(); //Start
-    }
-#endif
+
 #ifdef INCLUDE_EMLL_STATIC_LIBRARY
     OsReplaceGetLinkLayerRegFunc(&DemoGetLinkLayerRegFunc);
 #endif
-    //主站相关操作开始执行
+    //! EtherCAT Master start processing data
     dwRes = ecatProcess(eCnfType, pbyCnfData, dwCnfDataLen,
                         TimingDesc.dwBusCycleTimeUsec, nVerbose, dwDuration,
                         apLinkParms[0],
@@ -1081,66 +772,23 @@ int main(int nArgc, char *ppArgv[])
         ShowSyntax();
     }
     EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "EcMasterDemoDc stop.\n"));
-#if !(defined VXWORKS)
+
     if (nRetVal != APP_NOERROR) {
         OsSleep(5000);
     }
-#endif
+
     /* stop timing task if running */
-#if (defined EC_VERSION_RTEMS)
-    rtems_timer_delete(timerId);
-#else
     if (TimingDesc.bIsRunning) {
         TimingDesc.bShutdown = EC_TRUE;
         while (TimingDesc.bIsRunning) {
             OsSleep(1);
         }
     }
-#endif
-#ifdef EC_VERSION_ETKERNEL
-    if (bEnaPerfJobs  && S_bPreventCpuIdleTaskRunning)
-    {
-        S_bPreventCpuIdleTaskShutdown = EC_TRUE;
-        while (S_bPreventCpuIdleTaskRunning)
-        {
-            OsSleep(1);
-        }
-    }
-#endif
+
 #if (defined AUXCLOCK_SUPPORTED)
     /* clean up auxclk */
     if (TimingDesc.bUseAuxClock) {
-#if (defined VXWORKS)
-        sysAuxClkDisable();
-
-#elif ((defined UNDER_CE) && (_WIN32_WCE >= 0x600))
-        if (NULL != TimingDesc.hVirtualDrv)
-        {
-            /* deinit the auxilary clock interrupt and close the handle to it */
-            TimingDesc.oIrqDesc.dwSysIrq = dwAuxClkSysIntr;
-            bRes = DeviceIoControl(TimingDesc.hVirtualDrv, (DWORD)IOCTL_VIRTDRV_INTERRUPT_DEINIT, &(TimingDesc.oIrqDesc), sizeof(VI_T_INTERRUPTDESC), NULL, 0, NULL, NULL );
-            if (!bRes)
-            {
-                printf("Error calling DeviceIoControl(IOCTL_VIRTDRV_INTERRUPT_DEINIT) (0x%08X)!\n", GetLastError());
-            }
-            CloseHandle(TimingDesc.hVirtualDrv);
-            TimingDesc.hVirtualDrv = NULL;
-        }
-        /* Close the AUXCLK-TimingTask synchronization handle */
-        if (EC_NULL != TimingDesc.pvAuxClkEvent)
-        {
-            CloseHandle(TimingDesc.pvAuxClkEvent);
-            TimingDesc.pvAuxClkEvent = EC_NULL;
-        }
-#elif (defined UNDER_RTSS)
-        if (NULL != hTimer)
-        {
-             RtCancelTimer(hTimer, &liTimer);
-             RtDeleteTimer(hTimer);
-        }
-#else
         OsAuxClkDeinit(0);
-#endif
     }
 #endif
     /* delete the timing event */
@@ -1164,41 +812,7 @@ int main(int nArgc, char *ppArgv[])
         }
     }
 
-#if (defined EC_VERSION_GO32)
-    irq_Close();    /* close the Vortex86 IRQ library */
-    io_Close();     /* close the Vortex86 I/O library */
-#endif
-
-#if (defined EC_VERSION_RTXC)
-    f_releaseFS();
-#endif
-
-#if (defined EC_VERSION_RTEMS)
-    rtemsSyncBDBuffers();
-    exit(nRetVal);
-#else
     return nRetVal;
-#endif
 }
-
-#if (defined EC_VERSION_RTEMS)
-rtems_task Init(rtems_task_argument arg)
-{
-    rtems_id   Task_id;
-    rtems_name Task_name = rtems_build_name('M','A','I','N');
-
-    /* read time of day from rtc device and set it to rtems */
-    setRealTimeToRTEMS();
-    /* Mount file systems */
-    rtemsMountFilesystems();
-    /* create and start main task */
-    rtems_task_create(Task_name, MAIN_THREAD_PRIO,
-            RTEMS_MINIMUM_STACK_SIZE * 4, RTEMS_DEFAULT_MODES,
-            RTEMS_FLOATING_POINT | RTEMS_DEFAULT_ATTRIBUTES, &Task_id);
-    rtems_task_start(Task_id, Main, 1);
-//  rtems_monitor_init(0);
-    rtems_task_delete( RTEMS_SELF );
-}
-#endif /* EC_VERSION_RTEMS */
 
 /*-END OF SOURCE FILE--------------------------------------------------------*/
