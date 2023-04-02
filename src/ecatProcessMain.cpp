@@ -620,6 +620,10 @@ int main(int nArgc, char *ppArgv[]) {
         }
         bGetNextWord = EC_TRUE;
     }
+
+
+
+
     /* set application log level */
     switch (nVerbose) {
         case 0:

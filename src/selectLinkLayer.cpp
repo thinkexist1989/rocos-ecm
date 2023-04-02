@@ -2756,13 +2756,10 @@ Exit:
 }
 #endif /* INCLUDE_EMLLUDP */
 
-/***************************************************************************************************/
-/**
-\brief  Select Link Layer.
 
-This function checks whether parameter portion is a LinkLayer information and processes it
-\return EC_TRUE if parameter is LinkLayer Portion, EC_FALSE otherwise.
-*/
+//! \brief  Select Link Layer.
+//! This function checks whether parameter portion is a LinkLayer information and processes it
+//! \return EC_TRUE if parameter is LinkLayer Portion, EC_FALSE otherwise.
 EC_T_DWORD CreateLinkParmsFromCmdLine
 (   EC_T_CHAR**     ptcWord,
     EC_T_CHAR**     lpCmdLine,
