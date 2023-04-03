@@ -137,7 +137,7 @@ bool EcatConfig::createSharedMemory() {
 
         int val = 0;
         sem_getvalue(sem_mutex[i], &val);
-        std::cout << "value of sem_mutex is: " << val << std::endl;
+//        std::cout << "value of sem_mutex is: " << val << std::endl;
         if (val != 1) {
             sem_destroy(sem_mutex[i]);
             sem_unlink((EC_SEM_MUTEX + std::to_string(i)).c_str());

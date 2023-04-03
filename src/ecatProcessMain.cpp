@@ -13,7 +13,6 @@
 
 #include "EcFlags.h" //!< gflags definition
 #include "ver.h"
-#include <glog/logging.h>
 
 #if (defined ATEMRAS_SERVER)
 
@@ -31,6 +30,8 @@
 
 //#include <sys/syscall.h>
 #include <cstring>
+#include <iostream>
+#include <termcolor/termcolor.hpp>
 
 
 /*-DEFINES-------------------------------------------------------------------*/
@@ -79,10 +80,10 @@ EC_T_DWORD EnableRealtimeEnvironment(EC_T_VOID) {
     }
 
 //    sscanf(SystemName.release, "%d.%d.%d", &nMaj, &nMin, &nSub); // clang推荐用strtol来替代sscanf
-    char* end;
-    nMaj = (int)strtol(SystemName.release, &end, 10);
-    nMin = (int)strtol(end + 1, &end , 10);
-    nSub = (int)strtol(end + 1, &end, 10);
+    char *end;
+    nMaj = (int) strtol(SystemName.release, &end, 10);
+    nMin = (int) strtol(end + 1, &end, 10);
+    nSub = (int) strtol(end + 1, &end, 10);
 
     if (!(((nMaj == 2) && (nMin == 6)) || (nMaj >= 3))) {
         EcLogMsg(EC_LOG_LEVEL_ERROR,
@@ -238,21 +239,51 @@ int main(int nArgc, char *ppArgv[]) {
     /// gflags parsing parameters
     gflags::SetVersionString(ROCOS_ECM_VERSION);
     gflags::ParseCommandLineFlags(&nArgc, &ppArgv, false);
-    google::InitGoogleLogging(ppArgv[0]);
 
-    LOG(INFO)  << "Configuration file(-config): " << FLAGS_config;
-    LOG(INFO)  << "EtherCAT network information file(-eni): " << FLAGS_eni;
-    LOG(INFO)  << "Performance measure: " << FLAGS_perf;
-    LOG(INFO)  << "Running duration(ms, 0 is forever): " << FLAGS_duration;
-    LOG(INFO)  << "Bus cycle time(us): " << FLAGS_cycle;
-    LOG(INFO)  << "Verbose level: " << FLAGS_verbose;
-    LOG(INFO)  << "CPU index: " << FLAGS_cpuidx;
-    LOG(INFO)  << "Clock period(us, 0 is disable): " << FLAGS_auxclk;
-    LOG(INFO)  << "Remote API server port: " << FLAGS_sp;
-    LOG(INFO)  << "Log file prefix: " << FLAGS_log;
+    /// Print the configuration information
+    std::cout << termcolor::on_bright_blue << termcolor::blink
+              << "=================ROCOS EtherCAT Master=================" << termcolor::reset << std::endl;
+    std::cout << termcolor::blue << "==                  Author: Yang Luo                 ==" << termcolor::reset
+              << std::endl;
+    std::cout << termcolor::blue << "==                  Email: yluo@hit.edu.cn           ==" << termcolor::reset
+              << std::endl;
+    std::cout << termcolor::blue << "==                  Version: " << ROCOS_ECM_VERSION << "                   =="
+              << termcolor::reset << std::endl;
+
+    std::cout << termcolor::blue << "== Configuration file(-config): " << termcolor::reset << termcolor::bold
+              << FLAGS_config << termcolor::reset << std::endl;
+    std::cout << termcolor::blue << "== EtherCAT network information file(-eni): " << termcolor::reset
+              << termcolor::bold << FLAGS_eni << termcolor::reset << std::endl;
+    std::cout << termcolor::blue << "== Performance measure: " << termcolor::reset << termcolor::bold
+              << (FLAGS_perf ? "true" : "false") << termcolor::reset << std::endl;
+    std::cout << termcolor::blue << "== Running duration(ms): " << termcolor::reset << termcolor::bold
+              << (FLAGS_duration ? std::to_string(FLAGS_duration) : "forever") << termcolor::reset << std::endl;
+    std::cout << termcolor::blue << "== Bus cycle time(us): " << termcolor::reset << termcolor::bold << FLAGS_cycle
+              << termcolor::reset << std::endl;
+    std::cout << termcolor::blue << "== Verbose level: " << termcolor::reset << termcolor::bold << FLAGS_verbose
+              << termcolor::reset << std::endl;
+    std::cout << termcolor::blue << "== CPU index: " << termcolor::reset << termcolor::bold << FLAGS_cpuidx
+              << termcolor::reset << std::endl;
+    std::cout << termcolor::blue << "== Clock period(us): " << termcolor::reset << termcolor::bold
+              << (FLAGS_auxclk ? std::to_string(FLAGS_auxclk) : "disabled") << termcolor::reset << std::endl;
+    std::cout << termcolor::blue << "== Remote API server port: " << termcolor::reset << termcolor::bold << FLAGS_sp
+              << termcolor::reset << std::endl;
+    std::cout << termcolor::blue << "== link layer: " << termcolor::reset << termcolor::bold << FLAGS_link
+              << termcolor::reset << std::endl;
+    std::cout << termcolor::blue << "== instance: " << termcolor::reset << termcolor::bold << FLAGS_instance
+              << termcolor::reset << std::endl;
+    std::cout << termcolor::blue << "== mode: " << termcolor::reset << termcolor::bold << FLAGS_mode << termcolor::reset
+              << std::endl;
+    std::cout << termcolor::blue << "== Log file prefix: " << termcolor::reset << termcolor::bold << FLAGS_log
+              << termcolor::reset << std::endl;
+
+    std::cout << termcolor::on_bright_blue << termcolor::blink
+              << "=======================================================" << termcolor::reset << std::endl;
 
 
     /// Variables Definition
+    EC_T_CHAR szConfigFilename[256] = {'\0'}; // Config File Name(ecat_config.yaml)
+
     int nRetVal = APP_ERROR;
     EC_T_DWORD dwRes = EC_E_ERROR;
     EC_T_BOOL bLogInitialized = EC_FALSE;
@@ -349,287 +380,406 @@ int main(int nArgc, char *ppArgv[]) {
     TimingDesc.bIsRunning = EC_FALSE;
     TimingDesc.dwBusCycleTimeUsec = CYCLE_TIME * 1000; //在1415行，如果-b参数，就TimingDesc.dwBusCycleTimeUsec设置为相应值
 
-    /* prepare command line */
 
-    /* build szCommandLine from argument list */
+    //! Process commandline arguments
     {
-        EC_T_CHAR *pcStrCur = szCommandLine;
-        EC_T_INT nStrRemain = COMMAND_LINE_BUFFER_LENGTH;
+        // -config
+        OsSnprintf(szConfigFilename, sizeof(szConfigFilename) - 1, "%s",
+                   FLAGS_config.c_str()); // 将config文件名保存到szConfigFilename中
 
-        EC_T_CHAR szStrFormat[] = "%s";
+        // -eni
+        OsSnprintf(szENIFilename, sizeof(szENIFilename) - 1, "%s", FLAGS_eni.c_str()); //将eni文件名保存到szENIFilename中
 
-        /* build szCommandLine from argument list, skipping executable name */
-        for (nArgc--, ppArgv++; nArgc > 0; nArgc--, ppArgv++) {
-            EC_T_BOOL bIsFileName = EC_FALSE;
+        // -duration
+        dwDuration = FLAGS_duration; // 将duration保存到dwDuration中
 
-            /* insert next argument */
-            OsSnprintf(pcStrCur, nStrRemain - 1, szStrFormat, *ppArgv);
-
-            /* check for file name */
-            if (0 == OsStrcmp(pcStrCur, "-f")) {
-                bIsFileName = EC_TRUE;
-            }
-            /* adjust string cursor */
-            nStrRemain -= (EC_T_INT) OsStrlen(pcStrCur);
-            pcStrCur = pcStrCur + OsStrlen(pcStrCur);
-
-            /* insert space */
-            OsStrncpy(pcStrCur, " ", nStrRemain - 1);
-            nStrRemain--;
-            pcStrCur++;
-
-            if (bIsFileName && (1 < nArgc)) {
-                /* move to next arg (ENI file name) */
-                nArgc--;
-                ppArgv++;
-
-                /* insert quotation mark */
-                OsStrncpy(pcStrCur, "\"", nStrRemain - 1);
-                nStrRemain--;
-                pcStrCur++;
-
-                /* insert ENI file name */
-                OsSnprintf(pcStrCur, nStrRemain - 1, szStrFormat, *ppArgv);
-                nStrRemain -= (EC_T_INT) OsStrlen(pcStrCur);
-                pcStrCur = pcStrCur + OsStrlen(pcStrCur);
-
-                /* insert quotation mark */
-                OsStrncpy(pcStrCur, "\" ", nStrRemain - 1);
-                nStrRemain--;
-                pcStrCur++;
-            }
-        }
-    }
-    /* backup full command line */
-    OsStrncpy(szFullCommandLine, szCommandLine, sizeof(szFullCommandLine) - 1);
-
-    /* parse command line */
-    for (ptcWord = OsStrtok(szCommandLine, " "); ptcWord != EC_NULL;) {
-        if (0 == OsStricmp(ptcWord, "-f")) {
-            EC_T_INT nPtcWordIndex = 3;
-
-            /* Search for the start of the config file name. The config file
-               name may start with quotation marks because of blanks in the filename */
-            while (ptcWord[nPtcWordIndex] != '\0') {
-                if ((ptcWord[nPtcWordIndex] == '\"') || (ptcWord[nPtcWordIndex] != ' ')) {
-                    break;
-                }
-                nPtcWordIndex++;
-            }
-
-            /* Depending of a config file name within quotation marks (or without
-               quotation marks) extract the filename */
-            if (ptcWord[nPtcWordIndex] == '\"') {
-                /* Check if the strtok position is already correct */
-                if (nPtcWordIndex > 3) {
-                    /* More than 1 blank before -f. Correct strtok position. */
-                    OsStrtok(EC_NULL, "\"");
-                }
-
-                /* Now extract the config file name */
-                ptcWord = OsStrtok(EC_NULL, "\"");
-            } else {
-                /* Extract the config file name if it was not set within quotation marks */
-                ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
-            }
-
-            if ((ptcWord == EC_NULL)
-                || (OsStrncmp(ptcWord, "-", 1) == 0)) {
-                nRetVal = SYNTAX_ERROR;
-                goto Exit;
-            }
-            OsSnprintf(szENIFilename, sizeof(szENIFilename) - 1, "%s", ptcWord);
-        } else if (0 == OsStricmp(ptcWord, "-log")) {
-            EC_T_INT nPtcWordIndex = 4;
-
-            /* Search for the start of the config file name. The config file
-               name may start with quotation marks because of blanks in the filename */
-            while (ptcWord[nPtcWordIndex] != '\0') {
-                if ((ptcWord[nPtcWordIndex] == '\"') || (ptcWord[nPtcWordIndex] != ' ')) {
-                    break;
-                }
-                nPtcWordIndex++;
-            }
-
-            /* Depending of a config file name within quotation marks (or without
-               quotation marks) extract the filename */
-            if (ptcWord[nPtcWordIndex] == '\"') {
-                /* Check if the strtok position is already correct */
-                if (nPtcWordIndex > 3) {
-                    /* More than 1 blank before -f. Correct strtok position. */
-                    OsStrtok(EC_NULL, "\"");
-                }
-
-                /* Now extract the config file name */
-                ptcWord = OsStrtok(EC_NULL, "\"");
-            } else {
-                /* Extract the config file name if it was not set within quotation marks */
-                ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
-            }
-
-            if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
-                nRetVal = SYNTAX_ERROR;
-                goto Exit;
-            }
-            OsSnprintf(szLogFilePrefix, sizeof(szLogFilePrefix) - 1, "%s", ptcWord);
-        } else if (OsStricmp(ptcWord, "-t") == 0) {
-            ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
-            if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
-                nRetVal = SYNTAX_ERROR;
-                goto Exit;
-            }
-            dwDuration = OsStrtol(ptcWord, EC_NULL, 0);
-        } else if (OsStricmp(ptcWord, "-auxclk") == 0) {
+        // -cycle
 #if (defined AUXCLOCK_SUPPORTED)
+        if (TimingDesc.bUseAuxClock) {
+            EcLogMsg(EC_LOG_LEVEL_INFO,
+                     (pEcLogContext, EC_LOG_LEVEL_INFO, "Using bus cycle time %d usec from auxclock parameter\n", TimingDesc.dwBusCycleTimeUsec));
+        } else
+#endif
+        {
+            TimingDesc.dwBusCycleTimeUsec = FLAGS_cycle; // 将cycle保存到TimingDesc.dwBusCycleTimeUsec中
+        }
+
+        // -verbose
+        nVerbose = FLAGS_verbose; // 将verbose保存到nVerbose中
+
+        // -cpuidx
+        dwCpuIndex = FLAGS_cpuidx; // 将cpuidx保存到dwCpuIndex中
+
+        // -perf
+        bEnaPerfJobs = FLAGS_perf; // 将perf保存到bEnaPerfJobs中
+
+        // -auxclk
+#if (defined AUXCLOCK_SUPPORTED)
+        if (FLAGS_auxclk != 0) {
             TimingDesc.bUseAuxClock = EC_TRUE;
-            ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
-            if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
-                nRetVal = SYNTAX_ERROR;
-                goto Exit;
-            }
-            TimingDesc.dwBusCycleTimeUsec = OsStrtol(ptcWord, EC_NULL, 0);
+            TimingDesc.dwBusCycleTimeUsec = FLAGS_auxclk; // 将auxclk保存到TimingDesc.dwBusCycleTimeUsec中
             if (TimingDesc.dwBusCycleTimeUsec < 10) {
                 TimingDesc.dwBusCycleTimeUsec = 10;
             }
-#else
-            EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "Auxiliary clock not supported by this operating system!)\n"));
-            goto Exit;
-#endif
-        } else if (OsStricmp(ptcWord, "-b") == 0) {
-#if (defined AUXCLOCK_SUPPORTED)
-            if (TimingDesc.bUseAuxClock) {
-                EcLogMsg(EC_LOG_LEVEL_INFO,
-                         (pEcLogContext, EC_LOG_LEVEL_INFO, "Using bus cycle time %d usec from auxclock parameter\n", TimingDesc.dwBusCycleTimeUsec));
-            } else
-#endif
-            {
-                ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
-                if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
-                    nRetVal = SYNTAX_ERROR;
-                    goto Exit;
-                }
-                TimingDesc.dwBusCycleTimeUsec = OsStrtol(ptcWord, EC_NULL, 0);
-            }
-        } else if (OsStricmp(ptcWord, "-a") == 0) {
-            ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
-            if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
-                nRetVal = SYNTAX_ERROR;
-                goto Exit;
-            }
-            dwCpuIndex = OsStrtol(ptcWord, EC_NULL, 0);
-        } else if (OsStricmp(ptcWord, "-v") == 0) {
-            ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
-            if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
-                nRetVal = SYNTAX_ERROR;
-                goto Exit;
-            }
-            nVerbose = OsStrtol(ptcWord, EC_NULL, 10);
-        } else if (OsStricmp(ptcWord, "-perf") == 0) {
-            bEnaPerfJobs = EC_TRUE;
-        } else if (OsStricmp(ptcWord, "-flash") == 0) {
-            ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
-            if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
-                nRetVal = SYNTAX_ERROR;
-                goto Exit;
-            }
-            nFlashAddress = OsStrtol(ptcWord, EC_NULL, 10);
-        }
-#if (defined ATEMRAS_SERVER)
-        else if (OsStricmp(ptcWord, "-sp") == 0) {
-            ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
-            if ((ptcWord == NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
-                wServerPort = ATEMRAS_DEFAULT_PORT;
-
-                /* optional sub parameter not found, use the current word for the next parameter */
-                bGetNextWord = EC_FALSE;
-            } else {
-                wServerPort = (EC_T_WORD) OsStrtol(ptcWord, EC_NULL, 10);
-            }
-        }
-#endif
-        else if (OsStricmp(ptcWord, "-vlan") == 0) {
-#if (defined VLAN_FRAME_SUPPORT)
-            bVLANEnable = EC_TRUE;
-            ptcWord = GetNextWord((EC_T_CHAR**)&szCommandLine, &tcStorage);
-            if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0))
-            {
-                nRetVal = SYNTAX_ERROR;
-                goto Exit;
-            }
-            wVLANId    = (EC_T_WORD)OsStrtol(ptcWord, EC_NULL, 0);
-            ptcWord = GetNextWord((EC_T_CHAR**)&szCommandLine, &tcStorage);
-            if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0))
-            {
-                nRetVal = SYNTAX_ERROR;
-                goto Exit;
-            }
-            byVLANPrio = (EC_T_BYTE)OsStrtol(ptcWord, EC_NULL, 0);
-#else
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "VLAN is not supported by this version!)\n"));
-            goto Exit;
-#endif
-        } else if (OsStricmp(ptcWord, "-dcmmode") == 0) {
-            /* Extract the config file name if it was not set within quotation marks */
-            ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
-
-            if (OsStricmp(ptcWord, "off") == 0) eDcmMode = eDcmMode_Off;
-            else if (OsStricmp(ptcWord, "busshift") == 0) eDcmMode = eDcmMode_BusShift;
-            else if (OsStricmp(ptcWord, "mastershift") == 0) eDcmMode = eDcmMode_MasterShift;
-            else if (OsStricmp(ptcWord, "masterrefclock") == 0) eDcmMode = eDcmMode_MasterRefClock;
-            else if (OsStricmp(ptcWord, "linklayerrefclock") == 0) eDcmMode = eDcmMode_LinkLayerRefClock;
-#if (defined INCLUDE_DCX)
-            else if (OsStricmp(ptcWord, "dcx") == 0) eDcmMode = eDcmMode_Dcx;
-#endif
-            else {
-                nRetVal = SYNTAX_ERROR;
-                goto Exit;
-            }
-        } else if (OsStricmp(ptcWord, "-ctloff") == 0) {
-            bCtlOff = EC_TRUE;
-        }
-            ///// ROS node insert
-        else if (strstr(ptcWord, "__")) { ;
         } else {
-            EC_T_CHAR *szNextParm = ptcWord;
-            EC_T_DWORD dwNewCycleDurationUsec = 0;
-
-            dwRes = CreateLinkParmsFromCmdLine(&ptcWord, (EC_T_CHAR **) &szCommandLine, &tcStorage, &bGetNextWord,
-                                               &apLinkParms[dwNumLinkLayer]
-#if defined(INCLUDE_TTS)
-                    ,&dwNewCycleDurationUsec
-                    ,&pvTtsCycleEvent
-#endif
-            );
-            if (EC_E_NOERROR != dwRes) {
-                EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "SYNTAX_ERROR: %s!\n", szNextParm));
-                nRetVal = SYNTAX_ERROR;
-                goto Exit;
-            }
-            if (dwNumLinkLayer > 1) {
-                nRetVal = SYNTAX_ERROR;
-                goto Exit;
-            } else {
-#ifdef LINUX
-                EC_CPUSET_ZERO(CpuSet);
-                EC_CPUSET_SET(CpuSet, dwCpuIndex);
-                apLinkParms[dwNumLinkLayer]->dwIstPriority = (CpuSet << 16) | RECV_THREAD_PRIO;
+            TimingDesc.bUseAuxClock = EC_FALSE;
+        }
 #else
-                apLinkParms[dwNumLinkLayer]->dwIstPriority = RECV_THREAD_PRIO;
+        EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "Auxiliary clock not supported by this operating system!)\n"));
+                goto Exit;
 #endif
-                dwNumLinkLayer++;
 
-                if (dwNewCycleDurationUsec != 0) {
-                    TimingDesc.dwBusCycleTimeUsec = dwNewCycleDurationUsec;
-                }
+        // -sp
+#if (defined ATEMRAS_SERVER)
+        wServerPort = FLAGS_sp; // 将sp保存到wServerPort中
+#endif
+
+        // -log
+        OsSnprintf(szLogFilePrefix, sizeof(szLogFilePrefix) - 1, "%s", FLAGS_log.c_str()); // 将prefix保存到szLogFilePrefix中
+
+        // -flash
+        nFlashAddress = FLAGS_flash; // 将flash保存到nFlashAddress中
+
+        // -dcmmode
+        switch (FLAGS_dcmmode) {
+            case 0:
+                eDcmMode = eDcmMode_Off;
+                break;
+            case 1:
+                eDcmMode = eDcmMode_BusShift;
+                break;
+            case 2:
+                eDcmMode = eDcmMode_MasterShift;
+                break;
+            case 3:
+                eDcmMode = eDcmMode_LinkLayerRefClock;
+                break;
+            case 4:
+                eDcmMode = eDcmMode_MasterRefClock;
+                break;
+#if (defined INCLUDE_DCX)
+            case 5:
+                eDcmMode = eDcmMode_Dcx;
+                break;
+#endif
+            default:
+                break;
+        }
+
+        // -ctloff
+        bCtlOff = FLAGS_ctloff; // 将ctloff保存到bCtloff中
+
+        // link layer process
+
+        EC_T_CHAR *szNextParm = ptcWord;
+        EC_T_DWORD dwNewCycleDurationUsec = 0;
+
+        dwRes = CreateLinkParms(FLAGS_link, FLAGS_instance, FLAGS_mode, &apLinkParms[dwNumLinkLayer]);
+        if (EC_E_NOERROR != dwRes) {
+            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "SYNTAX_ERROR: %s!\n", szNextParm));
+            nRetVal = SYNTAX_ERROR;
+            goto Exit;
+        }
+
+        if (dwNumLinkLayer > 1) {
+            nRetVal = SYNTAX_ERROR;
+            goto Exit;
+        } else {
+            EC_CPUSET_ZERO(CpuSet);
+            EC_CPUSET_SET(CpuSet, dwCpuIndex);
+            apLinkParms[dwNumLinkLayer]->dwIstPriority = (CpuSet << 16) | RECV_THREAD_PRIO;
+
+            dwNumLinkLayer++;
+
+            if (dwNewCycleDurationUsec != 0) {
+                TimingDesc.dwBusCycleTimeUsec = dwNewCycleDurationUsec;
             }
         }
-        /* get next word */
-        if (bGetNextWord) {
-            ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
-        }
-        bGetNextWord = EC_TRUE;
+
     }
+
+
+
+//    /* prepare command line */
+//
+//    /* build szCommandLine from argument list */
+//    {
+//        EC_T_CHAR *pcStrCur = szCommandLine;
+//        EC_T_INT nStrRemain = COMMAND_LINE_BUFFER_LENGTH;
+//
+//        EC_T_CHAR szStrFormat[] = "%s";
+//
+//        /* build szCommandLine from argument list, skipping executable name */
+//        for (nArgc--, ppArgv++; nArgc > 0; nArgc--, ppArgv++) {
+//            EC_T_BOOL bIsFileName = EC_FALSE;
+//
+//            /* insert next argument */
+//            OsSnprintf(pcStrCur, nStrRemain - 1, szStrFormat, *ppArgv);
+//
+//            /* check for file name */
+//            if (0 == OsStrcmp(pcStrCur, "-f")) {
+//                bIsFileName = EC_TRUE;
+//            }
+//            /* adjust string cursor */
+//            nStrRemain -= (EC_T_INT) OsStrlen(pcStrCur);
+//            pcStrCur = pcStrCur + OsStrlen(pcStrCur);
+//
+//            /* insert space */
+//            OsStrncpy(pcStrCur, " ", nStrRemain - 1);
+//            nStrRemain--;
+//            pcStrCur++;
+//
+//            if (bIsFileName && (1 < nArgc)) {
+//                /* move to next arg (ENI file name) */
+//                nArgc--;
+//                ppArgv++;
+//
+//                /* insert quotation mark */
+//                OsStrncpy(pcStrCur, "\"", nStrRemain - 1);
+//                nStrRemain--;
+//                pcStrCur++;
+//
+//                /* insert ENI file name */
+//                OsSnprintf(pcStrCur, nStrRemain - 1, szStrFormat, *ppArgv);
+//                nStrRemain -= (EC_T_INT) OsStrlen(pcStrCur);
+//                pcStrCur = pcStrCur + OsStrlen(pcStrCur);
+//
+//                /* insert quotation mark */
+//                OsStrncpy(pcStrCur, "\" ", nStrRemain - 1);
+//                nStrRemain--;
+//                pcStrCur++;
+//            }
+//        }
+//    }
+//    /* backup full command line */
+//    OsStrncpy(szFullCommandLine, szCommandLine, sizeof(szFullCommandLine) - 1);
+//
+//    /* parse command line */
+//    for (ptcWord = OsStrtok(szCommandLine, " ");
+//         ptcWord != EC_NULL;) { // OsStrtok函数其实就是strtok函数，其将szCommandLine按照第二个参数拆分为多个字符串，同时返回第一个字符串指针，原字符串被修改
+//        if (0 == OsStricmp(ptcWord, "-f")) { // OsStricmp函数其实就是stricmp函数，其比较两个字符串是否相等，不区分大小写
+//            EC_T_INT nPtcWordIndex = 3; // 3是因为-f后面有一个空格
+//
+//            /* Search for the start of the config file name. The config file
+//               name may start with quotation marks because of blanks in the filename */
+//            while (ptcWord[nPtcWordIndex] != '\0') {
+//                if ((ptcWord[nPtcWordIndex] == '\"') ||
+//                    (ptcWord[nPtcWordIndex] != ' ')) { //只要“不是空格”或者“是双引号”，说明找到了文件名的开始，跳出循环
+//                    break;
+//                }
+//                nPtcWordIndex++;
+//            }
+//
+//            /* Depending of a config file name within quotation marks (or without
+//               quotation marks) extract the filename */
+//            if (ptcWord[nPtcWordIndex] == '\"') { //如果是双引号，说明文件名是在双引号中的
+//                /* Check if the strtok position is already correct */
+//                if (nPtcWordIndex > 3) {
+//                    /* More than 1 blank before -f. Correct strtok position. */
+//                    OsStrtok(EC_NULL, "\"");
+//                }
+//
+//                /* Now extract the config file name */
+//                ptcWord = OsStrtok(EC_NULL, "\"");
+//            } else { //如果不是双引号，说明文件名是没有双引号的
+//                /* Extract the config file name if it was not set within quotation marks */
+//                ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
+//            }
+//
+//            if ((ptcWord == EC_NULL)
+//                || (OsStrncmp(ptcWord, "-", 1) == 0)) {
+//                nRetVal = SYNTAX_ERROR;
+//                goto Exit;
+//            }
+//            OsSnprintf(szENIFilename, sizeof(szENIFilename) - 1, "%s", ptcWord); //将eni文件名保存到szENIFilename中
+//        } else if (0 == OsStricmp(ptcWord, "-log")) {
+//            EC_T_INT nPtcWordIndex = 4;
+//
+//            /* Search for the start of the config file name. The config file
+//               name may start with quotation marks because of blanks in the filename */
+//            while (ptcWord[nPtcWordIndex] != '\0') {
+//                if ((ptcWord[nPtcWordIndex] == '\"') || (ptcWord[nPtcWordIndex] != ' ')) {
+//                    break;
+//                }
+//                nPtcWordIndex++;
+//            }
+//
+//            /* Depending of a config file name within quotation marks (or without
+//               quotation marks) extract the filename */
+//            if (ptcWord[nPtcWordIndex] == '\"') {
+//                /* Check if the strtok position is already correct */
+//                if (nPtcWordIndex > 3) {
+//                    /* More than 1 blank before -f. Correct strtok position. */
+//                    OsStrtok(EC_NULL, "\"");
+//                }
+//
+//                /* Now extract the config file name */
+//                ptcWord = OsStrtok(EC_NULL, "\"");
+//            } else {
+//                /* Extract the config file name if it was not set within quotation marks */
+//                ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
+//            }
+//
+//            if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
+//                nRetVal = SYNTAX_ERROR;
+//                goto Exit;
+//            }
+//            OsSnprintf(szLogFilePrefix, sizeof(szLogFilePrefix) - 1, "%s", ptcWord); // 将prefix保存到szLogFilePrefix中
+//        } else if (OsStricmp(ptcWord, "-t") == 0) {
+//            ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
+//            if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
+//                nRetVal = SYNTAX_ERROR;
+//                goto Exit;
+//            }
+//            dwDuration = OsStrtol(ptcWord, EC_NULL, 0);
+//        } else if (OsStricmp(ptcWord, "-auxclk") == 0) {
+//#if (defined AUXCLOCK_SUPPORTED)
+//            TimingDesc.bUseAuxClock = EC_TRUE;
+//            ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
+//            if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
+//                nRetVal = SYNTAX_ERROR;
+//                goto Exit;
+//            }
+//            TimingDesc.dwBusCycleTimeUsec = OsStrtol(ptcWord, EC_NULL, 0);
+//            if (TimingDesc.dwBusCycleTimeUsec < 10) {
+//                TimingDesc.dwBusCycleTimeUsec = 10;
+//            }
+//#else
+//            EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "Auxiliary clock not supported by this operating system!)\n"));
+//            goto Exit;
+//#endif
+//        } else if (OsStricmp(ptcWord, "-b") == 0) {
+//#if (defined AUXCLOCK_SUPPORTED)
+//            if (TimingDesc.bUseAuxClock) {
+//                EcLogMsg(EC_LOG_LEVEL_INFO,
+//                         (pEcLogContext, EC_LOG_LEVEL_INFO, "Using bus cycle time %d usec from auxclock parameter\n", TimingDesc.dwBusCycleTimeUsec));
+//            } else
+//#endif
+//            {
+//                ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
+//                if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
+//                    nRetVal = SYNTAX_ERROR;
+//                    goto Exit;
+//                }
+//                TimingDesc.dwBusCycleTimeUsec = OsStrtol(ptcWord, EC_NULL, 0);
+//            }
+//        } else if (OsStricmp(ptcWord, "-a") == 0) {
+//            ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
+//            if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
+//                nRetVal = SYNTAX_ERROR;
+//                goto Exit;
+//            }
+//            dwCpuIndex = OsStrtol(ptcWord, EC_NULL, 0);
+//        } else if (OsStricmp(ptcWord, "-v") == 0) {
+//            ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
+//            if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
+//                nRetVal = SYNTAX_ERROR;
+//                goto Exit;
+//            }
+//            nVerbose = OsStrtol(ptcWord, EC_NULL, 10);
+//        } else if (OsStricmp(ptcWord, "-perf") == 0) {
+//            bEnaPerfJobs = EC_TRUE;
+//        } else if (OsStricmp(ptcWord, "-flash") == 0) {
+//            ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
+//            if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
+//                nRetVal = SYNTAX_ERROR;
+//                goto Exit;
+//            }
+//            nFlashAddress = OsStrtol(ptcWord, EC_NULL, 10);
+//        }
+//#if (defined ATEMRAS_SERVER)
+//        else if (OsStricmp(ptcWord, "-sp") == 0) {
+//            ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
+//            if ((ptcWord == NULL) || (OsStrncmp(ptcWord, "-", 1) == 0)) {
+//                wServerPort = ATEMRAS_DEFAULT_PORT;
+//
+//                /* optional sub parameter not found, use the current word for the next parameter */
+//                bGetNextWord = EC_FALSE;
+//            } else {
+//                wServerPort = (EC_T_WORD) OsStrtol(ptcWord, EC_NULL, 10);
+//            }
+//        }
+//#endif
+//        else if (OsStricmp(ptcWord, "-vlan") == 0) {
+//#if (defined VLAN_FRAME_SUPPORT)
+//            bVLANEnable = EC_TRUE;
+//            ptcWord = GetNextWord((EC_T_CHAR**)&szCommandLine, &tcStorage);
+//            if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0))
+//            {
+//                nRetVal = SYNTAX_ERROR;
+//                goto Exit;
+//            }
+//            wVLANId    = (EC_T_WORD)OsStrtol(ptcWord, EC_NULL, 0);
+//            ptcWord = GetNextWord((EC_T_CHAR**)&szCommandLine, &tcStorage);
+//            if ((ptcWord == EC_NULL) || (OsStrncmp(ptcWord, "-", 1) == 0))
+//            {
+//                nRetVal = SYNTAX_ERROR;
+//                goto Exit;
+//            }
+//            byVLANPrio = (EC_T_BYTE)OsStrtol(ptcWord, EC_NULL, 0);
+//#else
+//            EcLogMsg(EC_LOG_LEVEL_INFO,
+//                     (pEcLogContext, EC_LOG_LEVEL_INFO, "VLAN is not supported by this version!)\n"));
+//            goto Exit;
+//#endif
+//        } else if (OsStricmp(ptcWord, "-dcmmode") == 0) {
+//            /* Extract the config file name if it was not set within quotation marks */
+//            ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
+//
+//            if (OsStricmp(ptcWord, "off") == 0) eDcmMode = eDcmMode_Off;
+//            else if (OsStricmp(ptcWord, "busshift") == 0) eDcmMode = eDcmMode_BusShift;
+//            else if (OsStricmp(ptcWord, "mastershift") == 0) eDcmMode = eDcmMode_MasterShift;
+//            else if (OsStricmp(ptcWord, "masterrefclock") == 0) eDcmMode = eDcmMode_MasterRefClock;
+//            else if (OsStricmp(ptcWord, "linklayerrefclock") == 0) eDcmMode = eDcmMode_LinkLayerRefClock;
+//#if (defined INCLUDE_DCX)
+//            else if (OsStricmp(ptcWord, "dcx") == 0) eDcmMode = eDcmMode_Dcx;
+//#endif
+//            else {
+//                nRetVal = SYNTAX_ERROR;
+//                goto Exit;
+//            }
+//        } else if (OsStricmp(ptcWord, "-ctloff") == 0) {
+//            bCtlOff = EC_TRUE;
+//        }
+//            ///// ROS node insert
+//        else if (strstr(ptcWord, "__")) { ;
+//        } else {
+//            EC_T_CHAR *szNextParm = ptcWord;
+//            EC_T_DWORD dwNewCycleDurationUsec = 0;
+//
+//            dwRes = CreateLinkParmsFromCmdLine(&ptcWord, (EC_T_CHAR **) &szCommandLine, &tcStorage, &bGetNextWord,
+//                                               &apLinkParms[dwNumLinkLayer]
+//#if defined(INCLUDE_TTS)
+//                    ,&dwNewCycleDurationUsec
+//                    ,&pvTtsCycleEvent
+//#endif
+//            );
+//            if (EC_E_NOERROR != dwRes) {
+//                EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "SYNTAX_ERROR: %s!\n", szNextParm));
+//                nRetVal = SYNTAX_ERROR;
+//                goto Exit;
+//            }
+//            if (dwNumLinkLayer > 1) {
+//                nRetVal = SYNTAX_ERROR;
+//                goto Exit;
+//            } else {
+//                EC_CPUSET_ZERO(CpuSet);
+//                EC_CPUSET_SET(CpuSet, dwCpuIndex);
+//                apLinkParms[dwNumLinkLayer]->dwIstPriority = (CpuSet << 16) | RECV_THREAD_PRIO;
+//
+//                dwNumLinkLayer++;
+//
+//                if (dwNewCycleDurationUsec != 0) {
+//                    TimingDesc.dwBusCycleTimeUsec = dwNewCycleDurationUsec;
+//                }
+//            }
+//        }
+//        /* get next word */
+//        if (bGetNextWord) {
+//            ptcWord = GetNextWord((EC_T_CHAR **) &szCommandLine, &tcStorage);
+//        }
+//        bGetNextWord = EC_TRUE;
+//    } // End parse command line
 
 
 

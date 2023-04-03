@@ -22,7 +22,7 @@ email: luoyang@sia.cn
 ]]
 
 cmake_minimum_required(VERSION 3.10)
-project(rocos_ecm VERSION 0.0.3)
+project(rocos_ecm VERSION 0.0.3 DESCRIPTION "ROCOS EtherCAT Master")
 
 # add_compile_options(-std=c++11)
 set(CMAKE_CXX_STANDARD 11)
@@ -48,10 +48,11 @@ find_package(yaml-cpp REQUIRED)
 find_package(Threads REQUIRED)
 
 
-find_package(gflags REQUIRED)
-#add_subdirectory(3rdparty/gflags)
-
-add_subdirectory(3rdparty/glog)
+#find_package(gflags REQUIRED)
+#find_package(glog REQUIRED)
+add_subdirectory(3rdparty/gflags)
+#add_subdirectory(3rdparty/glog)
+add_subdirectory(3rdparty/termcolor)
 
 ###########
 ## Build ##
@@ -95,9 +96,10 @@ target_link_libraries(${PROJECT_NAME}
         dl
         rt
         Threads::Threads
-        gflags
-        glog::glog
+        gflags::gflags
         ecat_config
+        pthread
+        termcolor::termcolor
         )
 
 

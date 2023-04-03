@@ -178,6 +178,9 @@ typedef char TCHAR;
 /*-FUNCTION DECLARATION------------------------------------------------------*/
 EC_T_CHAR* GetNextWord(EC_T_CHAR **ppCmdLine, EC_T_CHAR *pStorage);
 
+//! 自己定义的CreateLinkParms函数
+EC_T_DWORD CreateLinkParms(EC_T_DWORD dwLink, EC_T_DWORD dwInstance, EC_T_DWORD dwMode, EC_T_LINK_PARMS **ppLinkParms);
+
 EC_T_DWORD CreateLinkParmsFromCmdLine(EC_T_CHAR** ptcWord, EC_T_CHAR** lpCmdLine, EC_T_CHAR* tcStorage, EC_T_BOOL* pbGetNextWord, EC_T_LINK_PARMS** ppLinkParms
 #if defined(INCLUDE_TTS)
                                       , EC_T_DWORD* pdwTtsBusCycleUsec /* [out] TTS Bus Cycle overrides original one when TTS is used */

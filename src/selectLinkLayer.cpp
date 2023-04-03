@@ -18,37 +18,30 @@
 *          SYNTAX_ERROR (-2) .
 */
 EC_T_BOOL ParseIpAddress
-(
-    EC_T_CHAR* ptcWord,
-    EC_T_BYTE* pbyIpAddress)
-{
-    EC_T_CHAR* ptcTmp   = EC_NULL;
-    EC_T_INT   nCnt     = 0;
+        (
+                EC_T_CHAR *ptcWord,
+                EC_T_BYTE *pbyIpAddress) {
+    EC_T_CHAR *ptcTmp = EC_NULL;
+    EC_T_INT nCnt = 0;
     EC_T_BOOL bRetVal = EC_TRUE;
 
-    if(EC_NULL == pbyIpAddress )
-    {
+    if (EC_NULL == pbyIpAddress) {
         bRetVal = EC_FALSE;
         goto Exit;
     }
 
     /* Get IP address */
     ptcTmp = ptcWord;
-    for (nCnt = 0; nCnt < 4; nCnt++)
-    {
-        if (ptcTmp == EC_NULL)
-        {
+    for (nCnt = 0; nCnt < 4; nCnt++) {
+        if (ptcTmp == EC_NULL) {
             bRetVal = EC_FALSE;
             goto Exit;
         }
-        pbyIpAddress[nCnt] = (EC_T_BYTE)OsStrtol(ptcTmp, EC_NULL, 10);
-        if(nCnt < 2)
-        {
-            ptcTmp = OsStrtok( EC_NULL, ".");
-        }
-        else if(nCnt < 3)
-        {
-            ptcTmp = OsStrtok( EC_NULL, " ");
+        pbyIpAddress[nCnt] = (EC_T_BYTE) OsStrtol(ptcTmp, EC_NULL, 10);
+        if (nCnt < 2) {
+            ptcTmp = OsStrtok(EC_NULL, ".");
+        } else if (nCnt < 3) {
+            ptcTmp = OsStrtok(EC_NULL, " ");
         }
     }
 
@@ -61,14 +54,13 @@ EC_T_BOOL ParseIpAddress
 *
 * Return: pointer to the next argument.
 */
-EC_T_CHAR* GetNextWord(EC_T_CHAR **ppCmdLine, EC_T_CHAR *pStorage)
-{
+EC_T_CHAR *GetNextWord(EC_T_CHAR **ppCmdLine, EC_T_CHAR *pStorage) {
     EC_T_CHAR *pWord;
 
     EC_UNREFPARM(ppCmdLine);
     EC_UNREFPARM(pStorage);
 
-    pWord = (EC_T_CHAR *)OsStrtok(NULL, " ");
+    pWord = (EC_T_CHAR *) OsStrtok(NULL, " ");
 
     return pWord;
 }
@@ -79,13 +71,11 @@ EC_T_CHAR* GetNextWord(EC_T_CHAR **ppCmdLine, EC_T_CHAR *pStorage)
 \return EC_TRUE if successfully parsed, EC_FALSE on syntax errors.
 */
 static EC_T_BOOL ParseString(
-    EC_T_CHAR**     ptcWord,
-    EC_T_CHAR**     lpCmdLine,
-    EC_T_CHAR*      tcStorage)
-{
+        EC_T_CHAR **ptcWord,
+        EC_T_CHAR **lpCmdLine,
+        EC_T_CHAR *tcStorage) {
     (*ptcWord) = GetNextWord(lpCmdLine, tcStorage);
-    if (((*ptcWord) == EC_NULL) || (OsStrncmp( (*ptcWord), "-", 1) == 0))
-    {
+    if (((*ptcWord) == EC_NULL) || (OsStrncmp((*ptcWord), "-", 1) == 0)) {
         return EC_FALSE;
     }
 
@@ -98,16 +88,14 @@ static EC_T_BOOL ParseString(
 \return EC_TRUE if successfully parsed, EC_FALSE on syntax errors.
 */
 static EC_T_BOOL ParseDword(
-    EC_T_CHAR**     ptcWord,
-    EC_T_CHAR**     lpCmdLine,
-    EC_T_CHAR*      tcStorage,
-    EC_T_DWORD*     pdwValue)
-{
-    if ( !ParseString(ptcWord, lpCmdLine, tcStorage) )
-    {
+        EC_T_CHAR **ptcWord,
+        EC_T_CHAR **lpCmdLine,
+        EC_T_CHAR *tcStorage,
+        EC_T_DWORD *pdwValue) {
+    if (!ParseString(ptcWord, lpCmdLine, tcStorage)) {
         return EC_FALSE;
     }
-    *pdwValue = (EC_T_DWORD)OsStrtol((*ptcWord), NULL, 0);
+    *pdwValue = (EC_T_DWORD) OsStrtol((*ptcWord), NULL, 0);
 
     return EC_TRUE;
 }
@@ -116,39 +104,33 @@ static EC_T_BOOL ParseDword(
 //! \brief  Parses EC_T_LINKMODE parameter value from the command line.
 //! \return EC_TRUE if successfully parsed, EC_FALSE on syntax errors.
 EC_T_BOOL ParseLinkMode(
-    EC_T_CHAR**     ptcWord,
-    EC_T_CHAR**     lpCmdLine,
-    EC_T_CHAR*      tcStorage,
-    EC_T_LINKMODE*  peLinkMode)
-{
+        EC_T_CHAR **ptcWord,
+        EC_T_CHAR **lpCmdLine,
+        EC_T_CHAR *tcStorage,
+        EC_T_LINKMODE *peLinkMode) {
     EC_T_DWORD dwMode = 0;
     EC_T_BOOL bRes = EC_FALSE;
 
-    if (ParseDword(ptcWord, lpCmdLine, tcStorage, &dwMode))
-    {
-        if (dwMode == 0)
-        {
+    if (ParseDword(ptcWord, lpCmdLine, tcStorage, &dwMode)) {
+        if (dwMode == 0) {
             *peLinkMode = EcLinkMode_INTERRUPT;
             bRes = EC_TRUE;
-        }
-        else if (dwMode == 1)
-        {
+        } else if (dwMode == 1) {
             *peLinkMode = EcLinkMode_POLLING;
             bRes = EC_TRUE;
-        }
-        else
-        {
-            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "Invalid Link Layer Mode (mode == %d)\n", dwMode));
+        } else {
+            EcLogMsg(EC_LOG_LEVEL_ERROR,
+                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "Invalid Link Layer Mode (mode == %d)\n", dwMode));
         }
     }
     return bRes;
 }
 
 //! \brief  Fill common link layer parameters
-static EC_T_VOID LinkParmsInit(EC_T_LINK_PARMS* pLinkParms,
-                               const EC_T_DWORD dwSignature, const EC_T_DWORD dwSize, const char* szDriverIdent,
-                               const EC_T_DWORD dwInstance, const EC_T_LINKMODE eLinkMode, const EC_T_DWORD dwIstPriority = 0)
-{
+static EC_T_VOID LinkParmsInit(EC_T_LINK_PARMS *pLinkParms,
+                               const EC_T_DWORD dwSignature, const EC_T_DWORD dwSize, const char *szDriverIdent,
+                               const EC_T_DWORD dwInstance, const EC_T_LINKMODE eLinkMode,
+                               const EC_T_DWORD dwIstPriority = 0) {
     OsMemset(pLinkParms, 0, sizeof(EC_T_LINK_PARMS));
     pLinkParms->dwSignature = dwSignature;
     pLinkParms->dwSize = dwSize;
@@ -212,44 +194,39 @@ Exit:
 //! EC_E_NOTFOUND    if command line was not matching\n
 //! EC_E_INVALIDPARM if syntax error
 
-static EC_T_DWORD CreateLinkParmsFromCmdLineAlteraTse(EC_T_CHAR** ptcWord,
-    EC_T_CHAR** lpCmdLine, EC_T_CHAR* tcStorage,
-    EC_T_BOOL*  pbGetNextWord,
-    EC_T_LINK_PARMS** ppLinkParms
-)
-{
+static EC_T_DWORD CreateLinkParmsFromCmdLineAlteraTse(EC_T_CHAR **ptcWord,
+                                                      EC_T_CHAR **lpCmdLine, EC_T_CHAR *tcStorage,
+                                                      EC_T_BOOL *pbGetNextWord,
+                                                      EC_T_LINK_PARMS **ppLinkParms
+) {
     EC_T_DWORD dwRetVal = EC_E_ERROR;
-    EC_T_LINK_PARMS_ALTERATSE* pLinkParmsAdapter = EC_NULL;
+    EC_T_LINK_PARMS_ALTERATSE *pLinkParmsAdapter = EC_NULL;
 
     EC_UNREFPARM(pbGetNextWord);
 
     /* check for matching adapter */
-    if (OsStricmp((*ptcWord), "-alteratse") != 0)
-    {
+    if (OsStricmp((*ptcWord), "-alteratse") != 0) {
         dwRetVal = EC_E_NOTFOUND;
         goto Exit;
     }
     /* alloc adapter specific link parms */
-    pLinkParmsAdapter = (EC_T_LINK_PARMS_ALTERATSE*)OsMalloc(sizeof(EC_T_LINK_PARMS_ALTERATSE));
-    if (EC_NULL == pLinkParmsAdapter)
-    {
+    pLinkParmsAdapter = (EC_T_LINK_PARMS_ALTERATSE *) OsMalloc(sizeof(EC_T_LINK_PARMS_ALTERATSE));
+    if (EC_NULL == pLinkParmsAdapter) {
         dwRetVal = EC_E_NOMEMORY;
         goto Exit;
     }
     OsMemset(pLinkParmsAdapter, 0, sizeof(EC_T_LINK_PARMS_ALTERATSE));
     LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_ALTERATSE,
-        sizeof(EC_T_LINK_PARMS_ALTERATSE), EC_LINK_PARMS_IDENT_ALTERATSE, 1, EcLinkMode_POLLING);
+                  sizeof(EC_T_LINK_PARMS_ALTERATSE), EC_LINK_PARMS_IDENT_ALTERATSE, 1, EcLinkMode_POLLING);
 
     if (!ParseDword(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.dwInstance)
         || !ParseLinkMode(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.eLinkMode)
-        )
-    {
+            ) {
         dwRetVal = EC_E_INVALIDPARM;
         goto Exit;
     }
 
-    if (pLinkParmsAdapter->linkParms.dwInstance <= 1 || pLinkParmsAdapter->linkParms.dwInstance > 2)
-    {
+    if (pLinkParmsAdapter->linkParms.dwInstance <= 1 || pLinkParmsAdapter->linkParms.dwInstance > 2) {
         EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "Port number must be between 1 and 2\n"));
         dwRetVal = EC_E_INVALIDPARM;
         goto Exit;
@@ -266,48 +243,47 @@ static EC_T_DWORD CreateLinkParmsFromCmdLineAlteraTse(EC_T_CHAR** ptcWord,
     *ppLinkParms = &pLinkParmsAdapter->linkParms;
     dwRetVal = EC_E_NOERROR;
 
-Exit:
-    if (EC_E_NOERROR != dwRetVal)
-    {
+    Exit:
+    if (EC_E_NOERROR != dwRetVal) {
         SafeOsFree(pLinkParmsAdapter);
     }
     return dwRetVal;
 }
+
 #endif /* INCLUDE_EMLLALTERATSE */
 
 #if (defined INCLUDE_EMLLCCAT)
+
 //! \brief  Try to create CCAT link layer parameters according to current command line parsing
 //! \return EC_E_NOERROR     if link layer parameters was created\n
 //!        EC_E_NOTFOUND    if command line was not matching\n
 //!        EC_E_INVALIDPARM if syntax error
-static EC_T_DWORD CreateLinkParmsFromCmdLineCCAT(EC_T_CHAR** ptcWord, EC_T_CHAR** lpCmdLine, EC_T_CHAR* tcStorage, EC_T_BOOL* pbGetNextWord,
-                                                 EC_T_LINK_PARMS** ppLinkParms)
-{
-EC_T_DWORD dwRetVal = EC_E_ERROR;
-EC_T_LINK_PARMS_CCAT* pLinkParmsAdapter = EC_NULL;
+static EC_T_DWORD CreateLinkParmsFromCmdLineCCAT(EC_T_CHAR **ptcWord, EC_T_CHAR **lpCmdLine, EC_T_CHAR *tcStorage,
+                                                 EC_T_BOOL *pbGetNextWord,
+                                                 EC_T_LINK_PARMS **ppLinkParms) {
+    EC_T_DWORD dwRetVal = EC_E_ERROR;
+    EC_T_LINK_PARMS_CCAT *pLinkParmsAdapter = EC_NULL;
 
     EC_UNREFPARM(pbGetNextWord);
 
     /* check for matching adapter */
-    if (OsStricmp((*ptcWord), "-ccat") != 0)
-    {
+    if (OsStricmp((*ptcWord), "-ccat") != 0) {
         dwRetVal = EC_E_NOTFOUND;
         goto Exit;
     }
     /* alloc adapter specific link parms */
-    pLinkParmsAdapter = (EC_T_LINK_PARMS_CCAT*)OsMalloc(sizeof(EC_T_LINK_PARMS_CCAT));
-    if (EC_NULL == pLinkParmsAdapter)
-    {
+    pLinkParmsAdapter = (EC_T_LINK_PARMS_CCAT *) OsMalloc(sizeof(EC_T_LINK_PARMS_CCAT));
+    if (EC_NULL == pLinkParmsAdapter) {
         dwRetVal = EC_E_NOMEMORY;
         goto Exit;
     }
     OsMemset(pLinkParmsAdapter, 0, sizeof(EC_T_LINK_PARMS_CCAT));
-    LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_CCAT, sizeof(EC_T_LINK_PARMS_CCAT), EC_LINK_PARMS_IDENT_CCAT, 1, EcLinkMode_POLLING);
+    LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_CCAT, sizeof(EC_T_LINK_PARMS_CCAT),
+                  EC_LINK_PARMS_IDENT_CCAT, 1, EcLinkMode_POLLING);
 
     /* parse mandatory parameters: instance, mode */
-    if ( !ParseDword(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.dwInstance)
-        || !ParseLinkMode(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.eLinkMode))
-    {
+    if (!ParseDword(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.dwInstance)
+        || !ParseLinkMode(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.eLinkMode)) {
         dwRetVal = EC_E_INVALIDPARM;
         goto Exit;
     }
@@ -327,13 +303,13 @@ EC_T_LINK_PARMS_CCAT* pLinkParmsAdapter = EC_NULL;
     *ppLinkParms = &pLinkParmsAdapter->linkParms;
     dwRetVal = EC_E_NOERROR;
 
-Exit:
-    if (EC_E_NOERROR != dwRetVal)
-    {
+    Exit:
+    if (EC_E_NOERROR != dwRetVal) {
         SafeOsFree(pLinkParmsAdapter);
     }
     return dwRetVal;
 }
+
 #endif /* INCLUDE_EMLLCCAT */
 
 #if (defined INCLUDE_EMLLCPSW)
@@ -794,34 +770,32 @@ Exit:
 EC_E_NOTFOUND    if command line was not matching
 EC_E_INVALIDPARM if syntax error
 */
-static EC_T_DWORD CreateLinkParmsFromCmdLineEG20T(EC_T_CHAR** ptcWord, EC_T_CHAR** lpCmdLine, EC_T_CHAR* tcStorage, EC_T_BOOL* pbGetNextWord,
-    EC_T_LINK_PARMS** ppLinkParms)
-{
+static EC_T_DWORD CreateLinkParmsFromCmdLineEG20T(EC_T_CHAR **ptcWord, EC_T_CHAR **lpCmdLine, EC_T_CHAR *tcStorage,
+                                                  EC_T_BOOL *pbGetNextWord,
+                                                  EC_T_LINK_PARMS **ppLinkParms) {
     EC_T_DWORD dwRetVal = EC_E_ERROR;
-    EC_T_LINK_PARMS_EG20T* pLinkParmsAdapter = EC_NULL;
+    EC_T_LINK_PARMS_EG20T *pLinkParmsAdapter = EC_NULL;
 
     EC_UNREFPARM(pbGetNextWord);
 
     /* check for matching adapter */
-    if (OsStricmp((*ptcWord), "-eg20t") != 0)
-    {
+    if (OsStricmp((*ptcWord), "-eg20t") != 0) {
         dwRetVal = EC_E_NOTFOUND;
         goto Exit;
     }
     /* alloc adapter specific link parms */
-    pLinkParmsAdapter = (EC_T_LINK_PARMS_EG20T*)OsMalloc(sizeof(EC_T_LINK_PARMS_EG20T));
-    if (EC_NULL == pLinkParmsAdapter)
-    {
+    pLinkParmsAdapter = (EC_T_LINK_PARMS_EG20T *) OsMalloc(sizeof(EC_T_LINK_PARMS_EG20T));
+    if (EC_NULL == pLinkParmsAdapter) {
         dwRetVal = EC_E_NOMEMORY;
         goto Exit;
     }
     OsMemset(pLinkParmsAdapter, 0, sizeof(EC_T_LINK_PARMS_CCAT));
-    LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_EG20T, sizeof(EC_T_LINK_PARMS_EG20T), EC_LINK_PARMS_IDENT_EG20T, 1, EcLinkMode_POLLING);
+    LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_EG20T, sizeof(EC_T_LINK_PARMS_EG20T),
+                  EC_LINK_PARMS_IDENT_EG20T, 1, EcLinkMode_POLLING);
 
     /* parse mandatory parameters: instance, mode */
     if (!ParseDword(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.dwInstance)
-        || !ParseLinkMode(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.eLinkMode))
-    {
+        || !ParseLinkMode(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.eLinkMode)) {
         dwRetVal = EC_E_INVALIDPARM;
         goto Exit;
     }
@@ -829,13 +803,13 @@ static EC_T_DWORD CreateLinkParmsFromCmdLineEG20T(EC_T_CHAR** ptcWord, EC_T_CHAR
     *ppLinkParms = &pLinkParmsAdapter->linkParms;
     dwRetVal = EC_E_NOERROR;
 
-Exit:
-    if (EC_E_NOERROR != dwRetVal)
-    {
+    Exit:
+    if (EC_E_NOERROR != dwRetVal) {
         SafeOsFree(pLinkParmsAdapter);
     }
     return dwRetVal;
 }
+
 #endif /* INCLUDE_EMLLEG20T */
 
 #if (defined INCLUDE_EMLLEMAC)
@@ -1582,12 +1556,12 @@ EC_T_DWORD dwUseGmiiToRgmiiConv = 0;
         break;
     case 3:
     case 4:
-    	pLinkParmsAdapter->dwPhyAddr = 12;
-    	pLinkParmsAdapter->eRxSource = eGemRxSource_MIO;
-		pLinkParmsAdapter->eGemType = eGemType_ZynqUltrascale;
-		break;
+        pLinkParmsAdapter->dwPhyAddr = 12;
+        pLinkParmsAdapter->eRxSource = eGemRxSource_MIO;
+        pLinkParmsAdapter->eGemType = eGemType_ZynqUltrascale;
+        break;
     default:
-    	break;
+        break;
     }
     dwUseGmiiToRgmiiConv = EC_FALSE;
     pLinkParmsAdapter->dwConvPhyAddr = 0;
@@ -1596,50 +1570,50 @@ EC_T_DWORD dwUseGmiiToRgmiiConv = 0;
     (*ptcWord) = GetNextWord(lpCmdLine, tcStorage);
     if (EC_NULL == *ptcWord)
     {
-    	/* nothing to do */
+        /* nothing to do */
     }
     else if (0 == OsStricmp((*ptcWord), "microzed"))
-	{
-		pLinkParmsAdapter->dwPhyAddr = 4;
-		pLinkParmsAdapter->eRxSource = eGemRxSource_MIO;
-	}
+    {
+        pLinkParmsAdapter->dwPhyAddr = 4;
+        pLinkParmsAdapter->eRxSource = eGemRxSource_MIO;
+    }
     else if (0 == OsStricmp((*ptcWord), "zedboard"))
-	{
-    	pLinkParmsAdapter->dwPhyAddr = 0;
-    	pLinkParmsAdapter->eRxSource = eGemRxSource_MIO;
+    {
+        pLinkParmsAdapter->dwPhyAddr = 0;
+        pLinkParmsAdapter->eRxSource = eGemRxSource_MIO;
     }
     else if (0 == OsStricmp((*ptcWord), "zc702"))
-	{
-		pLinkParmsAdapter->dwPhyAddr = 7;
-		pLinkParmsAdapter->eRxSource = eGemRxSource_MIO;
-	}
-	else if ((0 == OsStricmp((*ptcWord), "zcu102")) || (0 == OsStricmp((*ptcWord), "zcu104")))
-	{
-		pLinkParmsAdapter->dwPhyAddr = 12;
-		pLinkParmsAdapter->eRxSource = eGemRxSource_MIO;
-		pLinkParmsAdapter->eGemType = eGemType_ZynqUltrascale;
-	}
+    {
+        pLinkParmsAdapter->dwPhyAddr = 7;
+        pLinkParmsAdapter->eRxSource = eGemRxSource_MIO;
+    }
+    else if ((0 == OsStricmp((*ptcWord), "zcu102")) || (0 == OsStricmp((*ptcWord), "zcu104")))
+    {
+        pLinkParmsAdapter->dwPhyAddr = 12;
+        pLinkParmsAdapter->eRxSource = eGemRxSource_MIO;
+        pLinkParmsAdapter->eGemType = eGemType_ZynqUltrascale;
+    }
     else if (0 == OsStricmp((*ptcWord), "custom"))
-	{
-		/* parse optional parameters or use default values */
-		if (!ParseDword(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->dwPhyAddr)
-		 || !ParseDword(ptcWord, lpCmdLine, tcStorage, (EC_T_DWORD*)&pLinkParmsAdapter->eRxSource)
-		 || !ParseDword(ptcWord, lpCmdLine, tcStorage, &dwUseGmiiToRgmiiConv)
-		 || !ParseDword(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->dwConvPhyAddr)
-		 || !ParseGEMType(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->eGemType))
-		{
-			if (EC_NULL != pbGetNextWord)
-			{
-				*pbGetNextWord = EC_FALSE;
-			}
-		}
-	}
+    {
+        /* parse optional parameters or use default values */
+        if (!ParseDword(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->dwPhyAddr)
+         || !ParseDword(ptcWord, lpCmdLine, tcStorage, (EC_T_DWORD*)&pLinkParmsAdapter->eRxSource)
+         || !ParseDword(ptcWord, lpCmdLine, tcStorage, &dwUseGmiiToRgmiiConv)
+         || !ParseDword(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->dwConvPhyAddr)
+         || !ParseGEMType(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->eGemType))
+        {
+            if (EC_NULL != pbGetNextWord)
+            {
+                *pbGetNextWord = EC_FALSE;
+            }
+        }
+    }
     else
     {
-    	if (EC_NULL != pbGetNextWord)
-    	{
-    		*pbGetNextWord = EC_FALSE;
-    	}
+        if (EC_NULL != pbGetNextWord)
+        {
+            *pbGetNextWord = EC_FALSE;
+        }
     }
     pLinkParmsAdapter->bUseGmiiToRgmiiConv = (EC_T_BOOL)dwUseGmiiToRgmiiConv;
     pLinkParmsAdapter->dwRxInterrupt = pLinkParmsAdapter->linkParms.dwInstance - 1;
@@ -1668,34 +1642,32 @@ Exit:
         EC_E_NOTFOUND    if command line was not matching
         EC_E_INVALIDPARM if syntax error
 */
-static EC_T_DWORD CreateLinkParmsFromCmdLineI8254x(EC_T_CHAR** ptcWord, EC_T_CHAR** lpCmdLine, EC_T_CHAR* tcStorage, EC_T_BOOL* pbGetNextWord,
-                                                   EC_T_LINK_PARMS** ppLinkParms)
-{
-EC_T_DWORD dwRetVal = EC_E_ERROR;
-EC_T_LINK_PARMS_I8254X* pLinkParmsAdapter = EC_NULL;
+static EC_T_DWORD CreateLinkParmsFromCmdLineI8254x(EC_T_CHAR **ptcWord, EC_T_CHAR **lpCmdLine, EC_T_CHAR *tcStorage,
+                                                   EC_T_BOOL *pbGetNextWord,
+                                                   EC_T_LINK_PARMS **ppLinkParms) {
+    EC_T_DWORD dwRetVal = EC_E_ERROR;
+    EC_T_LINK_PARMS_I8254X *pLinkParmsAdapter = EC_NULL;
 
     EC_UNREFPARM(pbGetNextWord);
 
     /* check for matching adapter */
-    if (OsStricmp((*ptcWord), "-i8254x") != 0)
-    {
+    if (OsStricmp((*ptcWord), "-i8254x") != 0) {
         dwRetVal = EC_E_NOTFOUND;
         goto Exit;
     }
     /* alloc adapter specific link parms */
-    pLinkParmsAdapter = (EC_T_LINK_PARMS_I8254X*)OsMalloc(sizeof(EC_T_LINK_PARMS_I8254X));
-    if (EC_NULL == pLinkParmsAdapter)
-    {
+    pLinkParmsAdapter = (EC_T_LINK_PARMS_I8254X *) OsMalloc(sizeof(EC_T_LINK_PARMS_I8254X));
+    if (EC_NULL == pLinkParmsAdapter) {
         dwRetVal = EC_E_NOMEMORY;
         goto Exit;
     }
     OsMemset(pLinkParmsAdapter, 0, sizeof(EC_T_LINK_PARMS_I8254X));
-    LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_I8254X, sizeof(EC_T_LINK_PARMS_I8254X), EC_LINK_PARMS_IDENT_I8254X, 1, EcLinkMode_POLLING);
+    LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_I8254X, sizeof(EC_T_LINK_PARMS_I8254X),
+                  EC_LINK_PARMS_IDENT_I8254X, 1, EcLinkMode_POLLING);
 
     /* parse mandatory parameters: instance, mode */
-    if ( !ParseDword(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.dwInstance)
-        || !ParseLinkMode(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.eLinkMode))
-    {
+    if (!ParseDword(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.dwInstance)
+        || !ParseLinkMode(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.eLinkMode)) {
         dwRetVal = EC_E_INVALIDPARM;
         goto Exit;
     }
@@ -1710,13 +1682,44 @@ EC_T_LINK_PARMS_I8254X* pLinkParmsAdapter = EC_NULL;
     *ppLinkParms = &pLinkParmsAdapter->linkParms;
     dwRetVal = EC_E_NOERROR;
 
-Exit:
-    if (EC_E_NOERROR != dwRetVal)
-    {
+    Exit:
+    if (EC_E_NOERROR != dwRetVal) {
         SafeOsFree(pLinkParmsAdapter);
     }
     return dwRetVal;
 }
+
+
+static EC_T_DWORD
+CreateLinkParmsI8254x(EC_T_DWORD dwInstance, EC_T_DWORD dwMode, EC_T_LINK_PARMS **ppLinkParms) {
+    EC_T_DWORD dwRetVal = EC_E_ERROR;
+    EC_T_LINK_PARMS_I8254X *pLinkParmsAdapter = EC_NULL;
+
+    /* alloc adapter specific link parms */
+    pLinkParmsAdapter = (EC_T_LINK_PARMS_I8254X *) OsMalloc(sizeof(EC_T_LINK_PARMS_I8254X));
+    if (EC_NULL == pLinkParmsAdapter) {
+        dwRetVal = EC_E_NOMEMORY;
+        goto Exit;
+    }
+    OsMemset(pLinkParmsAdapter, 0, sizeof(EC_T_LINK_PARMS_I8254X));
+    LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_I8254X, sizeof(EC_T_LINK_PARMS_I8254X),
+                  EC_LINK_PARMS_IDENT_I8254X, 1, EcLinkMode_POLLING);
+
+    pLinkParmsAdapter->linkParms.dwInstance = dwInstance;
+    pLinkParmsAdapter->linkParms.eLinkMode = dwMode == 0 ? EcLinkMode_INTERRUPT : EcLinkMode_POLLING;
+
+    /* no errors */
+    *ppLinkParms = &pLinkParmsAdapter->linkParms;
+    dwRetVal = EC_E_NOERROR;
+
+    Exit:
+    if (EC_E_NOERROR != dwRetVal) {
+        SafeOsFree(pLinkParmsAdapter);
+    }
+    return dwRetVal;
+}
+
+
 #endif /* INCLUDE_EMLLI8254X */
 
 #if (defined INCLUDE_EMLLI8255X)
@@ -1728,34 +1731,32 @@ Exit:
         EC_E_NOTFOUND    if command line was not matching
         EC_E_INVALIDPARM if syntax error
 */
-static EC_T_DWORD CreateLinkParmsFromCmdLineI8255x(EC_T_CHAR** ptcWord, EC_T_CHAR** lpCmdLine, EC_T_CHAR* tcStorage, EC_T_BOOL* pbGetNextWord,
-                                                   EC_T_LINK_PARMS** ppLinkParms)
-{
-EC_T_DWORD dwRetVal = EC_E_ERROR;
-EC_T_LINK_PARMS_I8255X* pLinkParmsAdapter = EC_NULL;
+static EC_T_DWORD CreateLinkParmsFromCmdLineI8255x(EC_T_CHAR **ptcWord, EC_T_CHAR **lpCmdLine, EC_T_CHAR *tcStorage,
+                                                   EC_T_BOOL *pbGetNextWord,
+                                                   EC_T_LINK_PARMS **ppLinkParms) {
+    EC_T_DWORD dwRetVal = EC_E_ERROR;
+    EC_T_LINK_PARMS_I8255X *pLinkParmsAdapter = EC_NULL;
 
     EC_UNREFPARM(pbGetNextWord);
 
     /* check for matching adapter */
-    if (OsStricmp((*ptcWord), "-i8255x") != 0)
-    {
+    if (OsStricmp((*ptcWord), "-i8255x") != 0) {
         dwRetVal = EC_E_NOTFOUND;
         goto Exit;
     }
     /* alloc adapter specific link parms */
-    pLinkParmsAdapter = (EC_T_LINK_PARMS_I8255X*)OsMalloc(sizeof(EC_T_LINK_PARMS_I8255X));
-    if (EC_NULL == pLinkParmsAdapter)
-    {
+    pLinkParmsAdapter = (EC_T_LINK_PARMS_I8255X *) OsMalloc(sizeof(EC_T_LINK_PARMS_I8255X));
+    if (EC_NULL == pLinkParmsAdapter) {
         dwRetVal = EC_E_NOMEMORY;
         goto Exit;
     }
     OsMemset(pLinkParmsAdapter, 0, sizeof(EC_T_LINK_PARMS_I8255X));
-    LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_I8255X, sizeof(EC_T_LINK_PARMS_I8255X), EC_LINK_PARMS_IDENT_I8255X, 1, EcLinkMode_POLLING);
+    LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_I8255X, sizeof(EC_T_LINK_PARMS_I8255X),
+                  EC_LINK_PARMS_IDENT_I8255X, 1, EcLinkMode_POLLING);
 
     /* parse mandatory parameters: instance, mode */
-    if ( !ParseDword(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.dwInstance)
-        || !ParseLinkMode(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.eLinkMode))
-    {
+    if (!ParseDword(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.dwInstance)
+        || !ParseLinkMode(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.eLinkMode)) {
         dwRetVal = EC_E_INVALIDPARM;
         goto Exit;
     }
@@ -1763,13 +1764,42 @@ EC_T_LINK_PARMS_I8255X* pLinkParmsAdapter = EC_NULL;
     *ppLinkParms = &pLinkParmsAdapter->linkParms;
     dwRetVal = EC_E_NOERROR;
 
-Exit:
-    if (EC_E_NOERROR != dwRetVal)
-    {
+    Exit:
+    if (EC_E_NOERROR != dwRetVal) {
         SafeOsFree(pLinkParmsAdapter);
     }
     return dwRetVal;
 }
+
+static EC_T_DWORD
+CreateLinkParmsI8255x(EC_T_DWORD dwInstance, EC_T_DWORD dwMode, EC_T_LINK_PARMS **ppLinkParms) {
+    EC_T_DWORD dwRetVal = EC_E_ERROR;
+    EC_T_LINK_PARMS_I8255X *pLinkParmsAdapter = EC_NULL;
+
+    /* alloc adapter specific link parms */
+    pLinkParmsAdapter = (EC_T_LINK_PARMS_I8255X *) OsMalloc(sizeof(EC_T_LINK_PARMS_I8255X));
+    if (EC_NULL == pLinkParmsAdapter) {
+        dwRetVal = EC_E_NOMEMORY;
+        goto Exit;
+    }
+    OsMemset(pLinkParmsAdapter, 0, sizeof(EC_T_LINK_PARMS_I8255X));
+    LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_I8255X, sizeof(EC_T_LINK_PARMS_I8255X),
+                  EC_LINK_PARMS_IDENT_I8255X, 1, EcLinkMode_POLLING);
+
+    pLinkParmsAdapter->linkParms.dwInstance = dwInstance;
+    pLinkParmsAdapter->linkParms.eLinkMode = dwMode == 0 ? EcLinkMode_INTERRUPT : EcLinkMode_POLLING;
+
+    /* no errors */
+    *ppLinkParms = &pLinkParmsAdapter->linkParms;
+    dwRetVal = EC_E_NOERROR;
+
+    Exit:
+    if (EC_E_NOERROR != dwRetVal) {
+        SafeOsFree(pLinkParmsAdapter);
+    }
+    return dwRetVal;
+}
+
 #endif /* INCLUDE_EMLLI8255X */
 
 #if (defined INCLUDE_EMLLICSS)
@@ -2200,34 +2230,32 @@ Exit:
         EC_E_NOTFOUND    if command line was not matching
         EC_E_INVALIDPARM if syntax error
 */
-static EC_T_DWORD CreateLinkParmsFromCmdLineRTL8139(EC_T_CHAR** ptcWord, EC_T_CHAR** lpCmdLine, EC_T_CHAR* tcStorage, EC_T_BOOL* pbGetNextWord,
-                                                    EC_T_LINK_PARMS** ppLinkParms)
-{
-EC_T_DWORD dwRetVal = EC_E_ERROR;
-EC_T_LINK_PARMS_RTL8139* pLinkParmsAdapter = EC_NULL;
+static EC_T_DWORD CreateLinkParmsFromCmdLineRTL8139(EC_T_CHAR **ptcWord, EC_T_CHAR **lpCmdLine, EC_T_CHAR *tcStorage,
+                                                    EC_T_BOOL *pbGetNextWord,
+                                                    EC_T_LINK_PARMS **ppLinkParms) {
+    EC_T_DWORD dwRetVal = EC_E_ERROR;
+    EC_T_LINK_PARMS_RTL8139 *pLinkParmsAdapter = EC_NULL;
 
     EC_UNREFPARM(pbGetNextWord);
 
     /* check for matching adapter */
-    if (OsStricmp((*ptcWord), "-rtl8139") != 0)
-    {
+    if (OsStricmp((*ptcWord), "-rtl8139") != 0) {
         dwRetVal = EC_E_NOTFOUND;
         goto Exit;
     }
     /* alloc adapter specific link parms */
-    pLinkParmsAdapter = (EC_T_LINK_PARMS_RTL8139*)OsMalloc(sizeof(EC_T_LINK_PARMS_RTL8139));
-    if (EC_NULL == pLinkParmsAdapter)
-    {
+    pLinkParmsAdapter = (EC_T_LINK_PARMS_RTL8139 *) OsMalloc(sizeof(EC_T_LINK_PARMS_RTL8139));
+    if (EC_NULL == pLinkParmsAdapter) {
         dwRetVal = EC_E_NOMEMORY;
         goto Exit;
     }
     OsMemset(pLinkParmsAdapter, 0, sizeof(EC_T_LINK_PARMS_RTL8139));
-    LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_RTL8139, sizeof(EC_T_LINK_PARMS_RTL8139), EC_LINK_PARMS_IDENT_RTL8139, 1, EcLinkMode_POLLING);
+    LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_RTL8139, sizeof(EC_T_LINK_PARMS_RTL8139),
+                  EC_LINK_PARMS_IDENT_RTL8139, 1, EcLinkMode_POLLING);
 
     /* parse mandatory parameters: instance, mode */
-    if ( !ParseDword(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.dwInstance)
-        || !ParseLinkMode(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.eLinkMode))
-    {
+    if (!ParseDword(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.dwInstance)
+        || !ParseLinkMode(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.eLinkMode)) {
         dwRetVal = EC_E_INVALIDPARM;
         goto Exit;
     }
@@ -2235,13 +2263,13 @@ EC_T_LINK_PARMS_RTL8139* pLinkParmsAdapter = EC_NULL;
     *ppLinkParms = &pLinkParmsAdapter->linkParms;
     dwRetVal = EC_E_NOERROR;
 
-Exit:
-    if (EC_E_NOERROR != dwRetVal)
-    {
+    Exit:
+    if (EC_E_NOERROR != dwRetVal) {
         SafeOsFree(pLinkParmsAdapter);
     }
     return dwRetVal;
 }
+
 #endif /* INCLUDE_EMLLRTL8139 */
 
 #if (defined INCLUDE_EMLLRTL8169)
@@ -2253,33 +2281,31 @@ Exit:
         EC_E_NOTFOUND    if command line was not matching
         EC_E_INVALIDPARM if syntax error
 */
-static EC_T_DWORD CreateLinkParmsFromCmdLineRTL8169(EC_T_CHAR** ptcWord, EC_T_CHAR** lpCmdLine, EC_T_CHAR* tcStorage, EC_T_BOOL* pbGetNextWord,
-                                                    EC_T_LINK_PARMS** ppLinkParms)
-{
-EC_T_DWORD dwRetVal = EC_E_ERROR;
-EC_T_LINK_PARMS_RTL8169* pLinkParmsAdapter = EC_NULL;
+static EC_T_DWORD CreateLinkParmsFromCmdLineRTL8169(EC_T_CHAR **ptcWord, EC_T_CHAR **lpCmdLine, EC_T_CHAR *tcStorage,
+                                                    EC_T_BOOL *pbGetNextWord,
+                                                    EC_T_LINK_PARMS **ppLinkParms) {
+    EC_T_DWORD dwRetVal = EC_E_ERROR;
+    EC_T_LINK_PARMS_RTL8169 *pLinkParmsAdapter = EC_NULL;
 
     EC_UNREFPARM(pbGetNextWord);
 
     /* check for matching adapter */
-    if (OsStricmp((*ptcWord), "-rtl8169") != 0)
-    {
+    if (OsStricmp((*ptcWord), "-rtl8169") != 0) {
         dwRetVal = EC_E_NOTFOUND;
         goto Exit;
     }
     /* alloc adapter specific link parms */
-    pLinkParmsAdapter = (EC_T_LINK_PARMS_RTL8169*)OsMalloc(sizeof(EC_T_LINK_PARMS_RTL8169));
-    if (EC_NULL == pLinkParmsAdapter)
-    {
+    pLinkParmsAdapter = (EC_T_LINK_PARMS_RTL8169 *) OsMalloc(sizeof(EC_T_LINK_PARMS_RTL8169));
+    if (EC_NULL == pLinkParmsAdapter) {
         dwRetVal = EC_E_NOMEMORY;
         goto Exit;
     }
     OsMemset(pLinkParmsAdapter, 0, sizeof(EC_T_LINK_PARMS_RTL8169));
-    LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_RTL8169, sizeof(EC_T_LINK_PARMS_RTL8169), EC_LINK_PARMS_IDENT_RTL8169, 1, EcLinkMode_POLLING);
+    LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_RTL8169, sizeof(EC_T_LINK_PARMS_RTL8169),
+                  EC_LINK_PARMS_IDENT_RTL8169, 1, EcLinkMode_POLLING);
 
     if (!ParseDword(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.dwInstance)
-       || !ParseLinkMode(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.eLinkMode))
-    {
+        || !ParseLinkMode(ptcWord, lpCmdLine, tcStorage, &pLinkParmsAdapter->linkParms.eLinkMode)) {
         dwRetVal = EC_E_INVALIDPARM;
         goto Exit;
     }
@@ -2294,13 +2320,13 @@ EC_T_LINK_PARMS_RTL8169* pLinkParmsAdapter = EC_NULL;
     *ppLinkParms = &pLinkParmsAdapter->linkParms;
     dwRetVal = EC_E_NOERROR;
 
-Exit:
-    if (EC_E_NOERROR != dwRetVal)
-    {
+    Exit:
+    if (EC_E_NOERROR != dwRetVal) {
         SafeOsFree(pLinkParmsAdapter);
     }
     return dwRetVal;
 }
+
 #endif /* INCLUDE_EMLLRTL8169 */
 
 #if (defined INCLUDE_EMLLRZT1)
@@ -2526,43 +2552,40 @@ Exit:
         EC_E_NOTFOUND    if command line was not matching
         EC_E_INVALIDPARM if syntax error
 */
-static EC_T_DWORD CreateLinkParmsFromCmdLineSockRaw(EC_T_CHAR** ptcWord, EC_T_CHAR** lpCmdLine, EC_T_CHAR* tcStorage, EC_T_BOOL* pbGetNextWord,
-                                                    EC_T_LINK_PARMS** ppLinkParms)
-{
-EC_T_DWORD dwRetVal = EC_E_ERROR;
-EC_T_LINK_PARMS_SOCKRAW* pLinkParmsAdapter = EC_NULL;
+static EC_T_DWORD CreateLinkParmsFromCmdLineSockRaw(EC_T_CHAR **ptcWord, EC_T_CHAR **lpCmdLine, EC_T_CHAR *tcStorage,
+                                                    EC_T_BOOL *pbGetNextWord,
+                                                    EC_T_LINK_PARMS **ppLinkParms) {
+    EC_T_DWORD dwRetVal = EC_E_ERROR;
+    EC_T_LINK_PARMS_SOCKRAW *pLinkParmsAdapter = EC_NULL;
 
     EC_UNREFPARM(pbGetNextWord);
 
     /* check for matching adapter */
-    if (OsStricmp((*ptcWord), "-sockraw") != 0)
-    {
+    if (OsStricmp((*ptcWord), "-sockraw") != 0) {
         dwRetVal = EC_E_NOTFOUND;
         goto Exit;
     }
     /* alloc adapter specific link parms */
-    pLinkParmsAdapter = (EC_T_LINK_PARMS_SOCKRAW*)OsMalloc(sizeof(EC_T_LINK_PARMS_SOCKRAW));
-    if (EC_NULL == pLinkParmsAdapter)
-    {
+    pLinkParmsAdapter = (EC_T_LINK_PARMS_SOCKRAW *) OsMalloc(sizeof(EC_T_LINK_PARMS_SOCKRAW));
+    if (EC_NULL == pLinkParmsAdapter) {
         dwRetVal = EC_E_NOMEMORY;
         goto Exit;
     }
     OsMemset(pLinkParmsAdapter, 0, sizeof(EC_T_LINK_PARMS_SOCKRAW));
-    LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_SOCKRAW, sizeof(EC_T_LINK_PARMS_SOCKRAW), EC_LINK_PARMS_IDENT_SOCKRAW, 1, EcLinkMode_POLLING);
+    LinkParmsInit(&pLinkParmsAdapter->linkParms, EC_LINK_PARMS_SIGNATURE_SOCKRAW, sizeof(EC_T_LINK_PARMS_SOCKRAW),
+                  EC_LINK_PARMS_IDENT_SOCKRAW, 1, EcLinkMode_POLLING);
 
     /* get adapter name */
     *ptcWord = GetNextWord(lpCmdLine, tcStorage);
-    if ((*ptcWord == EC_NULL) || (OsStrncmp(*ptcWord, "-", 1) == 0))
-    {
+    if ((*ptcWord == EC_NULL) || (OsStrncmp(*ptcWord, "-", 1) == 0)) {
         dwRetVal = EC_E_INVALIDPARM;
         goto Exit;
     }
-    if (OsStrlen((char*)*ptcWord) > MAX_LEN_SOCKRAW_ADAPTER_NAME - 1)
-    {
+    if (OsStrlen((char *) *ptcWord) > MAX_LEN_SOCKRAW_ADAPTER_NAME - 1) {
         dwRetVal = EC_E_INVALIDPARM;
         goto Exit;
     }
-    OsStrncpy(pLinkParmsAdapter->szAdapterName, (char*)*ptcWord, MAX_LEN_SOCKRAW_ADAPTER_NAME - 1);
+    OsStrncpy(pLinkParmsAdapter->szAdapterName, (char *) *ptcWord, MAX_LEN_SOCKRAW_ADAPTER_NAME - 1);
 
 #if (defined DISABLE_FORCE_BROADCAST)
     /* Do not overwrite destination in frame with FF:FF:FF:FF:FF:FF, needed for EAP. */
@@ -2573,13 +2596,13 @@ EC_T_LINK_PARMS_SOCKRAW* pLinkParmsAdapter = EC_NULL;
     *ppLinkParms = &pLinkParmsAdapter->linkParms;
     dwRetVal = EC_E_NOERROR;
 
-Exit:
-    if (EC_E_NOERROR != dwRetVal)
-    {
+    Exit:
+    if (EC_E_NOERROR != dwRetVal) {
         SafeOsFree(pLinkParmsAdapter);
     }
     return dwRetVal;
 }
+
 #endif /* INCLUDE_EMLLSOCKRAW */
 
 #if (defined INCLUDE_EMLLWINPCAP)
@@ -2744,23 +2767,21 @@ Exit:
 //! This function checks whether parameter portion is a LinkLayer information and processes it
 //! \return EC_TRUE if parameter is LinkLayer Portion, EC_FALSE otherwise.
 EC_T_DWORD CreateLinkParmsFromCmdLine
-(   EC_T_CHAR**     ptcWord,
-    EC_T_CHAR**     lpCmdLine,
-    EC_T_CHAR*      tcStorage,
-    EC_T_BOOL*      pbGetNextWord,  /* [out]  Shows that next parameter should be read or not */
-    EC_T_LINK_PARMS** ppLinkParms
+        (EC_T_CHAR **ptcWord,
+         EC_T_CHAR **lpCmdLine,
+         EC_T_CHAR *tcStorage,
+         EC_T_BOOL *pbGetNextWord,  /* [out]  Shows that next parameter should be read or not */
+         EC_T_LINK_PARMS **ppLinkParms
 #if defined(INCLUDE_TTS)
-    , EC_T_DWORD* pdwTtsBusCycleUsec /* [out] TTS Bus Cycle overrides original one when TTS is used */
-    , EC_T_VOID** pvvTtsEvent        /* [out] TTS Cycle event. Should override original one when TTS is used */
+        , EC_T_DWORD* pdwTtsBusCycleUsec /* [out] TTS Bus Cycle overrides original one when TTS is used */
+        , EC_T_VOID** pvvTtsEvent        /* [out] TTS Cycle event. Should override original one when TTS is used */
 #endif
-)
-{
-EC_T_DWORD dwRetVal = EC_E_NOTFOUND;
+) {
+    EC_T_DWORD dwRetVal = EC_E_NOTFOUND;
 
 #if (defined INCLUDE_EMLLALTERATSE)
-    dwRetVal = CreateLinkParmsFromCmdLineAlteraTse(ptcWord, lpCmdLine, tcStorage, pbGetNextWord, ppLinkParms );
-    if (EC_E_NOTFOUND != dwRetVal)
-    {
+    dwRetVal = CreateLinkParmsFromCmdLineAlteraTse(ptcWord, lpCmdLine, tcStorage, pbGetNextWord, ppLinkParms);
+    if (EC_E_NOTFOUND != dwRetVal) {
         goto Exit;
     }
 #endif
@@ -2773,8 +2794,7 @@ EC_T_DWORD dwRetVal = EC_E_NOTFOUND;
 #endif
 #if (defined INCLUDE_EMLLCCAT)
     dwRetVal = CreateLinkParmsFromCmdLineCCAT(ptcWord, lpCmdLine, tcStorage, pbGetNextWord, ppLinkParms);
-    if (EC_E_NOTFOUND != dwRetVal)
-    {
+    if (EC_E_NOTFOUND != dwRetVal) {
         goto Exit;
     }
 #endif
@@ -2801,8 +2821,7 @@ EC_T_DWORD dwRetVal = EC_E_NOTFOUND;
 #endif
 #if (defined INCLUDE_EMLLEG20T)
     dwRetVal = CreateLinkParmsFromCmdLineEG20T(ptcWord, lpCmdLine, tcStorage, pbGetNextWord, ppLinkParms);
-    if (EC_E_NOTFOUND != dwRetVal)
-    {
+    if (EC_E_NOTFOUND != dwRetVal) {
         goto Exit;
     }
 #endif
@@ -2836,15 +2855,13 @@ EC_T_DWORD dwRetVal = EC_E_NOTFOUND;
 #endif
 #if (defined INCLUDE_EMLLI8254X)
     dwRetVal = CreateLinkParmsFromCmdLineI8254x(ptcWord, lpCmdLine, tcStorage, pbGetNextWord, ppLinkParms);
-    if (EC_E_NOTFOUND != dwRetVal)
-    {
+    if (EC_E_NOTFOUND != dwRetVal) {
         goto Exit;
     }
 #endif
 #if (defined INCLUDE_EMLLI8255X)
     dwRetVal = CreateLinkParmsFromCmdLineI8255x(ptcWord, lpCmdLine, tcStorage, pbGetNextWord, ppLinkParms);
-    if (EC_E_NOTFOUND != dwRetVal)
-    {
+    if (EC_E_NOTFOUND != dwRetVal) {
         goto Exit;
     }
 #endif
@@ -2890,15 +2907,13 @@ EC_T_DWORD dwRetVal = EC_E_NOTFOUND;
 #endif
 #if (defined INCLUDE_EMLLRTL8139)
     dwRetVal = CreateLinkParmsFromCmdLineRTL8139(ptcWord, lpCmdLine, tcStorage, pbGetNextWord, ppLinkParms);
-    if (EC_E_NOTFOUND != dwRetVal)
-    {
+    if (EC_E_NOTFOUND != dwRetVal) {
         goto Exit;
     }
 #endif
 #if (defined INCLUDE_EMLLRTL8169)
     dwRetVal = CreateLinkParmsFromCmdLineRTL8169(ptcWord, lpCmdLine, tcStorage, pbGetNextWord, ppLinkParms);
-    if (EC_E_NOTFOUND != dwRetVal)
-    {
+    if (EC_E_NOTFOUND != dwRetVal) {
         goto Exit;
     }
 #endif
@@ -2925,8 +2940,7 @@ EC_T_DWORD dwRetVal = EC_E_NOTFOUND;
 #endif
 #if (defined INCLUDE_EMLLSOCKRAW)
     dwRetVal = CreateLinkParmsFromCmdLineSockRaw(ptcWord, lpCmdLine, tcStorage, pbGetNextWord, ppLinkParms);
-    if (EC_E_NOTFOUND != dwRetVal)
-    {
+    if (EC_E_NOTFOUND != dwRetVal) {
         goto Exit;
     }
 #endif
@@ -2945,109 +2959,133 @@ EC_T_DWORD dwRetVal = EC_E_NOTFOUND;
     }
 #endif
 
-Exit:
+    Exit:
     return dwRetVal;
 }
 
-EC_T_VOID ShowLinkLayerSyntax1(EC_T_VOID)
+
+EC_T_DWORD CreateLinkParms(EC_T_DWORD dwLink, EC_T_DWORD dwInstance, EC_T_DWORD dwMode, EC_T_LINK_PARMS **ppLinkParms)
 {
+    EC_T_DWORD dwRetVal = EC_E_NOTFOUND;
+
+    switch (dwLink) {
+        case 0:
+            dwRetVal = CreateLinkParmsI8254x(dwInstance, dwMode, ppLinkParms);
+            break;
+        case 1:
+            dwRetVal = CreateLinkParmsI8255x(dwInstance, dwMode, ppLinkParms);
+            break;
+        default:
+            break;
+    }
+
+    Exit:
+    return dwRetVal;
+}
+
+EC_T_VOID ShowLinkLayerSyntax1(EC_T_VOID) {
     const EC_T_CHAR *syntaxLinkLayer = ""
-#if (defined INCLUDE_EMLLALTERATSE)
-        " [-alteratse Instance Mode]"
-#endif
-#if (defined INCLUDE_EMLLANTAIOS)
-        " [-antaios]"
-#endif
-#if (defined INCLUDE_EMLLCCAT)
-        " [-ccat Instance Mode]"
-#endif
-#if (defined INCLUDE_EMLLCPSW)
-        " [-cpsw Instance Mode PortPriority MasterFlag [RefBoard CpswType PhyAddress PhyConnectionMode NotUseDmaBuffers]]"
-#endif
-#if (defined INCLUDE_EMLLDUMMY)
-        " [-dummy Instance Mode]"
-#endif
-#if (defined INCLUDE_EMLLDW3504)
-        " [-dw3504 Instance Mode PhyAddress]"
-#endif
-#if (defined INCLUDE_EMLLEG20T)
-        " [-eg20t Instance Mode]"
-#endif
-#if (defined INCLUDE_EMLLEMAC)
-        " [-emac Instance Mode [RefBoard]]"
-#endif
-#if (defined INCLUDE_EMLLETSEC)
-        " [-fsletsec Instance Mode]"
-#endif
-#if (defined INCLUDE_EMLLFSLFEC)
-        " [-fslfec Instance Mode RefBoard [FecType PhyInterface [PhyAddress]]]"
-#endif
-#if (defined INCLUDE_EMLLGEM)
-        " [-gem Instance Mode [RefBoard [PhyAddress [PhyConnectionMode [UseGmiiToRgmii [GmiiToRgmiiPort [SocType]]]]]]]"
-#endif
-#if (defined INCLUDE_EMLLI8254X)
-        " [-i8254x Instance Mode]"
-#endif
-#if (defined INCLUDE_EMLLI8255X)
-        " [-i8255x Instance Mode]"
-#endif
-#if (defined INCLUDE_EMLLICSS)
-        " [-icss Instance Mode MasterFlag RefBoard [tts tts_config_time]]"
-#endif
-#if (defined INCLUDE_EMLLL9218I)
-        " [-l9218i Mode]"
-#endif
-#if (defined INCLUDE_EMLLNDISUIO)
-        " [-ndisuio Adapter]"
-#endif
-#if (defined INCLUDE_EMLLR6040)
-        " [-r6040 Instance Mode]"
-#endif
-#if (defined INCLUDE_EMLLRIN32M3)
-        " [-rin32m3]"
-#endif
-#if (defined INCLUDE_EMLLRTL8139)
-        " [-rtl8139 Instance Mode]"
-#endif
-#if (defined INCLUDE_EMLLRTL8169)
-        " [-rtl8169 Instance Mode]"
-#endif
-#if (defined INCLUDE_EMLLRZT1)
-        " [-rzt1 Instance]"
-#endif
-#if (defined INCLUDE_EMLLSHETH)
-        " [-sheth Instance Mode RefBoard]"
-#endif
-#if (defined INCLUDE_EMLLSNARF)
-        " [-snarf AdapterName]"
-#endif
-#if (defined INCLUDE_EMLLSOCKRAW)
-        " [-SockRaw device]"
-#endif
-#if (defined INCLUDE_EMLLWINPCAP)
-        " [-winpcap IpAddress Mode]"
-#endif
-#if (defined INCLUDE_EMLLUDP)
-        " [-udp IpAddress]"
-#endif
-        "\n";
+                                       #if (defined INCLUDE_EMLLALTERATSE)
+                                       " [-alteratse Instance Mode]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLANTAIOS)
+                                       " [-antaios]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLCCAT)
+                                       " [-ccat Instance Mode]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLCPSW)
+                                       " [-cpsw Instance Mode PortPriority MasterFlag [RefBoard CpswType PhyAddress PhyConnectionMode NotUseDmaBuffers]]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLDUMMY)
+                                       " [-dummy Instance Mode]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLDW3504)
+                                       " [-dw3504 Instance Mode PhyAddress]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLEG20T)
+                                       " [-eg20t Instance Mode]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLEMAC)
+                                       " [-emac Instance Mode [RefBoard]]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLETSEC)
+                                       " [-fsletsec Instance Mode]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLFSLFEC)
+                                       " [-fslfec Instance Mode RefBoard [FecType PhyInterface [PhyAddress]]]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLGEM)
+                                       " [-gem Instance Mode [RefBoard [PhyAddress [PhyConnectionMode [UseGmiiToRgmii [GmiiToRgmiiPort [SocType]]]]]]]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLI8254X)
+                                       " [-i8254x Instance Mode]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLI8255X)
+                                       " [-i8255x Instance Mode]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLICSS)
+                                       " [-icss Instance Mode MasterFlag RefBoard [tts tts_config_time]]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLL9218I)
+                                       " [-l9218i Mode]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLNDISUIO)
+                                       " [-ndisuio Adapter]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLR6040)
+                                       " [-r6040 Instance Mode]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLRIN32M3)
+                                       " [-rin32m3]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLRTL8139)
+                                       " [-rtl8139 Instance Mode]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLRTL8169)
+                                       " [-rtl8169 Instance Mode]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLRZT1)
+                                       " [-rzt1 Instance]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLSHETH)
+                                       " [-sheth Instance Mode RefBoard]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLSNARF)
+                                       " [-snarf AdapterName]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLSOCKRAW)
+                                       " [-SockRaw device]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLWINPCAP)
+                                       " [-winpcap IpAddress Mode]"
+                                       #endif
+                                       #if (defined INCLUDE_EMLLUDP)
+                                       " [-udp IpAddress]"
+                                       #endif
+                                       "\n";
     EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, syntaxLinkLayer));
 }
 
-EC_T_VOID ShowLinkLayerSyntax2(EC_T_VOID)
-{
+EC_T_VOID ShowLinkLayerSyntax2(EC_T_VOID) {
 #if (defined INCLUDE_EMLLALTERATSE)
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -alteratse        Link layer = Lenze/Intel FPGA TSE\n"));
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Instance        Port Instance (1=first), ex. 1\n"));
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Mode            Interrupt (0) or Polling (1) mode\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -alteratse        Link layer = Lenze/Intel FPGA TSE\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Instance        Port Instance (1=first), ex. 1\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Mode            Interrupt (0) or Polling (1) mode\n"));
 #endif
 #if (defined INCLUDE_EMLLANTAIOS)
     EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -antaios            Link layer = Antaios link layer device statically loaded\n"));
 #endif
 #if (defined INCLUDE_EMLLCCAT)
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -ccat             Link layer = Beckhoff CCAT\n"));
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Instance        Device instance (1=first), ex. 1\n"));
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Mode            Interrupt (0) or Polling (1) mode\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -ccat             Link layer = Beckhoff CCAT\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Instance        Device instance (1=first), ex. 1\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Mode            Interrupt (0) or Polling (1) mode\n"));
 #endif
 #if (defined INCLUDE_EMLLCPSW)
     EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -cpsw             Link layer = Texas Instruments Common Platform Switch (CPSW)\n"));
@@ -3076,9 +3114,12 @@ EC_T_VOID ShowLinkLayerSyntax2(EC_T_VOID)
     EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     if custom        PhyAddress: 0 .. 31, default 0\n"));
 #endif
 #if (defined INCLUDE_EMLLEG20T)
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -eg20t            Link layer = EG20T Gigabit Ethernet Controller\n"));
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Instance        Device instance (1=first), ex. 1\n"));
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Mode            Interrupt (0) or Polling (1) mode\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -eg20t            Link layer = EG20T Gigabit Ethernet Controller\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Instance        Device instance (1=first), ex. 1\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Mode            Interrupt (0) or Polling (1) mode\n"));
 #endif
 #if (defined INCLUDE_EMLLEMAC)
     EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -emac             Link layer = Xilinx LogiCORE IP XPS EMAC\n"));
@@ -3118,14 +3159,20 @@ EC_T_VOID ShowLinkLayerSyntax2(EC_T_VOID)
     EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     if custom        GEM type: zynq7000 or ultrascale\n"));
 #endif
 #if (defined INCLUDE_EMLLI8254X)
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -i8254x           Link layer = Intel 8254x\n"));
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Instance        Device instance (1=first), ex. 1\n"));
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Mode            Interrupt (0) or Polling (1) mode\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -i8254x           Link layer = Intel 8254x\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Instance        Device instance (1=first), ex. 1\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Mode            Interrupt (0) or Polling (1) mode\n"));
 #endif
 #if (defined INCLUDE_EMLLI8255X)
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -i8255x           Link layer = Intel 8255x\n"));
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Instance        Device instance (1=first), ex. 1\n"));
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Mode            Interrupt (0) or Polling (1) mode\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -i8255x           Link layer = Intel 8255x\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Instance        Device instance (1=first), ex. 1\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Mode            Interrupt (0) or Polling (1) mode\n"));
 #endif
 #if (defined INCLUDE_EMLLICSS)
     EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -icss             Link layer = Texas Instruments PRUICSS\n"));
@@ -3153,14 +3200,20 @@ EC_T_VOID ShowLinkLayerSyntax2(EC_T_VOID)
     EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -rin32m3          Link layer = RIN32M3\n"));
 #endif
 #if (defined INCLUDE_EMLLRTL8139)
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -rtl8139          Link layer = Realtek RTL8139\n"));
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Instance        Device instance (1=first), ex. 1\n"));
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Mode            Interrupt (0) or Polling (1) mode\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -rtl8139          Link layer = Realtek RTL8139\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Instance        Device instance (1=first), ex. 1\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Mode            Interrupt (0) or Polling (1) mode\n"));
 #endif
 #if (defined INCLUDE_EMLLRTL8169)
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -rtl8169          Link layer = Realtek RTL8169 / RTL8168 / RTL8111\n"));
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Instance        Device instance (1=first), ex. 1\n"));
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Mode            Interrupt (0) or Polling (1) mode\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -rtl8169          Link layer = Realtek RTL8169 / RTL8168 / RTL8111\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Instance        Device instance (1=first), ex. 1\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "     Mode            Interrupt (0) or Polling (1) mode\n"));
 #endif
 #if (defined INCLUDE_EMLLRZT1)
     EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -rzt1             Link layer = RZT1\n"));
@@ -3178,7 +3231,8 @@ EC_T_VOID ShowLinkLayerSyntax2(EC_T_VOID)
 #endif
 #if (defined INCLUDE_EMLLSOCKRAW)
     EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -SockRaw          Link layer = raw socket\n"));
-    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "     device          network device (e.g. eth1)\n"));
+    EcLogMsg(EC_LOG_LEVEL_ERROR,
+             (pEcLogContext, EC_LOG_LEVEL_ERROR, "     device          network device (e.g. eth1)\n"));
 #endif
 #if (defined INCLUDE_EMLLUDP)
     EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "   -udp              Link layer = UDP\n"));
@@ -3240,7 +3294,7 @@ EC_PF_LLREGISTER pfLlRegister = EC_NULL;
     if (0 == OsStrcmp(EC_LINK_PARMS_IDENT_GEM, szDriverIdent))
     {
         pfLlRegister = (EC_PF_LLREGISTER)emllRegisterGEM;
-	} else
+    } else
 #endif
 #if (defined INCLUDE_EMLLI8254X)
     if (0 == OsStrcmp("I8254x", szDriverIdent))

@@ -23,6 +23,13 @@ DECLARE_int32(auxclk);
 DECLARE_int32(sp);
 //! @brief Log file prefix
 DECLARE_string(log);
+//! @brief Flash outputs address.
+DECLARE_int32(flash);
+//! @brief DC mode
+DECLARE_int32(dcmmode);
+//! @brief Disable DCM control loop for diagnosis
+DECLARE_bool(ctloff);
+
 //! @brief Intel network card instances and mode
 DECLARE_int32(link);
 DECLARE_int32(instance);
