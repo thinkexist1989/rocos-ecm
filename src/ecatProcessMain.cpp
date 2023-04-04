@@ -2,7 +2,9 @@
  * DCDemoMain.cpp
  * Copyright                acontis technologies GmbH, Weingarten, Germany
  * Response                 Stefan Zintgraf
- * Description              EC-Master demo main entrypoint
+ * Description              rocos_ecm main entrypoint
+ * Modified                 Yang Luo , luoyang@sia.cn
+ * Last Modification Date   2023.04.04 18:00
  *---------------------------------------------------------------------------*/
 
 /*-INCLUDES------------------------------------------------------------------*/

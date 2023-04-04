@@ -15,8 +15,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 @Author
 Yang Luo, PHD
-Shenyang Institute of Automation, Chinese Academy of Sciences.
- email: luoyang@sia.cn
+@email: yluo@hit.edu.cn
 
 @Created on: 2021.11.29
 @Last Modified: 2023.3.28 22:03
@@ -32,7 +31,6 @@ Shenyang Institute of Automation, Chinese Academy of Sciences.
 #ifndef ECAT_CONFIG_HPP_INCLUDED
 #define ECAT_CONFIG_HPP_INCLUDED
 
-#define ROCOS_APP_ENABLED
 #define ROCOS_ECM_ENABLED
 
 #include <yaml-cpp/yaml.h>
@@ -280,10 +278,9 @@ public:
 
 #endif
 
-#ifdef ROCOS_APP_ENABLED
 
-    /// \brief
-    /// \return
+    /// \brief Get shared memory of rocos_ecm
+    /// \return true if ok
     bool getSharedMemory();
 
     ////////////// Get joints info for Ec Input /////////////////////
@@ -319,11 +316,10 @@ public:
     inline void
     setControlwordEC(int id, uint16_t ctrlword) { ecatSlaveVec->at(id).outputs.control_word = ctrlword; }
 
-    inline void waitForSignal(int id = 0) { sem_wait(sem_mutex[id]); }
+    void waitForSignal(int id = 0);
 
-//    inline void unlock() { sem_post(sem_mutex); }
+    void wait();
 
-#endif
 
     ///////////// Format robot info /////////////////
     std::string to_string();

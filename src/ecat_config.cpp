@@ -3,6 +3,7 @@
 //
 
 #include "ecat_config.h"
+#include <thread>
 
 
 bool EcatConfig::parserYamlFile(const std::string &configFile) {
@@ -257,4 +258,12 @@ void EcatConfig::print_message(const std::string &msg, EcatConfig::MessageLevel 
     }
 
     std::cout << msg << _def << std::endl;
+}
+
+void EcatConfig::waitForSignal(int id) {
+    sem_wait(sem_mutex[id]);
+}
+
+void EcatConfig::wait() {
+    std::this_thread::get_id();
 }
