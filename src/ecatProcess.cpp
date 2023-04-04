@@ -21,9 +21,9 @@
 
 #endif
 
-#include <math.h>
-
-#include <string.h>
+#include <cmath>
+#include <cstring>
+#include <termcolor/termcolor.hpp>
 
 /*-License Key -------------------------------------------------------------*/
 //#define LICENSE_KEY "FB3B37E5-014B554C-F51CA7DF"
@@ -69,7 +69,7 @@ static EC_T_VOID tEcJobTask(EC_T_VOID *pvThreadParamDesc);
 
 /*-MYAPP---------------------------------------------------------------------*/
 /* Demo code: Remove/change this in your application */
-static EC_T_DWORD myAppInit(T_EC_THREAD_PARAM *pEcThreadParam);
+static EC_T_DWORD myAppInit(EC_T_PBYTE pbyConfig, T_EC_THREAD_PARAM *pEcThreadParam);
 
 static EC_T_DWORD myAppPrepare(T_EC_THREAD_PARAM *pEcThreadParam);
 
@@ -86,17 +86,17 @@ static EC_T_DWORD myAppNotify(EC_T_DWORD dwCode, EC_T_NOTIFYPARMS *pParms);
 
 /*-FUNCTION DEFINITIONS------------------------------------------------------*/
 
-/********************************************************************************/
-/** \brief EC-Master demo application.
-*
-* This is an EC-Master demo application.
-*
-* \return  Status value.
+/** \brief EC-Master application process.
+ *
+ *
+ * \return  Status value.
 */
 EC_T_DWORD ecatProcess(
+        EC_T_PBYTE pbyCnf /* [in]  Configuration file in YAML  */
+        ,
         EC_T_CNF_TYPE eCnfType /* [in]  Enum type of configuration data provided */
         ,
-        EC_T_PBYTE pbyCnfData /* [in]  Configuration data */
+        EC_T_PBYTE pbyEni /* [in]  Eni Configuration data */
         ,
         EC_T_DWORD dwCnfDataLen /* [in]  Length of configuration data in byte */
         ,
@@ -198,7 +198,7 @@ EC_T_DWORD ecatProcess(
     /*****************************************************************************/
     /* Demo code: Remove/change this in your application: Initialize application */
     /*****************************************************************************/
-    dwRes = myAppInit(pEcThreadParam);
+    dwRes = myAppInit(pbyCnf, pEcThreadParam);
     if (EC_E_NOERROR != dwRes) {
         EcLogMsg(EC_LOG_LEVEL_ERROR,
                  (pEcLogContext, EC_LOG_LEVEL_ERROR, (EC_T_CHAR *) "myAppInit failed: %s (0x%lx))\n", ecatGetText(
@@ -364,7 +364,7 @@ EC_T_DWORD ecatProcess(
         }
     }
     /* Configure master */
-    dwRes = ecatConfigureMaster(eCnfType, pbyCnfData, dwCnfDataLen);
+    dwRes = ecatConfigureMaster(eCnfType, pbyEni, dwCnfDataLen);
     if (dwRes != EC_E_NOERROR) {
         dwRetVal = dwRes;
         EcLogMsg(EC_LOG_LEVEL_ERROR,
@@ -373,7 +373,7 @@ EC_T_DWORD ecatProcess(
         goto Exit;
     }
     /* configure DC/DCM master is started with ENI */
-    if (pbyCnfData != EC_NULL) {
+    if (pbyEni != EC_NULL) {
         /* configure DC */
         {
             EC_T_DC_CONFIGURE oDcConfigure;
@@ -590,7 +590,7 @@ EC_T_DWORD ecatProcess(
         goto Exit;
     }
     /* skip this step if demo started without ENI */
-    if (pbyCnfData != EC_NULL) {
+    if (pbyEni != EC_NULL) {
         /******************************************************/
         /* Demo code: Remove/change this in your application  */
         /******************************************************/
@@ -681,7 +681,7 @@ EC_T_DWORD ecatProcess(
         /*****************************************************************************************/
         myAppDiagnosis(pEcThreadParam);
 
-        if (pbyCnfData != EC_NULL) {
+        if (pbyEni != EC_NULL) {
             if ((eDcmMode_Off != S_eDcmMode) && (eDcmMode_LinkLayerRefClock != S_eDcmMode)) {
                 EC_T_DWORD dwStatus = 0;
                 EC_T_BOOL bWriteDiffLog = EC_FALSE;
@@ -1086,13 +1086,14 @@ static EC_T_DWORD RasNotifyWrapper(
 
 \return EC_E_NOERROR on success, error code otherwise.
 */
-static EC_T_DWORD myAppInit(T_EC_THREAD_PARAM *pEcThreadParam) {
+static EC_T_DWORD myAppInit(const EC_T_PBYTE pbyConfig, T_EC_THREAD_PARAM *pEcThreadParam) {
     EC_UNREFPARM(pEcThreadParam);
     //    return EC_E_NOERROR;
     ////////===========My Own Code============/////////
 
     //    pRobotConfig =
-    if (!pEcatConfig->parserYamlFile())
+    std::string configPath = (char *) pbyConfig;
+    if (!pEcatConfig->parserYamlFile(configPath))
         goto Exit;
 
     if (!pEcatConfig->createSharedMemory())

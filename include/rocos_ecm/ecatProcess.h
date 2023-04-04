@@ -28,8 +28,9 @@
 
 /*-FUNCTION DECLARATIONS-----------------------------------------------------*/
 EC_T_DWORD ecatProcess(
-     EC_T_CNF_TYPE       eCnfType
-    ,EC_T_PBYTE          pbyCnfData
+     EC_T_PBYTE          pbyCnf
+    ,EC_T_CNF_TYPE       eCnfType
+    ,EC_T_PBYTE          pbyEni
     ,EC_T_DWORD          dwCnfDataLen
     ,EC_T_DWORD          dwBusCycleTimeUsec
     ,EC_T_INT            nVerbose

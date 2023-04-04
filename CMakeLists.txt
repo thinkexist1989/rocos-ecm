@@ -75,6 +75,13 @@ file(GLOB_RECURSE CONFIG_FILE config/*.yaml)
 
 # ecat_config library
 add_library(ecat_config SHARED src/ecat_config.cpp)
+add_library(${PROJECT_NAME}::ecat_config ALIAS ecat_config)
+target_include_directories(ecat_config
+        PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+        )
+
 target_link_libraries(ecat_config
         PUBLIC
         Boost::boost
@@ -160,6 +167,14 @@ install(TARGETS ${PROJECT_NAME}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}  # 头文件安装路径
         )
 
+install(TARGETS ecat_config
+        EXPORT ecat_config-targets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}  # 动态库安装路径
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}  # 静态库安装路径
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}  # 可执行文件安装路径
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}  # 头文件安装路径
+        )
+
 # Install config files
 file(GLOB SO_FILES  ${CMAKE_BINARY_DIR}/bin/*.so)
 file(GLOB KO_FILES  ${CMAKE_BINARY_DIR}/bin/*.ko)
@@ -182,22 +197,32 @@ install(EXPORT ${PROJECT_NAME}-targets
         DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
         )
 
+install(EXPORT ecat_config-targets
+        FILE ecat_config-targets.cmake
+        NAMESPACE ${PROJECT_NAME}::
+        DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
+        )
+
+
 
 # 生成并安装配置文件
 configure_package_config_file(
         cmake/${PROJECT_NAME}-config.cmake.in
         ${PROJECT_NAME}-config.cmake
         INSTALL_DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
-        PATH_VARS CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR
 )
 
 # 写入库的版本信息
 write_basic_package_version_file(
-        rocos-ecm-config-version.cmake
+        ${PROJECT_NAME}-config-version.cmake
         VERSION ${PACKAGE_VERSION}
         COMPATIBILITY AnyNewerVersion  # 表示该函数库向下兼容
 )
 
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+        DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
+        )
 
 #############
 ## Testing ##

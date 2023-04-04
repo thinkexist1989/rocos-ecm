@@ -2,4 +2,15 @@
 
 @PACKAGE_INIT@
 
+find_package(Boost REQUIRED COMPONENTS date_time filesystem system chrono)
+if(NOT Boost_FOUND)
+  message(FATAL_ERROR "Boost not found. Please try to set the BOOST_ROOT environment variable to the root directory of your Boost installation.")
+endif()
+
+find_package(yaml-cpp REQUIRED)
+if(NOT yaml-cpp_FOUND)
+  message(FATAL_ERROR "yaml-cpp not found. Please try to set the YAML_CPP_ROOT environment variable to the root directory of your yaml-cpp installation.")
+endif()
+
 include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@-targets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/ecat_config-targets.cmake")

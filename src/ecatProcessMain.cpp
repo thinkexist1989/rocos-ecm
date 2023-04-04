@@ -283,6 +283,7 @@ int main(int nArgc, char *ppArgv[]) {
 
     /// Variables Definition
     EC_T_CHAR szConfigFilename[256] = {'\0'}; // Config File Name(ecat_config.yaml)
+    EC_T_PBYTE pbyCnf = nullptr;
 
     int nRetVal = APP_ERROR;
     EC_T_DWORD dwRes = EC_E_ERROR;
@@ -295,7 +296,7 @@ int main(int nArgc, char *ppArgv[]) {
 
     EC_T_CHAR szLogFilePrefix[256] = {'\0'};
     EC_T_CNF_TYPE eCnfType = eCnfType_Unknown;
-    EC_T_PBYTE pbyCnfData = nullptr;
+    EC_T_PBYTE pbyEni = nullptr;
     EC_T_DWORD dwCnfDataLen = 0;
     EC_T_CHAR szENIFilename[256] = {'\0'};
     EC_T_DWORD dwDuration = 120000;
@@ -386,6 +387,8 @@ int main(int nArgc, char *ppArgv[]) {
         // -config
         OsSnprintf(szConfigFilename, sizeof(szConfigFilename) - 1, "%s",
                    FLAGS_config.c_str()); // 将config文件名保存到szConfigFilename中
+
+        pbyCnf = (EC_T_PBYTE) &szConfigFilename[0];
 
         // -eni
         OsSnprintf(szENIFilename, sizeof(szENIFilename) - 1, "%s", FLAGS_eni.c_str()); //将eni文件名保存到szENIFilename中
@@ -824,7 +827,7 @@ int main(int nArgc, char *ppArgv[]) {
     /* determine master configuration type */
     if ('\0' != szENIFilename[0]) {
         eCnfType = eCnfType_Filename;
-        pbyCnfData = (EC_T_BYTE *) &szENIFilename[0];
+        pbyEni = (EC_T_BYTE *) &szENIFilename[0];
         dwCnfDataLen = 256;
     } else {
 #if (defined STATIC_MASTERENI_XML_DATA)
@@ -908,7 +911,7 @@ int main(int nArgc, char *ppArgv[]) {
     OsReplaceGetLinkLayerRegFunc(&DemoGetLinkLayerRegFunc);
 #endif
     //! EtherCAT Master start processing data
-    dwRes = ecatProcess(eCnfType, pbyCnfData, dwCnfDataLen,
+    dwRes = ecatProcess(pbyCnf, eCnfType, pbyEni, dwCnfDataLen,
                         TimingDesc.dwBusCycleTimeUsec, nVerbose, dwDuration,
                         apLinkParms[0],
                         TimingDesc.pvTimingEvent,
