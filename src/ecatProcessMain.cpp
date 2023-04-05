@@ -479,7 +479,9 @@ int main(int nArgc, char *ppArgv[]) {
         EC_T_CHAR *szNextParm = ptcWord;
         EC_T_DWORD dwNewCycleDurationUsec = 0;
 
-        dwRes = CreateLinkParms(FLAGS_link, FLAGS_instance, FLAGS_mode, &apLinkParms[dwNumLinkLayer]);
+        auto instance = std::strtol(FLAG_instance, nullptr, 0);
+
+        dwRes = CreateLinkParms(FLAGS_link, instance, FLAGS_mode, &apLinkParms[dwNumLinkLayer]);
         if (EC_E_NOERROR != dwRes) {
             EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "SYNTAX_ERROR: %s!\n", szNextParm));
             nRetVal = SYNTAX_ERROR;

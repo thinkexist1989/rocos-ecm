@@ -54,7 +54,7 @@ DECLARE_bool(ctloff);
 
 //! @brief Intel network card instances and mode
 DECLARE_int32(link);
-DECLARE_int32(instance);
+DECLARE_string(instance);
 DECLARE_int32(mode);
 
 
