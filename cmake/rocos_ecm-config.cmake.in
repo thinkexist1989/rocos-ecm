@@ -12,5 +12,7 @@ if(NOT yaml-cpp_FOUND)
   message(FATAL_ERROR "yaml-cpp not found. Please try to set the YAML_CPP_ROOT environment variable to the root directory of your yaml-cpp installation.")
 endif()
 
+set(ROCOS_APP_ENABLED)
+
 include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@-targets.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/ecat_config-targets.cmake")

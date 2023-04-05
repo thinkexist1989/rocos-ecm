@@ -31,8 +31,6 @@ Yang Luo, PHD
 #ifndef ECAT_CONFIG_HPP_INCLUDED
 #define ECAT_CONFIG_HPP_INCLUDED
 
-#define ROCOS_ECM_ENABLED
-
 #include <yaml-cpp/yaml.h>
 #include <iostream>
 #include <sstream>
@@ -58,22 +56,8 @@ Yang Luo, PHD
 #include <semaphore.h> //sem
 #include <sys/stat.h>  //umask
 
-#include <math.h>
-
-#define ROBOT_CONFIG_FILE "ecat_config.yaml"
-
-/*-SHARED MEMORY ------------------------------------------------------------*/
-#define EC_SHM "ecm"
-#define EC_SHM_MAX_SIZE 65536
-
-//#define EC_SEM_SYNC "sync"
-#define EC_SEM_MUTEX "sync"
-#define EC_SEM_NUM 10
-
-#define MAX_NAME_LEN 20
-#define MAX_JOINT_NUM 10
-
-#define MAX_SLAVE_NUM 20
+#include <cmath>
+#include <thread>
 
 
 enum INPUTS //
@@ -156,6 +140,8 @@ struct EcatInfo {
 
     EcatState ecatState{UNKNOWN};    // State of Ec-Master
 
+    EcatState ecatExpectState {OP};  // Expected State of Ec-Master
+
     int32_t slave_number{0};
 
 //    EcVec slaves; // all the slaves data
@@ -228,42 +214,34 @@ public:
  */
 class EcatConfig {
 public:
-#ifdef ROCOS_ECM_ENABLED
 
-    explicit EcatConfig(std::string configFile = ROBOT_CONFIG_FILE) : configFileName(configFile) {}
+    explicit EcatConfig(std::string configFile = "ecat_config.yaml");
 
-#endif
+    virtual ~EcatConfig();
 
-    virtual ~EcatConfig() {
-
-    }
-
-#ifdef ROCOS_ECM_ENABLED
     std::string configFileName{};
 
     std::string name{"default_robot"};
 
     std::string license{"12345678-12345678-12345678F"};
 
-    uint32_t loop_hz{1000};
+    uint32_t loop_hz{1000}; // Reserved
 
     int slave_number{0};
 
     std::vector<SlaveConfig> slaveCfg;
-#endif
 
 
-//    sem_t *sem_mutex;
-    std::vector<sem_t *> sem_mutex{EC_SEM_NUM};
+    std::vector<sem_t *> sem_mutex; // DO NOT USE
 
     EcatInfo *ecatInfo = nullptr;
     EcSlaveVec *ecatSlaveVec = nullptr;
     EcStringVec *ecatSlaveNameVec = nullptr;
     boost::interprocess::managed_shared_memory *managedSharedMemory = nullptr;
 
+
 public:
 
-#ifdef ROCOS_ECM_ENABLED
 
     bool parserYamlFile(const std::string &configFile);
 
@@ -276,11 +254,12 @@ public:
 
     bool createSharedMemory();
 
-#endif
 
 
     /// \brief Get shared memory of rocos_ecm
     /// \return true if ok
+    void init();
+
     bool getSharedMemory();
 
     ////////////// Get joints info for Ec Input /////////////////////
@@ -316,7 +295,7 @@ public:
     inline void
     setControlwordEC(int id, uint16_t ctrlword) { ecatSlaveVec->at(id).outputs.control_word = ctrlword; }
 
-    void waitForSignal(int id = 0);
+    void waitForSignal(int id = 0); // compact code, not recommended use. use wait() instead
 
     void wait();
 
@@ -325,6 +304,11 @@ public:
     std::string to_string();
 
 protected:
+
+    std::vector<std::thread::id> threadId;
+
+
+
     //////////// OUTPUT FORMAT SETTINGS ////////////////////
     //Terminal Color Show
     enum Color {

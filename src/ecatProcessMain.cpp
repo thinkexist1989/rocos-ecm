@@ -240,7 +240,7 @@ static EC_T_VOID tEcTimingTask(EC_T_VOID *pvThreadParamDesc) {
 int main(int nArgc, char *ppArgv[]) {
     /// gflags parsing parameters
     gflags::SetVersionString(ROCOS_ECM_VERSION);
-    gflags::ParseCommandLineFlags(&nArgc, &ppArgv, false);
+    gflags::ParseCommandLineFlags(&nArgc, &ppArgv, true);
 
     /// Print the configuration information
     std::cout << termcolor::on_bright_blue << termcolor::blink

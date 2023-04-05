@@ -188,6 +188,11 @@ install(FILES  ${ENI_FILE} ${CONFIG_FILE}
         DESTINATION ${${PROJECT_NAME}_INSTALL_CONFIGDIR}
         )
 
+# install gflags config file
+configure_file(config/ecm.flagfile.in ecm.flagfile) # because in ecm.flagfile.in, ${${PROJECT_NAME}_INSTALL_CONFIGDIR} must be defined
+install(FILES ${CMAKE_BINARY_DIR}/ecm.flagfile
+        DESTINATION ${${PROJECT_NAME}_INSTALL_CONFIGDIR}
+        )
 
 # install CMake config files
 set(${PROJECT_NAME}_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})

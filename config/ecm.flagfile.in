@@ -1,10 +1,10 @@
---config "@@PROJECT_NAME@_INSTALL_CONFIGDIR@"/ecat_config.yaml
---eni "@@PROJECT_NAME@_INSTALL_CONFIGDIR@"/eni.xml
---time 0
---cycle 1000
+--config=${${PROJECT_NAME}_INSTALL_CONFIGDIR}/ecat_config.yaml
+--eni=${${PROJECT_NAME}_INSTALL_CONFIGDIR}/eni.xml
+--time=0
+--cycle=1000
 --perf
---auxclk 0
---sp 6000
---link 0
---instance 1
---mode 1
+--auxclk=0
+--sp=6000
+--link=0
+--instance=1
+--mode=1

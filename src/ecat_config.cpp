@@ -3,8 +3,21 @@
 //
 
 #include "ecat_config.h"
-#include <thread>
 
+/*-SHARED MEMORY DEFINITION-------------------------------------*/
+#define EC_SHM "ecm"
+#define EC_SHM_MAX_SIZE 65536
+
+#define EC_SEM_MUTEX "sync"
+#define EC_SEM_NUM 10
+
+EcatConfig::EcatConfig(std::string configFile) : configFileName(configFile), sem_mutex(EC_SEM_NUM) {
+
+}
+
+EcatConfig::~EcatConfig() {
+
+}
 
 bool EcatConfig::parserYamlFile(const std::string &configFile) {
     if (!boost::filesystem::exists(configFile)) {
@@ -230,7 +243,7 @@ bool EcatConfig::getSharedMemory() {
     return true;
 }
 
-std::string EcatConfig::to_string()  {
+std::string EcatConfig::to_string() {
     std::stringstream ss;
     for (int i = 0; i < ecatSlaveVec->size(); i++) {
         ss << "[Joint " << i << "] "
@@ -265,5 +278,26 @@ void EcatConfig::waitForSignal(int id) {
 }
 
 void EcatConfig::wait() {
-    std::this_thread::get_id();
+    auto id = std::this_thread::get_id();
+    auto it = std::find(threadId.begin(), threadId.end(), id);
+    if(it != threadId.end()) { // thread is already in the list
+        waitForSignal(std::distance(threadId.begin(), it));
+    }
+    else {
+        if(threadId.size() >= EC_SEM_NUM) {
+            print_message("[SHM] Too many threads.", MessageLevel::ERROR);
+            return;
+        }
+        threadId.push_back(id);
+        waitForSignal(threadId.size() - 1);
+    }
 }
+
+void EcatConfig::init() {
+    if (!getSharedMemory()) {
+        print_message("[SHM] Can not get shared memory.", MessageLevel::ERROR);
+        exit(1);
+    }
+    print_message("[SHM] Shared memory is ready.", MessageLevel::NORMAL);
+}
+
