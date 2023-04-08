@@ -1,11 +1,11 @@
 #!/bin/bash
 
-echo "============EtherCAT Master for Robot=============="
-echo "===@Author: Yang Luo                            ==="
-echo "===@Create: 2021.07.17 00:05                    ==="
-echo "===@Last Modified: 2021.12.16 10:17             ==="
-echo "===@Ver: 0.4                                    ==="
-echo "===@usage: ./runECM.sh [eni.xml] [no.]          ==="
+echo "====================ROCOS-ECM======================"
+echo "=== Author: Yang Luo                            ==="
+echo "=== Create: 2021.07.17 00:05                    ==="
+echo "=== Last Modified: 2023.04.08 23:44             ==="
+echo "=== Ver: @rocos_ecm_VERSION@                                  ==="
+echo "=== usage: ./runECM.sh [flagfile] [no.]         ==="
 echo "==================================================="
 
 ETH_NUM=$(lspci -mm | grep -i 'Ethernet controller' | sed -n '1,$p' | cut -d ' ' -f 1 | awk '$1=$1' | wc -l) # confirm the number of ethernet controllers
@@ -24,12 +24,12 @@ else
 fi
 
 if [ $# -lt 1 ]; then
-  echo "The eni.xml will be used as default."
-  ENI_FILE=eni.xml
+  echo "The @rocos_ecm_INSTALL_CONFIGDIR@/ecm.flagfile will be used as default."
+  FLAGFILE=@rocos_ecm_INSTALL_CONFIGDIR@/ecm.flagfile
 else
-  echo "The $1 is used as eni file."
-  ENI_FILE="$1"
+  echo "The $1 is used as flagfile."
+  FLAGFILE="$1"
 fi
 
 # Start EcMaster
-nice -20 ./@PROJECT_NAME@ -f $ENI_FILE -i8254x $INSTANCE 1 -v 3 -perf -t 0
+nice -20 ./@PROJECT_NAME@ -flagfile "${FLAGFILE}"

@@ -8,12 +8,12 @@
 
 #KERNEL_MODULE=$(lspci -k | grep -A 3 -i 'Ethernet controller' | grep -i 'Kernel modules' | sed -n '$p' | cut -d ':' -f 2 | awk '$1=$1')
 
-echo "==========EtherCAT Master for Robot================"
-echo "===@Author: Yang Luo                            ==="
-echo "===@Create: 2021.07.17 00:05                    ==="
-echo "===@Last Modified: 2021.12.16 10:17             ==="
-echo "===@Ver: 0.4                                    ==="
-echo "===@usage: ./initECM.sh [no.]                   ==="
+echo "====================ROCOS-ECM======================"
+echo "=== Author: Yang Luo                            ==="
+echo "=== Create: 2021.07.17 00:05                    ==="
+echo "=== Last Modified: 2023.04.08 23:44             ==="
+echo "=== Ver: @rocos_ecm_VERSION@                                  ==="
+echo "=== usage: ./initECM.sh [no.]                   ==="
 echo "==================================================="
 
 ETH_NUM=$(lspci -mm | grep -i 'Ethernet controller' | sed -n '1,$p' | cut -d ' ' -f 1 | awk '$1=$1' | wc -l) # confirm the number of ethernet controllers
@@ -43,5 +43,5 @@ echo "Please make sure that your network driver is supported by Ec-Master."
 echo "0000:$INSTANCE" | sudo tee -a /sys/bus/pci/drivers/$KERNEL_MODULE/unbind
 
 if test -z "$(lsmod | grep atemsys)"; then
-  sudo insmod atemsys.ko
+  sudo insmod @CMAKE_INSTALL_BINDIR@/atemsys.ko
 fi

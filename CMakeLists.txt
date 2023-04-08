@@ -54,6 +54,10 @@ add_subdirectory(3rdparty/gflags)
 #add_subdirectory(3rdparty/glog)
 add_subdirectory(3rdparty/termcolor)
 
+
+set(${PROJECT_NAME}_INSTALL_CONFIGDIR ${CMAKE_INSTALL_PREFIX}/config)
+set(${PROJECT_NAME}_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+
 ###########
 ## Build ##
 ###########
@@ -183,7 +187,6 @@ install(FILES ${SO_FILES} ${KO_FILES} ${SH_FILES}
         DESTINATION ${CMAKE_INSTALL_BINDIR}
         )
 
-set(${PROJECT_NAME}_INSTALL_CONFIGDIR ${CMAKE_INSTALL_PREFIX}/config)
 install(FILES  ${ENI_FILE} ${CONFIG_FILE}
         DESTINATION ${${PROJECT_NAME}_INSTALL_CONFIGDIR}
         )
@@ -195,7 +198,6 @@ install(FILES ${CMAKE_BINARY_DIR}/ecm.flagfile
         )
 
 # install CMake config files
-set(${PROJECT_NAME}_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
 install(EXPORT ${PROJECT_NAME}-targets
         FILE ${PROJECT_NAME}-targets.cmake
         NAMESPACE ${PROJECT_NAME}::
@@ -208,6 +210,10 @@ install(EXPORT ecat_config-targets
         DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
         )
 
+# install rocos_ecm.service
+install(FILES ${CMAKE_BINARY_DIR}/rocos-ecm.service
+        DESTINATION ${${PROJECT_NAME}_INSTALL_CONFIGDIR}
+        )
 
 
 # 生成并安装配置文件
