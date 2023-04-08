@@ -140,9 +140,13 @@ struct EcatInfo {
 
     EcatState ecatState{UNKNOWN};    // State of Ec-Master
 
-    EcatState ecatExpectState {OP};  // Expected State of Ec-Master
+    EcatState ecatRequestState {OP};  // Request State of Ec-Master
+
+    EcatState ecatNextExpectedState {INIT};  // Next Expected State of Ec-Master
 
     int32_t slave_number{0};
+
+    bool isAuthorized{false}; // if the master is authorized
 
 //    EcVec slaves; // all the slaves data
 //    std::vector<EcatSlaveInfo> slaves; // all the slaves data

@@ -479,7 +479,7 @@ int main(int nArgc, char *ppArgv[]) {
         EC_T_CHAR *szNextParm = ptcWord;
         EC_T_DWORD dwNewCycleDurationUsec = 0;
 
-        auto instance = std::strtol(FLAG_instance, nullptr, 0);
+        auto instance = std::strtol(FLAGS_instance.c_str(), nullptr, 0);
 
         dwRes = CreateLinkParms(FLAGS_link, instance, FLAGS_mode, &apLinkParms[dwNumLinkLayer]);
         if (EC_E_NOERROR != dwRes) {

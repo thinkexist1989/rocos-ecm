@@ -57,5 +57,7 @@ DECLARE_int32(link);
 DECLARE_string(instance);
 DECLARE_int32(mode);
 
+DECLARE_string(state);
+
 
 #endif // EC_FLAGS_H

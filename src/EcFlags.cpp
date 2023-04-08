@@ -50,6 +50,8 @@ DEFINE_int32(link, 0, "Link layer selection: 0 = Intel 8254x, 1 = Intel 8255x. T
 DEFINE_string(instance, "01:00.0", "Device instance 1=first, 2=second. The device instance specifies which network card is used by the demo application. The default is the first network card. ");
 DEFINE_int32(mode, 1, "Mode 0 = Interrupt mode, 1= Polling mode. The mode specifies which mode is used by the demo application. The default is interrupt mode. ");
 
+DEFINE_string(state, "op", "The request state of EtherCAT slaves. value can be init/preop/safeop/op The default is op. ");
+
 
 //DEFINE_string(i8254x, "1 1", "<instance>: Device instance 1=first, 2=second; <mode>: Mode 0 = Interrupt mode, 1= Polling mode");
 //static bool Validate8254x(const char* flagname, const std::string& value) {
