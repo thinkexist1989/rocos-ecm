@@ -37,6 +37,29 @@ TEST_CASE("Shared memory test") {
     }
 }
 
+TEST_CASE("ecat state test") {
+    EcatConfig ecatConfig;
+    ecatConfig.getSharedMemory();
+//    for(int i = 0; i < 1000; i ++) {
+//        std::cout <<"Timestamp: " << ecatConfig.ecatInfo->timestamp << "; Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+//        usleep(10000);
+//    }
+
+//    ecatConfig.ecatInfo->ecatRequestState = EcatInfo::INIT;
+//
+//    for(int i = 0; i < 10; i++) {
+//        std::cout <<ecatConfig.ecatInfo->ecatState << std::endl;
+//        usleep(1000000);
+//    }
+
+    ecatConfig.ecatInfo->ecatRequestState = EcatInfo::PREOP;
+
+    for(int i = 0; i < 10; i++) {
+        std::cout <<ecatConfig.ecatInfo->ecatState << std::endl;
+        usleep(1000000);
+    }
+}
+
 TEST_CASE("4 motor moving") {
     EcatConfig ecatConfig;
     ecatConfig.getSharedMemory();

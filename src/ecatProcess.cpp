@@ -574,6 +574,7 @@ EC_T_DWORD ecatProcess(
                 switch (pEcatConfig->ecatInfo->ecatState) {
                     case EcatInfo::UNKNOWN:
                     case EcatInfo::BOOTSTRAP:
+                        pEcatConfig->ecatInfo->ecatNextExpectedState = EcatInfo::INIT;
                         break;
                     default:
                         pEcatConfig->ecatInfo->ecatNextExpectedState = EcatInfo::PREOP;
@@ -613,8 +614,8 @@ EC_T_DWORD ecatProcess(
                         break;
                 }
                 break;
-            case EcatInfo::UNKNOWN:
             case EcatInfo::BOOTSTRAP:
+            case EcatInfo::UNKNOWN:
             default:
                 EcLogMsg(EC_LOG_LEVEL_ERROR,
                          (pEcLogContext, EC_LOG_LEVEL_ERROR, "Invaid Request Master State!\n"));
@@ -1162,6 +1163,17 @@ static EC_T_DWORD myAppInit(const EC_T_PBYTE pbyConfig, T_EC_THREAD_PARAM *pEcTh
     EC_UNREFPARM(pEcThreadParam);
     //    return EC_E_NOERROR;
     ////////===========My Own Code============/////////
+
+    std::string configPath = (char *) pbyConfig;
+    if (!pEcatConfig->parserYamlFile(configPath))
+        goto Exit;
+
+    if (!pEcatConfig->createSharedMemory())
+        goto Exit;
+
+//    pEcatConfig->ecatSlaveVec->resize(pEcatConfig->slave_number);
+//    pEcatConfig->ecatSlaveNameVec->resize(pEcatConfig->slave_number, "");
+
     // Parse request state from command arguments --state
     if(strcasecmp(FLAGS_state.c_str(), "init") == 0)
         pEcatConfig->ecatInfo->ecatRequestState = EcatInfo::INIT;
@@ -1173,16 +1185,6 @@ static EC_T_DWORD myAppInit(const EC_T_PBYTE pbyConfig, T_EC_THREAD_PARAM *pEcTh
         pEcatConfig->ecatInfo->ecatRequestState = EcatInfo::OP;
     else
         pEcatConfig->ecatInfo->ecatRequestState = EcatInfo::UNKNOWN;
-
-    std::string configPath = (char *) pbyConfig;
-    if (!pEcatConfig->parserYamlFile(configPath))
-        goto Exit;
-
-    if (!pEcatConfig->createSharedMemory())
-        goto Exit;
-
-//    pEcatConfig->ecatSlaveVec->resize(pEcatConfig->slave_number);
-//    pEcatConfig->ecatSlaveNameVec->resize(pEcatConfig->slave_number, "");
 
     return EC_E_NOERROR;
 
