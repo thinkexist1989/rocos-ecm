@@ -200,13 +200,13 @@ install(FILES ${CMAKE_BINARY_DIR}/ecm.flagfile
 # install CMake config files
 install(EXPORT ${PROJECT_NAME}-targets
         FILE ${PROJECT_NAME}-targets.cmake
-        NAMESPACE ${PROJECT_NAME}::
+        NAMESPACE rocos::
         DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
         )
 
 install(EXPORT ecat_config-targets
         FILE ecat_config-targets.cmake
-        NAMESPACE ${PROJECT_NAME}::
+        NAMESPACE rocos::
         DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
         )
 
