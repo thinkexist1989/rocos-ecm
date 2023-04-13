@@ -622,7 +622,9 @@ EC_T_DWORD ecatProcess(
                 break;
         }
 
-        if(pEcatConfig->ecatInfo->ecatNextExpectedState == EcatInfo::INIT) {
+
+        // Dive into state switch
+        if(pEcatConfig->ecatInfo->ecatNextExpectedState == EcatInfo::INIT) { // set state to INIT
             /* set master and bus state to INIT */
             dwRes = ecatSetMasterState(ETHERCAT_STATE_CHANGE_TIMEOUT, eEcatState_INIT); // 切换到Init状态  by think
             pEcThreadParam->pNotInst->ProcessNotificationJobs();
@@ -644,8 +646,9 @@ EC_T_DWORD ecatProcess(
                 dwRetVal = dwRes;
                 goto Exit;
             }
+
         }
-        else if(pEcatConfig->ecatInfo->ecatNextExpectedState == EcatInfo::PREOP) {
+        else if(pEcatConfig->ecatInfo->ecatNextExpectedState == EcatInfo::PREOP) { // set state to PREOP
             /* set master and bus state to PREOP */
             dwRes = ecatSetMasterState(ETHERCAT_STATE_CHANGE_TIMEOUT, eEcatState_PREOP); // 切换到Preop状态  by think
             pEcThreadParam->pNotInst->ProcessNotificationJobs();
@@ -667,8 +670,9 @@ EC_T_DWORD ecatProcess(
                 dwRetVal = dwRes;
                 goto Exit;
             }
+
         }
-        else if(pEcatConfig->ecatInfo->ecatNextExpectedState == EcatInfo::SAFEOP) {
+        else if(pEcatConfig->ecatInfo->ecatNextExpectedState == EcatInfo::SAFEOP) { // set state to SAFEOP
             /* set master and bus state to SAFEOP */
             dwRes = ecatSetMasterState(ETHERCAT_STATE_CHANGE_TIMEOUT, eEcatState_SAFEOP); // 切换到Safeop状态  by think
             pEcThreadParam->pNotInst->ProcessNotificationJobs();
@@ -698,8 +702,9 @@ EC_T_DWORD ecatProcess(
                 dwRetVal = dwRes;
                 goto Exit;
             }
+
         }
-        else if(pEcatConfig->ecatInfo->ecatNextExpectedState == EcatInfo::OP) {
+        else if(pEcatConfig->ecatInfo->ecatNextExpectedState == EcatInfo::OP) { // set state to OP
             /* set master and bus state to OP */
             dwRes = ecatSetMasterState(ETHERCAT_STATE_CHANGE_TIMEOUT, eEcatState_OP); // 切换到Op状态 by think
             pEcThreadParam->pNotInst->ProcessNotificationJobs();
@@ -710,20 +715,19 @@ EC_T_DWORD ecatProcess(
                 dwRetVal = dwRes;
                 goto Exit;
             }
-        }
 
-        if (pEcThreadParam->TscMeasDesc.bMeasEnabled) {
-            EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "\n"));
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "Job times during startup <INIT> to <%s>:\n", ecatStateToStr(
-                             ecatGetMasterState())));
-            PERF_MEASURE_JOBS_SHOW(); /* show job times */
-            EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "\n"));
-            ecatPerfMeasReset(&pEcThreadParam->TscMeasDesc, 0xFFFFFFFF); /* clear job times of startup phase */
-        }
+            if (pEcThreadParam->TscMeasDesc.bMeasEnabled) {
+                EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "\n"));
+                EcLogMsg(EC_LOG_LEVEL_INFO,
+                         (pEcLogContext, EC_LOG_LEVEL_INFO, "Job times during startup <INIT> to <%s>:\n", ecatStateToStr(
+                                 ecatGetMasterState())));
+                PERF_MEASURE_JOBS_SHOW(); /* show job times */
+                EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "\n"));
+                ecatPerfMeasReset(&pEcThreadParam->TscMeasDesc, 0xFFFFFFFF); /* clear job times of startup phase */
+            }
 
 #if (defined DEBUG) && (defined XENOMAI)
-        /* Enabling mode switch warnings for shadowed task */
+            /* Enabling mode switch warnings for shadowed task */
         dwRes = rt_task_set_mode(0, T_WARNSW, NULL);
         if (0 != dwRes)
         {
@@ -732,98 +736,101 @@ EC_T_DWORD ecatProcess(
         }
 #endif
 
-        /* run the demo */
-        if (dwDuration != 0) {
-            pEcThreadParam->oDuration.Start(dwDuration);
-        }
-        while (bRun && (!pEcThreadParam->oDuration.IsStarted() ||
-                        !pEcThreadParam->oDuration.IsElapsed())) { // while op 其实运行到这里时，实时任务已经在tEcJobTask中运行了，这里只是在运行过程中做一些检查
-            if (nVerbose >= 2) {
-                PERF_MEASURE_JOBS_SHOW(); /* show job times */
+            /* run the demo */
+            if (dwDuration != 0) {
+                pEcThreadParam->oDuration.Start(dwDuration);
             }
-            bRun = !OsTerminateAppRequest(); /* check if demo shall terminate */
 
-            /*****************************************************************************************/
-            /* Demo code: Remove/change this in your application: Do some diagnosis outside job task */
-            /*****************************************************************************************/
-            myAppDiagnosis(pEcThreadParam);
+            while ((pEcatConfig->ecatInfo->ecatState == EcatInfo::OP) && bRun && (!pEcThreadParam->oDuration.IsStarted() ||
+                                                                                  !pEcThreadParam->oDuration.IsElapsed())) { // while op 其实运行到这里时，实时任务已经在tEcJobTask中运行了，这里只是在运行过程中做一些检查
+                if (nVerbose >= 2) {
+                    PERF_MEASURE_JOBS_SHOW(); /* show job times */
+                }
+                bRun = !OsTerminateAppRequest(); /* check if demo shall terminate */
 
-            if (pbyEni != EC_NULL) {
-                if ((eDcmMode_Off != S_eDcmMode) && (eDcmMode_LinkLayerRefClock != S_eDcmMode)) {
-                    EC_T_DWORD dwStatus = 0;
-                    EC_T_BOOL bWriteDiffLog = EC_FALSE;
-                    EC_T_INT nDiffCur = 0, nDiffAvg = 0, nDiffMax = 0;
+                /*****************************************************************************************/
+                /* Demo code: Remove/change this in your application: Do some diagnosis outside job task */
+                /*****************************************************************************************/
+                myAppDiagnosis(pEcThreadParam);
 
-                    if (!oDcmStatusTimer.IsStarted() || oDcmStatusTimer.IsElapsed()) {
-                        bWriteDiffLog = EC_TRUE;
-                        oDcmStatusTimer.Start(5000);
-                    }
+                if (pbyEni != EC_NULL) {
+                    if ((eDcmMode_Off != S_eDcmMode) && (eDcmMode_LinkLayerRefClock != S_eDcmMode)) {
+                        EC_T_DWORD dwStatus = 0;
+                        EC_T_BOOL bWriteDiffLog = EC_FALSE;
+                        EC_T_INT nDiffCur = 0, nDiffAvg = 0, nDiffMax = 0;
 
-                    dwRes = ecatDcmGetStatus(&dwStatus, &nDiffCur, &nDiffAvg, &nDiffMax);
-                    if (dwRes == EC_E_NOERROR) {
-                        if (bFirstDcmStatus) {
-                            EcLogMsg(EC_LOG_LEVEL_INFO,
-                                     (pEcLogContext, EC_LOG_LEVEL_INFO, "DCM during startup (<INIT> to <%s>)", ecatStateToStr(
-                                             ecatGetMasterState())));
+                        if (!oDcmStatusTimer.IsStarted() || oDcmStatusTimer.IsElapsed()) {
+                            bWriteDiffLog = EC_TRUE;
+                            oDcmStatusTimer.Start(5000);
                         }
-                        if ((dwStatus != EC_E_NOTREADY) && (dwStatus != EC_E_BUSY) && (dwStatus != EC_E_NOERROR)) {
-                            EcLogMsg(EC_LOG_LEVEL_INFO,
-                                     (pEcLogContext, EC_LOG_LEVEL_INFO, "DCM Status: %s (0x%08X)\n", ecatGetText(
-                                             dwStatus), dwStatus));
-                        }
-                        if (bWriteDiffLog && (nVerbose >= 3)) {
-                            EcLogMsg(EC_LOG_LEVEL_INFO,
-                                     (pEcLogContext, EC_LOG_LEVEL_INFO, "DCM Diff(ns): Cur=%7d, Avg=%7d, Max=%7d", nDiffCur, nDiffAvg, nDiffMax));
-                        }
-                    } else {
-                        if ((eEcatState_OP == ecatGetMasterState()) || (eEcatState_SAFEOP == ecatGetMasterState())) {
-                            EcLogMsg(EC_LOG_LEVEL_ERROR,
-                                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "Cannot get DCM status! %s (0x%08X)\n", ecatGetText(
-                                             dwRes), dwRes));
-                        }
-                    }
-#if (defined INCLUDE_DCX)
-                    if (eDcmMode_Dcx == S_eDcmMode && EC_E_NOERROR == dwRes) {
-                        EC_T_INT64 nTimeStampDiff = 0;
-                        dwRes = ecatDcxGetStatus(&dwStatus, &nDiffCur, &nDiffAvg, &nDiffMax, &nTimeStampDiff);
-                        if (EC_E_NOERROR == dwRes) {
+
+                        dwRes = ecatDcmGetStatus(&dwStatus, &nDiffCur, &nDiffAvg, &nDiffMax);
+                        if (dwRes == EC_E_NOERROR) {
                             if (bFirstDcmStatus) {
                                 EcLogMsg(EC_LOG_LEVEL_INFO,
-                                         (pEcLogContext, EC_LOG_LEVEL_INFO, "DCX during startup (<INIT> to <%s>)", ecatStateToStr(
+                                         (pEcLogContext, EC_LOG_LEVEL_INFO, "DCM during startup (<INIT> to <%s>)", ecatStateToStr(
                                                  ecatGetMasterState())));
                             }
                             if ((dwStatus != EC_E_NOTREADY) && (dwStatus != EC_E_BUSY) && (dwStatus != EC_E_NOERROR)) {
                                 EcLogMsg(EC_LOG_LEVEL_INFO,
-                                         (pEcLogContext, EC_LOG_LEVEL_INFO, "DCX Status: %s (0x%08X)\n", ecatGetText(
+                                         (pEcLogContext, EC_LOG_LEVEL_INFO, "DCM Status: %s (0x%08X)\n", ecatGetText(
                                                  dwStatus), dwStatus));
                             }
                             if (bWriteDiffLog && (nVerbose >= 3)) {
                                 EcLogMsg(EC_LOG_LEVEL_INFO,
-                                         (pEcLogContext, EC_LOG_LEVEL_INFO, "DCX Diff(ns): Cur=%7d, Avg=%7d, Max=%7d, TimeStamp=%7d", nDiffCur, nDiffAvg, nDiffMax, nTimeStampDiff));
+                                         (pEcLogContext, EC_LOG_LEVEL_INFO, "DCM Diff(ns): Cur=%7d, Avg=%7d, Max=%7d", nDiffCur, nDiffAvg, nDiffMax));
                             }
                         } else {
-                            if ((eEcatState_OP == ecatGetMasterState()) ||
-                                (eEcatState_SAFEOP == ecatGetMasterState())) {
+                            if ((eEcatState_OP == ecatGetMasterState()) || (eEcatState_SAFEOP == ecatGetMasterState())) {
                                 EcLogMsg(EC_LOG_LEVEL_ERROR,
-                                         (pEcLogContext, EC_LOG_LEVEL_ERROR, "Cannot get DCX status! %s (0x%08X)\n", ecatGetText(
+                                         (pEcLogContext, EC_LOG_LEVEL_ERROR, "Cannot get DCM status! %s (0x%08X)\n", ecatGetText(
                                                  dwRes), dwRes));
                             }
                         }
-                    }
+#if (defined INCLUDE_DCX)
+                        if (eDcmMode_Dcx == S_eDcmMode && EC_E_NOERROR == dwRes) {
+                            EC_T_INT64 nTimeStampDiff = 0;
+                            dwRes = ecatDcxGetStatus(&dwStatus, &nDiffCur, &nDiffAvg, &nDiffMax, &nTimeStampDiff);
+                            if (EC_E_NOERROR == dwRes) {
+                                if (bFirstDcmStatus) {
+                                    EcLogMsg(EC_LOG_LEVEL_INFO,
+                                             (pEcLogContext, EC_LOG_LEVEL_INFO, "DCX during startup (<INIT> to <%s>)", ecatStateToStr(
+                                                     ecatGetMasterState())));
+                                }
+                                if ((dwStatus != EC_E_NOTREADY) && (dwStatus != EC_E_BUSY) && (dwStatus != EC_E_NOERROR)) {
+                                    EcLogMsg(EC_LOG_LEVEL_INFO,
+                                             (pEcLogContext, EC_LOG_LEVEL_INFO, "DCX Status: %s (0x%08X)\n", ecatGetText(
+                                                     dwStatus), dwStatus));
+                                }
+                                if (bWriteDiffLog && (nVerbose >= 3)) {
+                                    EcLogMsg(EC_LOG_LEVEL_INFO,
+                                             (pEcLogContext, EC_LOG_LEVEL_INFO, "DCX Diff(ns): Cur=%7d, Avg=%7d, Max=%7d, TimeStamp=%7d", nDiffCur, nDiffAvg, nDiffMax, nTimeStampDiff));
+                                }
+                            } else {
+                                if ((eEcatState_OP == ecatGetMasterState()) ||
+                                    (eEcatState_SAFEOP == ecatGetMasterState())) {
+                                    EcLogMsg(EC_LOG_LEVEL_ERROR,
+                                             (pEcLogContext, EC_LOG_LEVEL_ERROR, "Cannot get DCX status! %s (0x%08X)\n", ecatGetText(
+                                                     dwRes), dwRes));
+                                }
+                            }
+                        }
 #endif
-                    if (bFirstDcmStatus && (EC_E_NOERROR == dwRes)) {
-                        bFirstDcmStatus = EC_FALSE;
+                        if (bFirstDcmStatus && (EC_E_NOERROR == dwRes)) {
+                            bFirstDcmStatus = EC_FALSE;
 #if (defined ATECAT_VERSION) && (ATECAT_VERSION >= 0x02040106)
-                        ecatDcmResetStatus();
+                            ecatDcmResetStatus();
 #endif
+                        }
                     }
                 }
-            }
-            /* process notification jobs */
-            pEcThreadParam->pNotInst->ProcessNotificationJobs();
+                /* process notification jobs */
+                pEcThreadParam->pNotInst->ProcessNotificationJobs();
 
-            OsSleep(5);
-        } // end while op
+                OsSleep(5);
+            } // end while op
+
+        }
 
         OsSleep(50);
     } // end while process
