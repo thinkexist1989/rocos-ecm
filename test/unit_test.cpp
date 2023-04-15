@@ -45,14 +45,14 @@ TEST_CASE("ecat state test") {
 //        usleep(10000);
 //    }
 
-//    ecatConfig.ecatInfo->ecatRequestState = EcatInfo::INIT;
-//
-//    for(int i = 0; i < 10; i++) {
-//        std::cout <<ecatConfig.ecatInfo->ecatState << std::endl;
-//        usleep(1000000);
-//    }
+    ecatConfig.ecatInfo->ecatRequestState = EcatInfo::INIT;
 
-    ecatConfig.ecatInfo->ecatRequestState = EcatInfo::PREOP;
+    for(int i = 0; i < 5; i++) {
+        std::cout <<ecatConfig.ecatInfo->ecatState << std::endl;
+        usleep(1000000);
+    }
+
+    ecatConfig.ecatInfo->ecatRequestState = EcatInfo::OP;
 
     for(int i = 0; i < 10; i++) {
         std::cout <<ecatConfig.ecatInfo->ecatState << std::endl;

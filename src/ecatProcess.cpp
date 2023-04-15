@@ -607,6 +607,8 @@ EC_T_DWORD ecatProcess(
                     case EcatInfo::BOOTSTRAP:
                         pEcatConfig->ecatInfo->ecatNextExpectedState = EcatInfo::INIT;
                         break;
+                    case EcatInfo::PREOP:
+                        pEcatConfig->ecatInfo->ecatNextExpectedState = EcatInfo::SAFEOP;
                     case EcatInfo::SAFEOP:
                         pEcatConfig->ecatInfo->ecatNextExpectedState = EcatInfo::OP;
                         break;
@@ -741,7 +743,7 @@ EC_T_DWORD ecatProcess(
                 pEcThreadParam->oDuration.Start(dwDuration);
             }
 
-            while ((pEcatConfig->ecatInfo->ecatState == EcatInfo::OP) && bRun && (!pEcThreadParam->oDuration.IsStarted() ||
+            while ((pEcatConfig->ecatInfo->ecatRequestState == EcatInfo::OP) && bRun && (!pEcThreadParam->oDuration.IsStarted() ||
                                                                                   !pEcThreadParam->oDuration.IsElapsed())) { // while op 其实运行到这里时，实时任务已经在tEcJobTask中运行了，这里只是在运行过程中做一些检查
                 if (nVerbose >= 2) {
                     PERF_MEASURE_JOBS_SHOW(); /* show job times */
