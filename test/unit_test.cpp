@@ -60,6 +60,21 @@ TEST_CASE("ecat state test") {
     }
 }
 
+TEST_CASE("sea_move") {
+    EcatConfig ecatConfig;
+    ecatConfig.getSharedMemory();
+
+    int i = 0;
+    while(1) {
+//        std::cout << "  Slave name:  " << ecatConfig.ecatSlaveNameVec->at(i) << std::endl;
+
+        std::cout << "Pos 1:  " << ecatConfig.ecatSlaveVec->at(i).inputs.position_actual_value << " ; Pos 2: "
+                  << ecatConfig.ecatSlaveVec->at(i).inputs.secondary_position_value << std::endl;
+        usleep(100000);
+    }
+
+}
+
 TEST_CASE("4 motor moving") {
     EcatConfig ecatConfig;
     ecatConfig.getSharedMemory();
