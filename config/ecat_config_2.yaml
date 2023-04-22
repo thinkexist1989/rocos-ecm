@@ -1,0 +1,37 @@
+robot:
+  name: 'sjtu_robot' # [required] less than ROBOT_NAME_MAXLEN(20 bytes)
+  license: '2A183B38-9F93C32D-B25DDBCD' # i5 研域工控
+  loop_hz: 1000     # [required] control frequency
+  slave_number: 2 # [required]
+  slaves:
+   - id: 0 # The order of the slave [required]
+     name: joint_1
+     inputs: # [optional]
+       group_name: 'Inputs'
+       status_word: 'Status word'
+       position_actual_value: 'Position actual value'
+       velocity_actual_value: 'Velocity actual value'
+       torque_actual_value: 'Torque actual value'
+       load_torque_value: 'Analog Input 1'
+     outputs: # [optional]
+       mode_of_operation: 'Mode of operation'
+       control_word: 'Control word'
+       target_position: 'Target Position'
+       target_velocity: 'Target Velocity'
+       target_torque: 'Target Torque'
+   - id: 1 # The order of the slave [required]
+     name: joint_2
+     inputs: # [optional]
+       group_name: 'Outputs'
+       status_word: 'Status word'
+       position_actual_value: 'Position actual value'
+       velocity_actual_value: 'Velocity actual value'
+       torque_actual_value: 'Torque actual value'
+       load_torque_value: 'Analog Input 1'
+     outputs: # [optional]
+       mode_of_operation: 'Mode of operation'
+       control_word: 'Control word'
+       target_position: 'Target Position'
+       target_velocity: 'Target Velocity'
+       target_torque: 'Target Torque'
+   
