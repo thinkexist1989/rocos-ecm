@@ -278,11 +278,11 @@ public:
 
     inline uint16_t getStatusWordEC(int id) const { return ecatSlaveVec->at(id).inputs.status_word; }
 
-    inline uint16_t getSecondaryPositionEC(int id) const {
+    inline int32_t getSecondaryPositionEC(int id) const {
         return ecatSlaveVec->at(id).inputs.secondary_position_value;
     }
 
-    inline uint16_t getSecondaryVelocityEC(int id) const {
+    inline int32_t getSecondaryVelocityEC(int id) const {
         return ecatSlaveVec->at(id).inputs.secondary_velocity_value;
     }
 
