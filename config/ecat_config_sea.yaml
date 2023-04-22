@@ -9,18 +9,18 @@ robot:
    - id: 0 # The order of the slave [required]
      name: joint_1
      inputs: # [optional]
-       group_name: 'Inptuts'
-       status_word: 'Status word'
+       group_name: 'TxPDO Mapping 1'
+       status_word: 'Statusword'
        position_actual_value: 'Position actual value'
        velocity_actual_value: 'Velocity actual value'
        torque_actual_value: 'Torque actual value'
-       load_torque_value: 'Analog Input 1'
+       load_torque_value: 'Analog input 1'
        secondary_position_value: 'Secondary position value'
        secondary_velocity_value: 'Secondary velocity value'
      outputs: # [optional]
-       group_name: 'Outputs'
-       mode_of_operation: 'Mode of operation'
-       control_word: 'Control word'
-       target_position: 'Target Position'
-       target_velocity: 'Target Velocity'
-       target_torque: 'Target Torque'
+       group_name: 'RxPDO Mapping 1'
+       mode_of_operation: 'Modes of operation'
+       control_word: 'Controlword'
+       target_position: 'Target position'
+       target_velocity: 'Target velocity'
+       target_torque: 'Target torque'
