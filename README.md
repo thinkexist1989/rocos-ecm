@@ -24,7 +24,7 @@ ROCOS-ECM需要实时内核（RT-Kernel）的支持，最简单的方式就是�
 
 
 > 使用范围
-ROCOS-ECM目前只有emllI8254x的网卡驱动，支持大部分Intel Pro/1000的网卡，具体支持的网卡型号可以查看Ec-Master用户手册第321页Supported Network Controller一节，本机的网卡型号可以通过lspci -vvv | grep -i ethernet指令查询
+ROCOS-ECM目前只有emllI8254x的网卡驱动，支持大部分Intel Pro/1000的网卡，具体支持的网卡型号可以查看Ec-Master用户手册第321页Supported Network Controller一节，本机的网卡型号可以通过lspci -vvv | grep -i ethernet指令查询,因基于商用主站Acontis，未授权的网卡，只能运行主站1小时。
 
 ```bash
 lspci -vvv | grep -i ethernet
