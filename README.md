@@ -138,11 +138,12 @@ robot:
 ```bash
  cd /opt/rocos/ecm/bin
 ```
+
 2. 首先需要卸载网卡，这一步可以通过脚本自动完成，也可以手动加载
   ```bash
   sudo sh initECM.sh
   ```
-
+<img src="https://github.com/thinkexist1989/rocos-ecm/blob/dev/image/initECM_run.png" alt="show" />
 3. 以管理员身份启动主站，其命令行参数有两种方式：
    
   - 通过命令行标志来配置。主要的命令行参数包括如下
@@ -265,7 +266,9 @@ The CPU affinity specifies which CPU the demo application ought to  . Defaults t
   --instance=6
   --mode=1
   ```
-
+## 运行成功示意图及视频
+> 主站运行流程示意
+<img src="https://github.com/thinkexist1989/rocos-ecm/blob/dev/image/start.gif" alt="show" />
 
 
 
