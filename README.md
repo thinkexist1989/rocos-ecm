@@ -15,7 +15,7 @@
 
 ROCOS-EtherCAT-Master(ROCOS-Ecm)是基于Acontis Ec-Master 的EtherCAT主站实现。
 其设计之初的目的是能够快速实现6自由度或7自由度机械臂关节的运动控制。主要思路是通过EcMaster从PDO中获取周期性数据，并通过共享内存的方式将数据共享来使用。
-目前实现的功能主要包括：多从站位置、速度、力矩下发和获取
+
 
 # <table><tr><td bgcolor=#5c7ada>依赖</td></tr></table>
 ## 实时内核
