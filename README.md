@@ -268,7 +268,10 @@ The CPU affinity specifies which CPU the demo application ought to  . Defaults t
   ```
 ## 运行成功示意图及视频
 > 主站运行流程示意
+
 <img src="https://github.com/thinkexist1989/rocos-ecm/blob/dev/image/start.gif" alt="show" />
+
+<img src="https://github.com/thinkexist1989/rocos-ecm/blob/dev/image/run.png" alt="show" />
 
 
 
