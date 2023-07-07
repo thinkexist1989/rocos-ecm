@@ -66,7 +66,6 @@ sudo make install
 - atemsys.ko Ec-Master针对Linux的内核模块，主要包括经过优化的网络协议栈（实时性能更好），需要在运行主程序文件前先加载进内核sudo insmod atemsys.ko，但这一步可以通过脚本自动加载，后续会说明
 - libemllI8254x.so Ec-Master公司提供的针对Intel网卡的驱动链接库程序，主程序运行时会链接到此库文件
 - initECM.sh及runECM.sh 为了方便程序运行编写的脚本文件，可以通过执行两个脚本文件快速运行主站
-- 
 # <table><tr><td bgcolor=#5c7ada> 配置</td></tr></table>
 
 - 配置并生成<font color=#1E90FF>eni.xml</font>文件
@@ -143,6 +142,7 @@ robot:
   ```bash
   sudo sh initECM.sh
   ```
+  > 网卡卸载示意图
 <img src="https://github.com/thinkexist1989/rocos-ecm/blob/dev/image/initECM_run.png" alt="show" />
 3. 以管理员身份启动主站，其命令行参数有两种方式：
    
