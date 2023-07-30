@@ -279,4 +279,4 @@ The CPU affinity specifies which CPU the demo application ought to  . Defaults t
 
 :bust_in_silhouette: 
 - **Yang Luo (yluo@hit.edu.cn)**
-- **Jincheng Sun (2100828@stu.neu.edu.cn)**
+- **Jincheng Sun (2390104@stu.neu.edu.cn)**
