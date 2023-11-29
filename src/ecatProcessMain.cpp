@@ -376,7 +376,7 @@ int main(int nArgc, char *ppArgv[]) {
 
 
     /* set running flag */
-    bRun = EC_TRUE;
+    bRun = EC_TRUE; // 定义在ecatProcessCommon.cpp中的全局变量，在ecatProcess.cpp中while判断用到
 
     /* Initialize Timing Event descriptor */
     TimingDesc.bShutdown = EC_FALSE;
