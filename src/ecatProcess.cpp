@@ -964,7 +964,7 @@ static EC_T_VOID tEcJobTask(EC_T_VOID *pvThreadParamDesc) {
         OsWaitForEvent(pEcThreadParam->pvTtsEvent, EC_WAITINFINITE);
 #else
         /* wait for next cycle (event from scheduler task) */
-        OsWaitForEvent(pEcThreadParam->pvTimingEvent, EC_WAITINFINITE);
+        OsWaitForEvent(pEcThreadParam->pvTimingEvent, EC_WAITINFINITE); // 阻塞等待定时器事件
 #endif
 
         PERF_JOB_END(PERF_CycleTime);

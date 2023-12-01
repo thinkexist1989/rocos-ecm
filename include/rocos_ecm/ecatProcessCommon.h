@@ -95,7 +95,7 @@ typedef struct _T_EC_THREAD_PARAM
 } T_EC_THREAD_PARAM;
 
 /*-GLOBAL VARIABLES-----------------------------------------------------------*/
-extern volatile EC_T_BOOL  bRun;
+extern volatile EC_T_BOOL  bRun; // volatile修饰符的作用是防止编译器优化，直接从内存中读取变量的值，而不是使用寄存器中的备份（多线程更新）
 
 /*-FUNCTION DECLARATION------------------------------------------------------*/
 EC_T_DWORD CoeReadObjectDictionary(
