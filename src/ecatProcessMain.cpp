@@ -826,7 +826,7 @@ int main(int nArgc, char *ppArgv[]) {
 #if !(defined XENOMAI) || (defined CONFIG_XENO_COBALT) || (defined CONFIG_XENO_MERCURY)
     oLogging.SetLogThreadAffinity(dwCpuIndex);
 #endif /* !XENOMAI || CONFIG_XENO_COBALT || CONFIG_XENO_MERCURY */
-    EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "Full command line: %s\n", szFullCommandLine));
+//    EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "Full command line: %s\n", szFullCommandLine)); // 打印完整的命令行，已经不需要了 by think
 
     /* determine master configuration type */
     if ('\0' != szENIFilename[0]) {

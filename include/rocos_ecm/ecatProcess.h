@@ -74,6 +74,7 @@ EC_T_DWORD ecatProcess(
 #define PERF_MEASURE_JOBS_INIT(msgcb)   ecatPerfMeasInit(&pEcThreadParam->TscMeasDesc,0,MAX_JOB_NUM,msgcb);ecatPerfMeasEnable(&pEcThreadParam->TscMeasDesc)
 #define PERF_MEASURE_JOBS_DEINIT()      ecatPerfMeasDeinit(&pEcThreadParam->TscMeasDesc)
 #define PERF_MEASURE_JOBS_SHOW()        ecatPerfMeasShow(&pEcThreadParam->TscMeasDesc,0xFFFFFFFF,S_aszMeasInfo)
+#define PERF_MEASURE_JOBS_SHOW_IDX(nJobIndex)        ecatPerfMeasShow(&pEcThreadParam->TscMeasDesc, nJobIndex ,S_aszMeasInfo) //只显示指定的perf by think
 #define PERF_JOB_START(nJobIndex)       ecatPerfMeasStart(&pEcThreadParam->TscMeasDesc,(EC_T_DWORD)(nJobIndex))
 #define PERF_JOB_END(nJobIndex)         ecatPerfMeasEnd(&pEcThreadParam->TscMeasDesc,(EC_T_DWORD)(nJobIndex))
 

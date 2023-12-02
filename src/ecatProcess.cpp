@@ -36,7 +36,7 @@
 static EcatConfig *pEcatConfig = new EcatConfig();
 
 /*-Logging-------------------------------------------------------------------*/
-#define DCM_ENABLE_LOGFILE
+//#define DCM_ENABLE_LOGFILE
 
 /*-LOCAL VARIABLES-----------------------------------------------------------*/
 static EC_T_REGISTERRESULTS S_oRegisterResults; //
@@ -1564,6 +1564,8 @@ static EC_T_DWORD myAppSetup(T_EC_THREAD_PARAM *pEcThreadParam) {
         }
 
     }
+
+    ecatPerfMeasReset(&pEcThreadParam->TscMeasDesc, 0xFFFFFFFF); /* clear job times of startup phase */
 
     return EC_E_NOERROR;
 
