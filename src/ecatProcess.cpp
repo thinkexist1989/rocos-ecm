@@ -199,7 +199,7 @@ EC_T_DWORD ecatProcess(
     }
 
     ////////////////        MY OWN CODE     ///////////////////////
-    //////////////// Initialize application ///////////////////////
+    /* Initialize application */
     dwRes = myAppInit(pbyCnf, pEcThreadParam);
     if (EC_E_NOERROR != dwRes) {
         EcLogMsg(EC_LOG_LEVEL_ERROR,
@@ -590,16 +590,16 @@ EC_T_DWORD ecatProcess(
     }
 
     /* 创建PD Memory */
-
+    pEcatConfig->createPdDataMemoryProvider(MemReqDesc.dwPDInSize, MemReqDesc.dwPDOutSize);
 
 
     /* 配置Memory Provider */
     EC_T_MEMPROV_DESC MemProvDesc;
     MemProvDesc.pvContext = EC_NULL; // 由于不使用callback function，不需要pvContext
 
-    MemProvDesc.pbyPDOutData = EC_NULL; // PD OUT的内存指针
+    MemProvDesc.pbyPDOutData = (EC_T_PBYTE)(pEcatConfig->pdOutputPtr); // PD OUT的内存指针
     MemProvDesc.dwPDOutDataLength = MemReqDesc.dwPDOutSize;
-    MemProvDesc.pbyPDInData = EC_NULL; // PD IN的内存指针
+    MemProvDesc.pbyPDInData = (EC_T_PBYTE)(pEcatConfig->pdInputPtr); // PD IN的内存指针
     MemProvDesc.dwPDInDataLength = MemReqDesc.dwPDInSize;
 
     MemProvDesc.pfPDOutDataReadRequest = EC_NULL; // PD OUT的读取请求回调函数

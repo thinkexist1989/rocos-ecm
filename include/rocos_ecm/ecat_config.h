@@ -41,6 +41,7 @@ Yang Luo, PHD
 #include <boost/algorithm/string.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
+#include <boost/interprocess/mapped_region.hpp>
 #include <boost/chrono.hpp>
 #include <boost/interprocess/containers/vector.hpp>
 #include <boost/interprocess/containers/string.hpp>
@@ -243,6 +244,14 @@ public:
     EcStringVec *ecatSlaveNameVec = nullptr;
     boost::interprocess::managed_shared_memory *managedSharedMemory = nullptr;
 
+    // PD Input and Output memory
+    boost::interprocess::shared_memory_object *pdInputShm = nullptr;
+    boost::interprocess::shared_memory_object *pdOutputShm = nullptr;
+    boost::interprocess::mapped_region *pdInputRegion = nullptr;
+    boost::interprocess::mapped_region *pdOutputRegion = nullptr;
+    void* pdInputPtr = nullptr;
+    void* pdOutputPtr = nullptr;
+
 
 public:
 
@@ -257,6 +266,10 @@ public:
     std::string getEcOutpVarName(int jntId, OUTPUTS enumEcOutp);
 
     bool createSharedMemory();
+
+    bool createPdDataMemoryProvider(int pdInputSize, int pdOutputSize);
+
+    bool getPdDataMemoryProvider();
 
 
 

@@ -301,3 +301,37 @@ void EcatConfig::init() {
     print_message("[SHM] Shared memory is ready.", MessageLevel::NORMAL);
 }
 
+bool EcatConfig::createPdDataMemoryProvider(int pdInputSize, int pdOutputSize) {
+    using namespace boost::interprocess;
+
+    pdInputShm = new shared_memory_object(open_or_create, "pd_input", read_write);
+    pdOutputShm = new shared_memory_object(open_or_create, "pd_output", read_write);
+
+    pdInputShm->truncate(pdInputSize);
+    pdOutputShm->truncate(pdOutputSize);
+
+    pdInputRegion = new mapped_region(*pdInputShm, read_write);
+    pdOutputRegion = new mapped_region(*pdOutputShm, read_write);
+
+    pdInputPtr = static_cast<char *>(pdInputRegion->get_address());
+    pdOutputPtr = static_cast<char *>(pdOutputRegion->get_address());
+
+    return true;
+}
+
+bool EcatConfig::getPdDataMemoryProvider() {
+    using namespace boost::interprocess;
+
+    pdInputShm = new shared_memory_object(open_or_create, "pd_input", read_write);
+    pdOutputShm = new shared_memory_object(open_or_create, "pd_output", read_write);
+
+    pdInputRegion = new mapped_region(*pdInputShm, read_write);
+    pdOutputRegion = new mapped_region(*pdOutputShm, read_write);
+
+
+    pdInputPtr = static_cast<char *>(pdInputRegion->get_address());
+    pdOutputPtr = static_cast<char *>(pdOutputRegion->get_address());
+
+    return true;
+}
+
