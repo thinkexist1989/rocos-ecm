@@ -43,5 +43,5 @@ echo "Please make sure that your network driver is supported by Ec-Master."
 echo "0000:$INSTANCE" | sudo tee -a /sys/bus/pci/drivers/$KERNEL_MODULE/unbind
 
 if test -z "$(lsmod | grep atemsys)"; then
-  sudo insmod @CMAKE_INSTALL_BINDIR@/atemsys.ko
+  sudo insmod @CMAKE_INSTALL_BINDIR_ABSOLUTE@/atemsys.ko
 fi
