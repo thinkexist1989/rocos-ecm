@@ -1276,7 +1276,7 @@ EC_T_CHAR *SlaveVendorText(T_eEtherCAT_Vendor EV       /**< [in]   Vendor ID */)
         VENDOR_TEXT(ecvendor_molex, "Molex Canada Limited");
         VENDOR_TEXT(ecvendor_vanguard, "Vanguard Systems Inc.");
         VENDOR_TEXT(ecvendor_ifatos, "ifatos GmbH and Co. KG");
-        VENDOR_TEXT(ecvendor_ingenieria, "Ingenier­a UNO S.L");
+        VENDOR_TEXT(ecvendor_ingenieria, "IngenierÂ­a UNO S.L");
         VENDOR_TEXT(ecvendor_daekhon, "Daekhon Corporation");
         VENDOR_TEXT(ecvendor_marubeni, "Marubeni Information Systems Co., Ltd.");
         VENDOR_TEXT(ecvendor_ydk, "YDK Co., Ltd.");

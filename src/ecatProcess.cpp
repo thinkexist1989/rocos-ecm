@@ -172,7 +172,7 @@ EC_T_DWORD ecatProcess(
     if (poLinkParms->eLinkMode != EcLinkMode_POLLING) {
         dwRetVal = EC_E_INVALIDPARM;
         EcLogMsg(EC_LOG_LEVEL_ERROR,
-                 (pEcLogContext, EC_LOG_LEVEL_ERROR, "Error: Link layer in 'interrupt' mode is not supported by EcMasterDemo. Please select 'polling' mode.\n"));
+                 (pEcLogContext, EC_LOG_LEVEL_ERROR, "Error: Link layer in 'interrupt' mode is not supported by ROCOS-ECM. Please select 'polling' mode.\n"));
         goto Exit;
     }
     /* set thread affinity */
