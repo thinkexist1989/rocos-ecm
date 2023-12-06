@@ -559,74 +559,7 @@ EC_T_DWORD ecatProcess(
         }
     }
 
-    //////////// MY OWN CODE /////////////////
-    // 在ecatConfigureMaster之后，ecatStart之前处理共享内存映射
-    /* 获取Process Data Memory Size */
-    EC_T_MEMREQ_DESC MemReqDesc;
-    EC_T_DWORD dwNumOutData;
-
-    EC_T_IOCTLPARMS IoCtlParams;
-    IoCtlParams.pbyInBuf    = EC_NULL;
-    IoCtlParams.dwInBufSize = 0;
-    IoCtlParams.pbyOutBuf = (EC_T_BYTE*)&MemReqDesc;
-    IoCtlParams.dwOutBufSize = sizeof(MemReqDesc);
-    IoCtlParams.pdwNumOutData = &dwNumOutData;
-
-    dwRes = ecatIoControl(EC_IOCTL_GET_PDMEMORYSIZE, &IoCtlParams);
-
-    if(dwRes != EC_E_NOERROR) {
-        EcLogMsg(EC_LOG_LEVEL_ERROR,
-                 (pEcLogContext, EC_LOG_LEVEL_ERROR, "Cannot get process data memory size\n", dwRes));
-        dwRetVal = dwRes;
-        goto Exit;
-    } else {
-        EcLogMsg(EC_LOG_LEVEL_INFO,
-                 (pEcLogContext, EC_LOG_LEVEL_INFO, "******************************************************************************\n", MemReqDesc.dwPDInSize));
-
-        EcLogMsg(EC_LOG_LEVEL_INFO,
-                 (pEcLogContext, EC_LOG_LEVEL_INFO, "\033[34m\033[1mProcess data input memory size: %d\033[0m\n", MemReqDesc.dwPDInSize));
-        EcLogMsg(EC_LOG_LEVEL_INFO,
-                 (pEcLogContext, EC_LOG_LEVEL_INFO, "\033[34m\033[1mProcess data output memory size: %d\033[0m\n", MemReqDesc.dwPDOutSize));
-    }
-
-    /* 创建PD Memory */
-
-
-
-    /* 配置Memory Provider */
-    EC_T_MEMPROV_DESC MemProvDesc;
-    MemProvDesc.pvContext = EC_NULL; // 由于不使用callback function，不需要pvContext
-
-    MemProvDesc.pbyPDOutData = EC_NULL; // PD OUT的内存指针
-    MemProvDesc.dwPDOutDataLength = MemReqDesc.dwPDOutSize;
-    MemProvDesc.pbyPDInData = EC_NULL; // PD IN的内存指针
-    MemProvDesc.dwPDInDataLength = MemReqDesc.dwPDInSize;
-
-    MemProvDesc.pfPDOutDataReadRequest = EC_NULL; // PD OUT的读取请求回调函数
-    MemProvDesc.pfPDOutDataReadRelease = EC_NULL; // PD OUT的读取释放回调函数
-    MemProvDesc.pfPDInDataWriteRequest = EC_NULL; // PD IN的写入请求回调函数
-    MemProvDesc.pfPDInDataWriteRelease = EC_NULL; // PD IN的写入释放回调函数
-
-
-
-    EC_T_IOCTLPARMS IoCtlPdMemProvParams;
-    IoCtlPdMemProvParams.pbyInBuf    = (EC_T_BYTE*)&MemProvDesc;
-    IoCtlPdMemProvParams.dwInBufSize = sizeof(MemProvDesc);
-    IoCtlPdMemProvParams.pbyOutBuf = EC_NULL;
-    IoCtlPdMemProvParams.dwOutBufSize = 0;
-    IoCtlPdMemProvParams.pdwNumOutData = EC_NULL;
-
-    dwRes = ecatIoControl(EC_IOCTL_REGISTER_PDMEMORYPROVIDER, &IoCtlPdMemProvParams);
-
-    if(dwRes != EC_E_NOERROR) {
-        EcLogMsg(EC_LOG_LEVEL_ERROR,
-                 (pEcLogContext, EC_LOG_LEVEL_ERROR, "\033[31m\033[1mCannot register process data memory provider\033[0m\n", dwRes));
-        dwRetVal = dwRes;
-        goto Exit;
-    } else {
-        EcLogMsg(EC_LOG_LEVEL_INFO,
-                 (pEcLogContext, EC_LOG_LEVEL_INFO, "\033[32m\033[1mRegister process data memory provider successfully\033[0m\n"));
-    }
+ 
 
     EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "=====================\n"));
     EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "Start EtherCAT Master\n"));
