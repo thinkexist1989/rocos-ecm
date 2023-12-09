@@ -244,9 +244,9 @@ bool EcatConfig::getSharedMemory() {
 
 
     for(int i = 0; i < ecatInfo->slave_number; i++){
-        std::cout << "status_word offsets: " << slaveCfg[i].ecInpOffsets[STATUS_WORD] << std::endl;
-        ecatSlaveVec->at(i).inputs.status_word = (uint16_t *) ((char *) pdInputPtr +
-                                                               slaveCfg[i].ecInpOffsets[STATUS_WORD] / 8);
+        ecatSlaveVec->at(i).inputs.status_word = (uint16_t *) ((char *) pdInputPtr);
+        ecatSlaveVec->at(i).inputs.position_actual_value = (int32_t *) ((char *) pdInputPtr + 2);
+        ecatSlaveVec->at(i).inputs.velocity_actual_value = (int32_t *) ((char *) pdInputPtr + 6);
     }
 
 

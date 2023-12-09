@@ -35,7 +35,11 @@ TEST_CASE("Shared memory test") {
 
 
     for(int i = 0; i < 1000; i ++) {
-        std::cout <<"Timestamp: " << ecatConfig.ecatInfo->timestamp << "; Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+        std::cout <<"Timestamp: " << ecatConfig.ecatInfo->timestamp
+        << "; Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word
+        << "; Position is: "<< *ecatConfig.ecatSlaveVec->at(0).inputs.position_actual_value
+        << "; Velocity is: "<< *ecatConfig.ecatSlaveVec->at(0).inputs.velocity_actual_value
+        << std::endl;
 
         std::cout << (int)(*(uint8_t *)ecatConfig.pdInputPtr) << std::endl;
         usleep(10000);
