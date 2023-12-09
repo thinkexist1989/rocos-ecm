@@ -71,6 +71,12 @@ enum INPUTS //
     LOAD_TORQUE_VALUE,
     SECONDARY_POSITION_VALUE, // Synapticon Driver Compat 0x230A
     SECONDARY_VELOCITY_VALUE, // Synapticon Driver Compat 0x230B
+    FX_VALUE, // FT-sensor
+    FY_VALUE, // FT-sensor
+    FZ_VALUE, // FT-sensor
+    MX_VALUE, // FT-sensor
+    MY_VALUE, // FT-sensor
+    MZ_VALUE, // FT-sensor
 };
 enum OUTPUTS {
     OUTPUT_GRP_NAME, // group_name
@@ -96,24 +102,30 @@ struct EcatSlaveInfo {
 
     /** Struct store the EtherCAT process data input  **/
     struct PDInput {
-        uint16_t status_word{0};             // Size: 2.0 unsigned
-        int32_t position_actual_value{0};    // Size: 4.0 signed
-        int32_t velocity_actual_value{0};    // Size: 4.0 signed
-        int16_t torque_actual_value{0};      // Size: 2.0 signed
-        int16_t load_torque_value{0};        // Size: 2.0 signed
-        int32_t secondary_position_value{0}; // Size: 4.0 signed -> Synapticon Driver Compat
-        int32_t secondary_velocity_value{0}; // Size: 4.0 signed -> Synapticon Driver Compat
+        uint16_t* status_word                   {nullptr};              // Size: 2.0 unsigned
+        int32_t*  position_actual_value         {nullptr};             // Size: 4.0 signed
+        int32_t*  velocity_actual_value         {nullptr};             // Size: 4.0 signed
+        int16_t*  torque_actual_value           {nullptr};             // Size: 2.0 signed
+        int16_t*  load_torque_value             {nullptr};             // Size: 2.0 signed
+        int32_t*  secondary_position_value      {nullptr};             // Size: 4.0 signed -> Synapticon Driver Compat
+        int32_t*  secondary_velocity_value      {nullptr};             // Size: 4.0 signed -> Synapticon Driver Compat
+        float*    fx_value                      {nullptr};             // Size: 4.0 float
+        float*    fy_value                      {nullptr};             // Size: 4.0 float
+        float*    fz_value                      {nullptr};             // Size: 4.0 float
+        float*    mx_value                      {nullptr};             // Size: 4.0 float
+        float*    my_value                      {nullptr};             // Size: 4.0 float
+        float*    mz_value                      {nullptr};             // Size: 4.0 float
     };
 
     PDInput inputs;
 
     /** Struct store the EtherCAT process data output  **/
     struct PDOutput {
-        int8_t mode_of_operation{8}; // Size: 1.0 signed
-        uint16_t control_word{0};    // Size: 2.0 unsigned
-        int32_t target_position{0};  // Size: 4.0 signed
-        int32_t target_velocity{0};  // Size: 4.0 signed
-        int16_t target_torque{0};    // Size: 2.0 signed
+        int8_t*   mode_of_operation             {nullptr};             // Size: 1.0 signed
+        uint16_t* control_word                  {nullptr};             // Size: 2.0 unsigned
+        int32_t*  target_position               {nullptr};             // Size: 4.0 signed
+        int32_t*  target_velocity               {nullptr};             // Size: 4.0 signed
+        int16_t*  target_torque                 {nullptr};             // Size: 2.0 signed
     };
 
     PDOutput outputs;
@@ -134,7 +146,7 @@ struct EcatInfo {
         BOOTSTRAP = 3
     };
 
-    double minCyclcTime{0.0}; // minimum cycling time   /* usec */
+    double minCycleTime{0.0}; // minimum cycling time  /* usec */
     double maxCycleTime{0.0}; // maximum cycling time  /* usec */
     double avgCycleTime{0.0}; // average cycling time  /* usec */
     double currCycleTime{0.0}; // current cycling time /* usec */
@@ -171,12 +183,12 @@ public:
         ecInpMap[LOAD_TORQUE_VALUE] = "Analog Input 1";
         ecInpMap[SECONDARY_POSITION_VALUE] = "Secondary position value"; // Synapticon Driver Compat
         ecInpMap[SECONDARY_VELOCITY_VALUE] = "Secondary velocity value"; // Synapticon Driver Compat
-
-        ecInpOffsets[STATUS_WORD] = 0;
-        ecInpOffsets[POSITION_ACTUAL_VALUE] = 0;
-        ecInpOffsets[VELOCITY_ACTUAL_VALUE] = 0;
-        ecInpOffsets[TORQUE_ACTUAL_VALUE] = 0;
-        ecInpOffsets[LOAD_TORQUE_VALUE] = 0;
+        ecInpMap[FX_VALUE] = "Fx"; // FT-sensor Fx
+        ecInpMap[FY_VALUE] = "Fy"; // FT-sensor Fy
+        ecInpMap[FZ_VALUE] = "Fz"; // FT-sensor Fz
+        ecInpMap[MX_VALUE] = "Mx"; // FT-sensor Mx
+        ecInpMap[MY_VALUE] = "My"; // FT-sensor My
+        ecInpMap[MZ_VALUE] = "Mz"; // FT-sensor Mz
 
         // EtherCAT Process Data Output default Name Mapping
         ecOutpMap[OUTPUT_GRP_NAME] = "Outputs";
@@ -185,13 +197,6 @@ public:
         ecOutpMap[TARGET_POSITION] = "Target Position";
         ecOutpMap[TARGET_VELOCITY] = "Target Velocity";
         ecOutpMap[TARGET_TORQUE] = "Target Torque";
-
-        ecOutpOffsets[MODE_OF_OPERATION] = 0;
-        ecOutpOffsets[CONTROL_WORD] = 0;
-        ecOutpOffsets[TARGET_POSITION] = 0;
-        ecOutpOffsets[TARGET_VELOCITY] = 0;
-        ecOutpOffsets[TARGET_TORQUE] = 0;
-
     }
 
     ~SlaveConfig() {
@@ -203,14 +208,17 @@ public:
 //    std::string jntName;
 
     std::string name{"Slave_1001 [Elmo Drive ]"};
+    enum SlaveType {
+        DRIVER = 0,
+        FT_SENSOR = 1,
+    };
+
+    SlaveType type {DRIVER};
     std::map<INPUTS, std::string> ecInpMap;
     std::map<OUTPUTS, std::string> ecOutpMap;
 
     std::map<INPUTS, int> ecInpOffsets;
     std::map<OUTPUTS, int> ecOutpOffsets;
-
-//    T_JOINT_EC_INPUT *jntEcInpPtr = nullptr;
-//    T_JOINT_EC_OUTPUT *jntEcOutpPtr = nullptr;
 };
 
 
@@ -233,6 +241,8 @@ public:
     uint32_t loop_hz{1000}; // Reserved
 
     int slave_number{0};
+    int drive_number{0};
+    int ft_sensor_number{0};
 
     std::vector<SlaveConfig> slaveCfg;
 
@@ -281,36 +291,36 @@ public:
 
     ////////////// Get joints info for Ec Input /////////////////////
 
-    inline int32_t getActualPositionEC(int id) const { return ecatSlaveVec->at(id).inputs.position_actual_value; }
+    inline int32_t getActualPositionEC(int id) const { return *ecatSlaveVec->at(id).inputs.position_actual_value; }
 
-    inline int32_t getActualVelocityEC(int id) const { return ecatSlaveVec->at(id).inputs.velocity_actual_value; }
+    inline int32_t getActualVelocityEC(int id) const { return *ecatSlaveVec->at(id).inputs.velocity_actual_value; }
 
-    inline int16_t getActualTorqueEC(int id) const { return ecatSlaveVec->at(id).inputs.torque_actual_value; }
+    inline int16_t getActualTorqueEC(int id) const { return *ecatSlaveVec->at(id).inputs.torque_actual_value; }
 
-    inline int16_t getLoadTorqueEC(int id) const { return ecatSlaveVec->at(id).inputs.load_torque_value; }
+    inline int16_t getLoadTorqueEC(int id) const { return *ecatSlaveVec->at(id).inputs.load_torque_value; }
 
-    inline uint16_t getStatusWordEC(int id) const { return ecatSlaveVec->at(id).inputs.status_word; }
+    inline uint16_t getStatusWordEC(int id) const { return *ecatSlaveVec->at(id).inputs.status_word; }
 
     inline int32_t getSecondaryPositionEC(int id) const {
-        return ecatSlaveVec->at(id).inputs.secondary_position_value;
+        return *ecatSlaveVec->at(id).inputs.secondary_position_value;
     }
 
     inline int32_t getSecondaryVelocityEC(int id) const {
-        return ecatSlaveVec->at(id).inputs.secondary_velocity_value;
+        return *ecatSlaveVec->at(id).inputs.secondary_velocity_value;
     }
 
     ////////////// Get joints info for Ec Input /////////////////////
 
-    inline void setTargetPositionEC(int id, int32_t pos) { ecatSlaveVec->at(id).outputs.target_position = pos; }
+    inline void setTargetPositionEC(int id, int32_t pos) { *ecatSlaveVec->at(id).outputs.target_position = pos; }
 
-    inline void setTargetVelocityEC(int id, int32_t vel) { ecatSlaveVec->at(id).outputs.target_velocity = vel; }
+    inline void setTargetVelocityEC(int id, int32_t vel) { *ecatSlaveVec->at(id).outputs.target_velocity = vel; }
 
-    inline void setTargetTorqueEC(int id, int16_t tor) { ecatSlaveVec->at(id).outputs.target_torque = tor; }
+    inline void setTargetTorqueEC(int id, int16_t tor) { *ecatSlaveVec->at(id).outputs.target_torque = tor; }
 
-    inline void setModeOfOperationEC(int id, int8_t mode) { ecatSlaveVec->at(id).outputs.mode_of_operation = mode; }
+    inline void setModeOfOperationEC(int id, int8_t mode) { *ecatSlaveVec->at(id).outputs.mode_of_operation = mode; }
 
     inline void
-    setControlwordEC(int id, uint16_t ctrlword) { ecatSlaveVec->at(id).outputs.control_word = ctrlword; }
+    setControlwordEC(int id, uint16_t ctrlword) { *ecatSlaveVec->at(id).outputs.control_word = ctrlword; }
 
     void waitForSignal(int id = 0); // compact code, not recommended use. use wait() instead
 

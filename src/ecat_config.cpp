@@ -195,6 +195,8 @@ bool EcatConfig::createSharedMemory() {
 
 bool EcatConfig::getSharedMemory() {
 
+    getPdDataMemoryProvider();
+
     mode_t mask = umask(0); // 取消屏蔽的权限位
 
     sem_mutex.resize(EC_SEM_NUM);
@@ -206,7 +208,6 @@ bool EcatConfig::getSharedMemory() {
             return false;
         }
     }
-
 
     using namespace boost::interprocess;
     managedSharedMemory = new managed_shared_memory{open_or_create, EC_SHM, EC_SHM_MAX_SIZE};
@@ -239,6 +240,20 @@ bool EcatConfig::getSharedMemory() {
     }
 
     umask(mask); // 恢复umask的值
+
+
+
+    for(int i = 0; i < ecatInfo->slave_number; i++){
+        std::cout << "status_word offsets: " << slaveCfg[i].ecInpOffsets[STATUS_WORD] << std::endl;
+        ecatSlaveVec->at(i).inputs.status_word = (uint16_t *) ((char *) pdInputPtr +
+                                                               slaveCfg[i].ecInpOffsets[STATUS_WORD] / 8);
+    }
+
+
+
+
+
+
 
     return true;
 }

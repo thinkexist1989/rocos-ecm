@@ -31,8 +31,13 @@ Shenyang Institute of Automation, Chinese Academy of Sciences.
 TEST_CASE("Shared memory test") {
     EcatConfig ecatConfig;
     ecatConfig.getSharedMemory();
+
+
+
     for(int i = 0; i < 1000; i ++) {
-        std::cout <<"Timestamp: " << ecatConfig.ecatInfo->timestamp << "; Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+        std::cout <<"Timestamp: " << ecatConfig.ecatInfo->timestamp << "; Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+
+        std::cout << (int)(*(uint8_t *)ecatConfig.pdInputPtr) << std::endl;
         usleep(10000);
     }
 }
@@ -87,34 +92,34 @@ TEST_CASE("4 motor moving") {
 
     for(int i = 0; i < ecatConfig.ecatInfo->slave_number; i++) {
         std::cout << "  Slave name:  " << ecatConfig.ecatSlaveNameVec->at(i) << std::endl;
-        ecatConfig.ecatSlaveVec->at(i).outputs.mode_of_operation = 9;
-        ecatConfig.ecatSlaveVec->at(i).outputs.control_word = 128;
-        ecatConfig.ecatSlaveVec->at(i).outputs.target_position = ecatConfig.ecatSlaveVec->at(i).inputs.position_actual_value;
+        *ecatConfig.ecatSlaveVec->at(i).outputs.mode_of_operation = 9;
+        *ecatConfig.ecatSlaveVec->at(i).outputs.control_word = 128;
+        *ecatConfig.ecatSlaveVec->at(i).outputs.target_position = *ecatConfig.ecatSlaveVec->at(i).inputs.position_actual_value;
         std::cout << "Pos is:  " << ecatConfig.ecatSlaveVec->at(i).inputs.position_actual_value << std::endl;
         usleep(10000);
 
-        ecatConfig.ecatSlaveVec->at(i).outputs.control_word = 6;
+        *ecatConfig.ecatSlaveVec->at(i).outputs.control_word = 6;
         usleep(10000);
-        std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(i).inputs.status_word << std::endl;
+        std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(i).inputs.status_word << std::endl;
 
 
-        ecatConfig.ecatSlaveVec->at(i).outputs.control_word = 7;
+        *ecatConfig.ecatSlaveVec->at(i).outputs.control_word = 7;
         usleep(10000);
-        std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(i).inputs.status_word << std::endl;
+        std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(i).inputs.status_word << std::endl;
 
-        ecatConfig.ecatSlaveVec->at(i).outputs.control_word = 15;
-        ecatConfig.ecatSlaveVec->at(i).outputs.target_velocity = 100000;
+        *ecatConfig.ecatSlaveVec->at(i).outputs.control_word = 15;
+        *ecatConfig.ecatSlaveVec->at(i).outputs.target_velocity = 100000;
         if(i == 3) {
-            ecatConfig.ecatSlaveVec->at(i).outputs.target_velocity = 3000000;
+            *ecatConfig.ecatSlaveVec->at(i).outputs.target_velocity = 3000000;
         }
         usleep(10000);
-        std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(i).inputs.status_word << std::endl;
+        std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(i).inputs.status_word << std::endl;
 
         usleep(5000000);
 
-        ecatConfig.ecatSlaveVec->at(i).outputs.control_word = 0;
+        *ecatConfig.ecatSlaveVec->at(i).outputs.control_word = 0;
         usleep(10000);
-        std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(i).inputs.status_word << std::endl;
+        std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(i).inputs.status_word << std::endl;
     }
 }
 
@@ -124,38 +129,38 @@ TEST_CASE("csp") {
     std::cout <<"Timestamp: " << ecatConfig.ecatInfo->timestamp << std::endl;
     std::cout << "  Slave name:  " << ecatConfig.ecatSlaveNameVec->at(0) << std::endl;
     std::cout << "  Ethercat State: " << ecatConfig.ecatInfo->ecatState << std::endl;
-    std::cout << "  " << ecatConfig.ecatSlaveVec->at(0).inputs.position_actual_value << std::endl;
+    std::cout << "  " << *ecatConfig.ecatSlaveVec->at(0).inputs.position_actual_value << std::endl;
 
-    ecatConfig.ecatSlaveVec->at(0).outputs.mode_of_operation = 8;
-    ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 128;
-    ecatConfig.ecatSlaveVec->at(0).outputs.target_position = ecatConfig.ecatSlaveVec->at(0).inputs.position_actual_value ;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.mode_of_operation = 8;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 128;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.target_position = *ecatConfig.ecatSlaveVec->at(0).inputs.position_actual_value ;
     usleep(1000000);
-    std::cout << "Target Position is: " << ecatConfig.ecatSlaveVec->at(0).outputs.target_position << std::endl;
-    std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+    std::cout << "Target Position is: " << *ecatConfig.ecatSlaveVec->at(0).outputs.target_position << std::endl;
+    std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
 
 
-    ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 6;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 6;
     usleep(1000000);
-    std::cout << "Target Position is: " << ecatConfig.ecatSlaveVec->at(0).outputs.target_position << std::endl;
-    std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+    std::cout << "Target Position is: " << *ecatConfig.ecatSlaveVec->at(0).outputs.target_position << std::endl;
+    std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
 
 
-    ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 7;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 7;
     usleep(1000000);
-    std::cout << "Target Position is: " << ecatConfig.ecatSlaveVec->at(0).outputs.target_position << std::endl;
-    std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+    std::cout << "Target Position is: " << *ecatConfig.ecatSlaveVec->at(0).outputs.target_position << std::endl;
+    std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
 
-    ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 15;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 15;
     usleep(1000000);
-    std::cout << "Target Position is: " << ecatConfig.ecatSlaveVec->at(0).outputs.target_position << std::endl;
-    std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+    std::cout << "Target Position is: " << *ecatConfig.ecatSlaveVec->at(0).outputs.target_position << std::endl;
+    std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
 //    ecatConfig.ecatSlaveVec->at(0).outputs.target_velocity = 10000;
 
     usleep(10000000);
 
-    ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 0;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 0;
     usleep(1000000);
-    std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+    std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
 }
 
 TEST_CASE("csv") {
@@ -164,33 +169,33 @@ TEST_CASE("csv") {
     std::cout <<"Timestamp: " << ecatConfig.ecatInfo->timestamp << std::endl;
     std::cout << "  Slave name:  " << ecatConfig.ecatSlaveNameVec->at(0) << std::endl;
     std::cout << "  Ethercat State: " << ecatConfig.ecatInfo->ecatState << std::endl;
-    std::cout << "  " << ecatConfig.ecatSlaveVec->at(0).inputs.position_actual_value << std::endl;
+    std::cout << "  " << *ecatConfig.ecatSlaveVec->at(0).inputs.position_actual_value << std::endl;
 
-    ecatConfig.ecatSlaveVec->at(0).outputs.mode_of_operation = 9;
-    ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 128;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.mode_of_operation = 9;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 128;
     usleep(1000000);
-    std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+    std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
 
 
-    ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 6;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 6;
     usleep(1000000);
-    std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+    std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
 
 
-    ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 7;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 7;
     usleep(1000000);
-    std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+    std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
 
-    ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 15;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 15;
     usleep(1000000);
-    std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
-    ecatConfig.ecatSlaveVec->at(0).outputs.target_velocity = 10000;
+    std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.target_velocity = 10000;
 
     usleep(10000000);
 
-    ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 0;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 0;
     usleep(1000000);
-    std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+    std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
 }
 
 TEST_CASE("cst") {
@@ -199,33 +204,33 @@ TEST_CASE("cst") {
     std::cout <<"Timestamp: " << ecatConfig.ecatInfo->timestamp << std::endl;
     std::cout << "  Slave name:  " << ecatConfig.ecatSlaveNameVec->at(0) << std::endl;
     std::cout << "  Ethercat State: " << ecatConfig.ecatInfo->ecatState << std::endl;
-    std::cout << "  " << ecatConfig.ecatSlaveVec->at(0).inputs.position_actual_value << std::endl;
+    std::cout << "  " << *ecatConfig.ecatSlaveVec->at(0).inputs.position_actual_value << std::endl;
 
-    ecatConfig.ecatSlaveVec->at(0).outputs.mode_of_operation = 10;
-    ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 128;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.mode_of_operation = 10;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 128;
     usleep(1000000);
-    std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+    std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
 
 
-    ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 6;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 6;
     usleep(1000000);
-    std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+    std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
 
 
-    ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 7;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 7;
     usleep(1000000);
-    std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+    std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
 
-    ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 15;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 15;
     usleep(1000000);
-    std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
-    ecatConfig.ecatSlaveVec->at(0).outputs.target_torque = 70;
+    std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.target_torque = 70;
 
     usleep(20000000);
 
-    ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 0;
+    *ecatConfig.ecatSlaveVec->at(0).outputs.control_word = 0;
     usleep(1000000);
-    std::cout << "Status is:  " << ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
+    std::cout << "Status is:  " << *ecatConfig.ecatSlaveVec->at(0).inputs.status_word << std::endl;
 }
 
 TEST_CASE("Cycling Time Print") {
@@ -238,7 +243,7 @@ TEST_CASE("Cycling Time Print") {
         std::cout << "  Ethercat State: " << ecatConfig.ecatInfo->ecatState << std::endl;
 
         std::cout << "  Current cycling Time: " << ecatConfig.ecatInfo->currCycleTime  << std::endl;
-        std::cout << "  Min cycling Time: " << ecatConfig.ecatInfo->minCyclcTime  << std::endl;
+        std::cout << "  Min cycling Time: " << ecatConfig.ecatInfo->minCycleTime  << std::endl;
         std::cout << "  Max cycling Time: " << ecatConfig.ecatInfo->maxCycleTime  << std::endl;
         std::cout << "  Avg cycling Time: " << ecatConfig.ecatInfo->avgCycleTime << std::endl;
 
