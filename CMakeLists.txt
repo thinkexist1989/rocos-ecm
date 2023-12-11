@@ -44,14 +44,9 @@ message(STATUS "INSTALL PREFIX: ${CMAKE_INSTALL_PREFIX}")
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package(Boost REQUIRED COMPONENTS date_time filesystem system chrono)
-find_package(yaml-cpp REQUIRED)
 find_package(Threads REQUIRED)
 
-
-#find_package(gflags REQUIRED)
-#find_package(glog REQUIRED)
 add_subdirectory(3rdparty/gflags)
-#add_subdirectory(3rdparty/glog)
 add_subdirectory(3rdparty/termcolor)
 
 
@@ -92,8 +87,6 @@ target_link_libraries(ecat_config
         Boost::date_time
         Boost::filesystem
         Boost::system
-        Boost::chrono
-        yaml-cpp
         rt
         )
 
@@ -158,7 +151,7 @@ include(CMakePackageConfigHelpers)
 #        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
 #        )
 
-install(FILES ${CMAKE_BINARY_DIR}/ver.h include/rocos_ecm/ecat_config.h
+install(FILES ${CMAKE_BINARY_DIR}/ver.h include/rocos_ecm/ecat_config_master.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocos_ecm
         )
 

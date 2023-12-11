@@ -6,8 +6,6 @@
 #include <regex>
 #include "EcFlags.h"
 
-//! @brief the path of EtherCAT configuration file(YAML). Default value is "/etc/rocos-ecm/ecat_config.yaml"
-DEFINE_string(config, "/opt/rocos/ecm/config/ecat_config.yaml", "Path to ecat_config file in YAML format.");
 
 //! @brief the path of eni file(EtherCAT Network Information). Default value is "/etc/rocos-ecm/eni.xml"
 DEFINE_string(eni, "/opt/rocos/ecm/config/eni.xml", "Path to ENI file in XML format.");
@@ -47,10 +45,12 @@ DEFINE_bool(ctloff, false, "Disable DCM control loop for diagnosis. ");
 
 //! @brief Intel network card instances and mode
 DEFINE_int32(link, 0, "Link layer selection: 0 = Intel 8254x, 1 = Intel 8255x. The link layer selection specifies which link layer is used by the demo application. The default is Intel 8254x. ");
-DEFINE_string(instance, "01:00.0", "Device instance 1=first, 2=second. The device instance specifies which network card is used by the demo application. The default is the first network card. ");
+DEFINE_int32(instance, 1, "Device instance 1=first, 2=second. The device instance specifies which network card is used by the demo application. The default is the first network card. ");
 DEFINE_int32(mode, 1, "Mode 0 = Interrupt mode, 1= Polling mode. The mode specifies which mode is used by the demo application. The default is interrupt mode. ");
 
 DEFINE_string(state, "op", "The request state of EtherCAT slaves. value can be init/preop/safeop/op The default is op. ");
+
+DEFINE_string(license, "2A183B38-9F93C32D-B25DDBCD", "The license key of EC-Master binding with MAC Address. ");
 
 
 //DEFINE_string(i8254x, "1 1", "<instance>: Device instance 1=first, 2=second; <mode>: Mode 0 = Interrupt mode, 1= Polling mode");

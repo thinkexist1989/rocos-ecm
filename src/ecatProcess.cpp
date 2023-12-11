@@ -31,10 +31,11 @@
 //#define LICENSE_KEY "FB3B37E5-014B554C-F51CA7DF"
 
 /*-EtherCAT Configuration------------------------------------------------------*/
-#include "include/rocos_ecm/ecat_config.h"
+#include "rocos_ecm/ecat_config_master.h"
 
-static EcatConfig *pEcatConfig = new EcatConfig();
-static constexpr const char* slave_type_names[] = { "Driver", "FT Sensor" };
+static EcatConfigMaster *pEcatConfig = new EcatConfigMaster();
+
+static timeval tv; // time stamp
 
 
 /*-Logging-------------------------------------------------------------------*/
@@ -73,7 +74,7 @@ static EC_T_VOID tEcJobTask(EC_T_VOID *pvThreadParamDesc);
 
 /*-MYAPP---------------------------------------------------------------------*/
 /* Demo code: Remove/change this in your application */
-static EC_T_DWORD myAppInit(EC_T_PBYTE pbyConfig, T_EC_THREAD_PARAM *pEcThreadParam);
+static EC_T_DWORD myAppInit(T_EC_THREAD_PARAM *pEcThreadParam);
 
 static EC_T_DWORD myAppPrepare(T_EC_THREAD_PARAM *pEcThreadParam);
 
@@ -96,7 +97,7 @@ static EC_T_DWORD myAppNotify(EC_T_DWORD dwCode, EC_T_NOTIFYPARMS *pParms);
  * \return  Status value.
 */
 EC_T_DWORD ecatProcess(
-        EC_T_PBYTE pbyCnf /* [in]  Configuration file in YAML  */
+        EC_T_PBYTE pbyCnf /* [deprecated]  Configuration file in YAML  */
         ,
         EC_T_CNF_TYPE eCnfType /* [in]  Enum type of configuration data provided */
         ,
@@ -202,7 +203,7 @@ EC_T_DWORD ecatProcess(
 
     ////////////////        MY OWN CODE     ///////////////////////
     /* Initialize application */
-    dwRes = myAppInit(pbyCnf, pEcThreadParam);
+    dwRes = myAppInit(pEcThreadParam);
     if (EC_E_NOERROR != dwRes) {
         EcLogMsg(EC_LOG_LEVEL_ERROR,
                  (pEcLogContext, EC_LOG_LEVEL_ERROR, (EC_T_CHAR *) "myAppInit failed: %s (0x%lx))\n", ecatGetText(
@@ -332,15 +333,15 @@ EC_T_DWORD ecatProcess(
     /* Add License Key */
 //    dwRes = ecatSetLicenseKey(LICENSE_KEY);
     //////////// MY OWN CODE /////////////////
-    dwRes = ecatSetLicenseKey(const_cast<EC_T_CHAR *>(pEcatConfig->license.c_str()));
+    dwRes = ecatSetLicenseKey(const_cast<EC_T_CHAR *>(FLAGS_license.c_str()));
     if (dwRes != EC_E_NOERROR) {
-        pEcatConfig->ecatInfo->isAuthorized = true; // ecMaster is authorized
+        pEcatConfig->ecatBus->is_authorized = true; // ecMaster is authorized
         EcLogMsg(EC_LOG_LEVEL_ERROR,
-                 (pEcLogContext, EC_LOG_LEVEL_ERROR, "\033[31m\033[1mThe license key: %s is not correct.\033[0m\n", pEcatConfig->license.c_str()));
+                 (pEcLogContext, EC_LOG_LEVEL_ERROR, "\033[31m\033[1mThe license key: %s is not correct.\033[0m\n", FLAGS_license.c_str()));
     } else {
-        pEcatConfig->ecatInfo->isAuthorized = false; // ecMaster is not authorized
+        pEcatConfig->ecatBus->is_authorized = false; // ecMaster is not authorized
         EcLogMsg(EC_LOG_LEVEL_INFO,
-                 (pEcLogContext, EC_LOG_LEVEL_ERROR, "\033[32m\033[1mThe license key: %s is correct.\033[0m\n", pEcatConfig->license.c_str()));
+                 (pEcLogContext, EC_LOG_LEVEL_ERROR, "\033[32m\033[1mThe license key: %s is correct.\033[0m\n", FLAGS_license.c_str()));
     }
 
     /* Create cyclic task to trigger master jobs */
@@ -636,60 +637,60 @@ EC_T_DWORD ecatProcess(
 
 
     while (bRun) { //while process
-        pEcatConfig->ecatInfo->ecatState = static_cast<EcatInfo::EcatState>(ecatGetMasterState()); // Get Ec Master State
+        pEcatConfig->ecatBus->current_state = ecatGetMasterState(); // Get Ec Master State
         //! Process EtherCAT state machine
-        switch (pEcatConfig->ecatInfo->ecatRequestState) {
-            case EcatInfo::INIT:
-                pEcatConfig->ecatInfo->ecatNextExpectedState = EcatInfo::INIT;
+        switch (pEcatConfig->ecatBus->request_state) {
+            case eEcatState_INIT:
+                pEcatConfig->ecatBus->next_expected_state = eEcatState_INIT;
                 break;
-            case EcatInfo::PREOP:
-                switch (pEcatConfig->ecatInfo->ecatState) {
-                    case EcatInfo::UNKNOWN:
-                    case EcatInfo::BOOTSTRAP:
-                        pEcatConfig->ecatInfo->ecatNextExpectedState = EcatInfo::INIT;
+            case eEcatState_PREOP:
+                switch (pEcatConfig->ecatBus->current_state) {
+                    case eEcatState_UNKNOWN:
+                    case eEcatState_BOOTSTRAP:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_INIT;
                         break;
                     default:
-                        pEcatConfig->ecatInfo->ecatNextExpectedState = EcatInfo::PREOP;
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_PREOP;
                         break;
                 }
                 break;
-            case EcatInfo::SAFEOP:
-                switch (pEcatConfig->ecatInfo->ecatState) {
-                    case EcatInfo::INIT:
-                        pEcatConfig->ecatInfo->ecatNextExpectedState = EcatInfo::PREOP;
+            case eEcatState_SAFEOP:
+                switch (pEcatConfig->ecatBus->current_state) {
+                    case eEcatState_INIT:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_PREOP;
                         break;
-                    case EcatInfo::UNKNOWN:
-                    case EcatInfo::BOOTSTRAP:
-                        pEcatConfig->ecatInfo->ecatNextExpectedState = EcatInfo::INIT;
+                    case eEcatState_UNKNOWN:
+                    case eEcatState_BOOTSTRAP:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_INIT;
                         break;
-                    case EcatInfo::PREOP:
-                    case EcatInfo::OP:
-                        pEcatConfig->ecatInfo->ecatNextExpectedState = EcatInfo::SAFEOP;
-                        break;
-                    default:
-                        break;
-                }
-                break;
-            case EcatInfo::OP:
-                switch (pEcatConfig->ecatInfo->ecatState) {
-                    case EcatInfo::INIT:
-                        pEcatConfig->ecatInfo->ecatNextExpectedState = EcatInfo::PREOP;
-                        break;
-                    case EcatInfo::UNKNOWN:
-                    case EcatInfo::BOOTSTRAP:
-                        pEcatConfig->ecatInfo->ecatNextExpectedState = EcatInfo::INIT;
-                        break;
-                    case EcatInfo::PREOP:
-                        pEcatConfig->ecatInfo->ecatNextExpectedState = EcatInfo::SAFEOP;
-                    case EcatInfo::SAFEOP:
-                        pEcatConfig->ecatInfo->ecatNextExpectedState = EcatInfo::OP;
+                    case eEcatState_PREOP:
+                    case eEcatState_OP:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_SAFEOP;
                         break;
                     default:
                         break;
                 }
                 break;
-            case EcatInfo::BOOTSTRAP:
-            case EcatInfo::UNKNOWN:
+            case eEcatState_OP:
+                switch (pEcatConfig->ecatBus->current_state) {
+                    case eEcatState_INIT:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_PREOP;
+                        break;
+                    case eEcatState_UNKNOWN:
+                    case eEcatState_BOOTSTRAP:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_INIT;
+                        break;
+                    case eEcatState_PREOP:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_SAFEOP;
+                    case eEcatState_SAFEOP:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_OP;
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case eEcatState_BOOTSTRAP:
+            case eEcatState_UNKNOWN:
             default:
                 EcLogMsg(EC_LOG_LEVEL_ERROR,
                          (pEcLogContext, EC_LOG_LEVEL_ERROR, "Invaid Request Master State!\n"));
@@ -698,7 +699,7 @@ EC_T_DWORD ecatProcess(
 
 
         // Dive into state switch
-        if (pEcatConfig->ecatInfo->ecatNextExpectedState == EcatInfo::INIT) { // set state to INIT
+        if (pEcatConfig->ecatBus->next_expected_state == eEcatState_INIT) { // set state to INIT
             /* set master and bus state to INIT */
             dwRes = ecatSetMasterState(ETHERCAT_STATE_CHANGE_TIMEOUT, eEcatState_INIT); // 切换到Init状态  by think
             pEcThreadParam->pNotInst->ProcessNotificationJobs();
@@ -721,7 +722,7 @@ EC_T_DWORD ecatProcess(
                 goto Exit;
             }
 
-        } else if (pEcatConfig->ecatInfo->ecatNextExpectedState == EcatInfo::PREOP) { // set state to PREOP
+        } else if (pEcatConfig->ecatBus->next_expected_state == eEcatState_PREOP) { // set state to PREOP
             /* set master and bus state to PREOP */
             dwRes = ecatSetMasterState(ETHERCAT_STATE_CHANGE_TIMEOUT, eEcatState_PREOP); // 切换到Preop状态  by think
             pEcThreadParam->pNotInst->ProcessNotificationJobs();
@@ -744,7 +745,7 @@ EC_T_DWORD ecatProcess(
                 goto Exit;
             }
 
-        } else if (pEcatConfig->ecatInfo->ecatNextExpectedState == EcatInfo::SAFEOP) { // set state to SAFEOP
+        } else if (pEcatConfig->ecatBus->next_expected_state == eEcatState_SAFEOP) { // set state to SAFEOP
             /* set master and bus state to SAFEOP */
             dwRes = ecatSetMasterState(ETHERCAT_STATE_CHANGE_TIMEOUT, eEcatState_SAFEOP); // 切换到Safeop状态  by think
             pEcThreadParam->pNotInst->ProcessNotificationJobs();
@@ -775,7 +776,7 @@ EC_T_DWORD ecatProcess(
                 goto Exit;
             }
 
-        } else if (pEcatConfig->ecatInfo->ecatNextExpectedState == EcatInfo::OP) { // set state to OP
+        } else if (pEcatConfig->ecatBus->next_expected_state == eEcatState_OP) { // set state to OP
             /* set master and bus state to OP */
             dwRes = ecatSetMasterState(ETHERCAT_STATE_CHANGE_TIMEOUT, eEcatState_OP); // 切换到Op状态 by think
             pEcThreadParam->pNotInst->ProcessNotificationJobs();
@@ -812,7 +813,7 @@ EC_T_DWORD ecatProcess(
                 pEcThreadParam->oDuration.Start(dwDuration);
             }
 
-            while ((pEcatConfig->ecatInfo->ecatRequestState == EcatInfo::OP) && bRun &&
+            while ((pEcatConfig->ecatBus->request_state == eEcatState_OP) && bRun &&
                    (!pEcThreadParam->oDuration.IsStarted() ||
                     !pEcThreadParam->oDuration.IsElapsed())) { // while op 其实运行到这里时，实时任务已经在tEcJobTask中运行了，这里只是在运行过程中做一些检查
                 if (nVerbose >= 2) {
@@ -1041,10 +1042,10 @@ static EC_T_VOID tEcJobTask(EC_T_VOID *pvThreadParamDesc) {
 
         PERF_JOB_END(PERF_CycleTime);
         ////////===========My Own Code============/////////
-        pEcatConfig->ecatInfo->minCycleTime = pEcThreadParam->TscMeasDesc.aTscTime[PERF_CycleTime].dwMin / 10.0;
-        pEcatConfig->ecatInfo->maxCycleTime = pEcThreadParam->TscMeasDesc.aTscTime[PERF_CycleTime].dwMax / 10.0;
-        pEcatConfig->ecatInfo->avgCycleTime = pEcThreadParam->TscMeasDesc.aTscTime[PERF_CycleTime].dwAvg / 1600.0;
-        pEcatConfig->ecatInfo->currCycleTime = pEcThreadParam->TscMeasDesc.aTscTime[PERF_CycleTime].dwCurr / 10.0;
+        pEcatConfig->ecatBus->min_cycle_time = pEcThreadParam->TscMeasDesc.aTscTime[PERF_CycleTime].dwMin / 10.0;
+        pEcatConfig->ecatBus->max_cycle_time = pEcThreadParam->TscMeasDesc.aTscTime[PERF_CycleTime].dwMax / 10.0;
+        pEcatConfig->ecatBus->avg_cycle_time = pEcThreadParam->TscMeasDesc.aTscTime[PERF_CycleTime].dwAvg / 1600.0;
+        pEcatConfig->ecatBus->current_cycle_time = pEcThreadParam->TscMeasDesc.aTscTime[PERF_CycleTime].dwCurr / 10.0;
 
         //////////////////////////////////////////////////
         PERF_JOB_START(PERF_CycleTime);
@@ -1105,13 +1106,15 @@ static EC_T_VOID tEcJobTask(EC_T_VOID *pvThreadParamDesc) {
             EC_T_STATE eMasterState = ecatGetMasterState();
 
             /***********Record Ec-Master State**************/
-            pEcatConfig->ecatInfo->ecatState = static_cast<EcatInfo::EcatState>(eMasterState);
+            pEcatConfig->ecatBus->current_state = eMasterState;
 
             //            if ((eEcatState_SAFEOP == eMasterState) || (eEcatState_OP == eMasterState))
             if (eEcatState_OP == eMasterState) {
                 myAppWorkpd(pEcThreadParam, abyPdIn, abyPdOut);
             } else if (eEcatState_SAFEOP == eMasterState) {
                 myAppReadypd(pEcThreadParam, abyPdIn, abyPdOut);
+            } else {
+                ecatPerfMeasReset(&pEcThreadParam->TscMeasDesc, 0xFFFFFFFF); // 如果不是OP或者SafeOP就一直重置
             }
         }
         PERF_JOB_END(PERF_myAppWorkpd);
@@ -1240,29 +1243,26 @@ static EC_T_DWORD RasNotifyWrapper(
 
 \return EC_E_NOERROR on success, error code otherwise.
 */
-static EC_T_DWORD myAppInit(const EC_T_PBYTE pbyConfig, T_EC_THREAD_PARAM *pEcThreadParam) {
+static EC_T_DWORD myAppInit(T_EC_THREAD_PARAM *pEcThreadParam) {
     EC_UNREFPARM(pEcThreadParam);
     //    return EC_E_NOERROR;
+
     ////////===========My Own Code============/////////
 
-    std::string configPath = (char *) pbyConfig;
-    if (!pEcatConfig->parserYamlFile(configPath))
-        goto Exit;
-
-    if (!pEcatConfig->createSharedMemory())
+    if (!pEcatConfig->createSharedMemory()) // 创建共享内存 by think
         goto Exit;
 
     // Parse request state from command arguments --state
     if (strcasecmp(FLAGS_state.c_str(), "init") == 0)
-        pEcatConfig->ecatInfo->ecatRequestState = EcatInfo::INIT;
+        pEcatConfig->ecatBus->request_state = eEcatState_INIT;
     else if (strcasecmp(FLAGS_state.c_str(), "preop") == 0)
-        pEcatConfig->ecatInfo->ecatRequestState = EcatInfo::PREOP;
+        pEcatConfig->ecatBus->request_state = eEcatState_PREOP;
     else if (strcasecmp(FLAGS_state.c_str(), "safeop") == 0)
-        pEcatConfig->ecatInfo->ecatRequestState = EcatInfo::SAFEOP;
+        pEcatConfig->ecatBus->request_state = eEcatState_SAFEOP;
     else if (strcasecmp(FLAGS_state.c_str(), "op") == 0)
-        pEcatConfig->ecatInfo->ecatRequestState = EcatInfo::OP;
+        pEcatConfig->ecatBus->request_state = eEcatState_OP;
     else
-        pEcatConfig->ecatInfo->ecatRequestState = EcatInfo::UNKNOWN;
+        pEcatConfig->ecatBus->request_state = eEcatState_UNKNOWN;
 
     return EC_E_NOERROR;
 
@@ -1317,11 +1317,14 @@ static EC_T_DWORD myAppPrepare(T_EC_THREAD_PARAM *pEcThreadParam) {
     //    return EC_E_NOERROR;
 
     ////////===========My Own Code============/////////
+    pEcatConfig->ecatBus->slave_num = ecatGetNumConfiguredSlaves();
 
-    if (ecatGetNumConfiguredSlaves() != pEcatConfig->slave_number) {
+    // 判断ENI文件中配置的从站数量和实际连接的从站数量是否一致
+    if (ecatGetNumConfiguredSlaves() != ecatGetNumConnectedSlaves()) {
         EcLogMsg(EC_LOG_LEVEL_ERROR,
-                 (pEcLogContext, EC_LOG_LEVEL_ERROR, "Slave number in ENI is not equal to the slave number in configurations file(eg. ecat_config.yaml) . "
-                                                     "Please check out the configurations file(eg. ecat_config.yaml) and EcMaster ENI file\n"));
+                 (pEcLogContext, EC_LOG_LEVEL_ERROR, "Slaves in ENI (total %d) is not equal to slaves that connected (total %d). "
+                                                     "Please check out the configurations file(eg. ecat_config.yaml) and EcMaster ENI file\n",ecatGetNumConfiguredSlaves(),ecatGetNumConnectedSlaves() ));
+
         goto Exit;
     }
 
@@ -1346,453 +1349,92 @@ static EC_T_DWORD myAppSetup(T_EC_THREAD_PARAM *pEcThreadParam) {
 
 
     ////============== MY OWN CODE =================////
-    for (int i = 0; i < pEcatConfig->slave_number; ++i) {
+    for (int i = 0; i < pEcatConfig->ecatBus->slave_num; ++i) {
         EC_T_CFG_SLAVE_INFO SlaveInfo;
 
-        if (ecatGetCfgSlaveInfo(EC_TRUE, i + 1001, &SlaveInfo) != EC_E_NOERROR) {
+        EC_T_WORD slave_addr = i + 1001;
+
+        if (ecatGetCfgSlaveInfo(EC_TRUE, slave_addr, &SlaveInfo) != EC_E_NOERROR) {
             EcLogMsg(EC_LOG_LEVEL_ERROR,
                      (pEcLogContext, EC_LOG_LEVEL_ERROR, "ecatGetCfgSlaveInfo() Error!!\n"));
             goto Exit;
         }
 
+        rocos::Slave* pSlave = &pEcatConfig->ecatBus->slaves[i];
+
         EcLogMsg(EC_LOG_LEVEL_INFO,
                  (pEcLogContext, EC_LOG_LEVEL_INFO, "******************************************************************************\n"));
 
-        pEcatConfig->slaveCfg[i].name = SlaveInfo.abyDeviceName;
-        EcLogMsg(EC_LOG_LEVEL_INFO,
-                 (pEcLogContext, EC_LOG_LEVEL_INFO, "Slave Name..........: %s\n", pEcatConfig->slaveCfg[i].name.c_str()));
-        pEcatConfig->ecatSlaveVec->at(i).slave_id = i;
-        pEcatConfig->ecatSlaveNameVec->at(i) = SlaveInfo.abyDeviceName;
+        memcpy(pSlave->name, SlaveInfo.abyDeviceName, sizeof(SlaveInfo.abyDeviceName)); /// Slave Name
 
         EcLogMsg(EC_LOG_LEVEL_INFO,
-                 (pEcLogContext, EC_LOG_LEVEL_INFO, "Slave Type..........: %s\n", slave_type_names[
-                         pEcatConfig->slaveCfg[i].type]));
+                 (pEcLogContext, EC_LOG_LEVEL_INFO, "Slave Name..........: %s\n", pSlave->name));
 
-        EC_T_PROCESS_VAR_INFO VarInfo;
+        pSlave->id = i; /// Slave ID
+
+        EcLogMsg(EC_LOG_LEVEL_INFO,
+                 (pEcLogContext, EC_LOG_LEVEL_INFO, "Slave ID............: %d\n", pSlave->id));
 
         ////=================Process Data Inputs==================////
-
         EcLogMsg(EC_LOG_LEVEL_INFO,
                  (pEcLogContext, EC_LOG_LEVEL_INFO, "No. of PD IN........: %d\n", SlaveInfo.wNumProcessVarsInp));
 
+        pSlave->input_var_num = SlaveInfo.wNumProcessVarsInp; /// Input Var Num
 
-        // 1. ec_status_word
-        if (ecatFindInpVarByName(const_cast<EC_T_CHAR *>(pEcatConfig->getEcInpVarName(i, STATUS_WORD).c_str()),
-                                 &VarInfo) !=
-            EC_E_NOERROR) {
-//            EcLogMsg(EC_LOG_LEVEL_WARNING,
-//                     (pEcLogContext, EC_LOG_LEVEL_WARNING, "[ecatFindInpVarByName()]: Can not find input var: %s , ignored !!\n", pEcatConfig->getEcInpVarName(
-//                             i, STATUS_WORD).c_str()));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[STATUS_WORD] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.status_word = nullptr;
-
-        } else if (sizeof(uint16_t) * 8 != VarInfo.nBitSize) { // Size: 2.0 unsigned
+        EC_T_PROCESS_VAR_INFO pSlaveInpVarInfoEntries[SlaveInfo.wNumProcessVarsInp]; // 存储Input Vars
+        EC_T_WORD pwInpReadEntries;
+        if(ecatGetSlaveInpVarInfo(EC_TRUE, slave_addr, SlaveInfo.wNumProcessVarsInp, pSlaveInpVarInfoEntries, &pwInpReadEntries) != EC_E_NOERROR) {
             EcLogMsg(EC_LOG_LEVEL_ERROR,
-                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "Status Word Bit Size Error!!\n"));
+                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "ecatGetSlaveInpVarInfo() Error!!\n"));
             goto Exit;
-        } else {
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[IN] Stat. Wrd......: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[STATUS_WORD] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.status_word = (uint16_t *) ((char *) pEcatConfig->pdInputPtr +
-                                                                                VarInfo.nBitOffs / 8);
-
         }
 
-
-
-        // 2. ec_position_actual_value
-        if (ecatFindInpVarByName(
-                const_cast<EC_T_CHAR *>(pEcatConfig->getEcInpVarName(i, POSITION_ACTUAL_VALUE).c_str()),
-                &VarInfo) !=
-            EC_E_NOERROR) {
-//            EcLogMsg(EC_LOG_LEVEL_WARNING,
-//                     (pEcLogContext, EC_LOG_LEVEL_WARNING, "[ecatFindInpVarByName()]: Can not find input var: %s , ignored !!\n", pEcatConfig->getEcInpVarName(
-//                             i, POSITION_ACTUAL_VALUE).c_str()));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[POSITION_ACTUAL_VALUE] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.position_actual_value = nullptr;
-        } else if (sizeof(int32_t) * 8 != VarInfo.nBitSize) {
-            EcLogMsg(EC_LOG_LEVEL_ERROR,
-                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "Position Actual Value Bit Size Error!!\n"));
-            goto Exit;
-        } else {
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[IN] Pos. Act. Val..: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[POSITION_ACTUAL_VALUE] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.position_actual_value = (int32_t *) (
-                    (char *) pEcatConfig->pdInputPtr + VarInfo.nBitOffs / 8);
-
+        if(pwInpReadEntries != SlaveInfo.wNumProcessVarsInp) {
+            EcLogMsg(EC_LOG_LEVEL_WARNING,
+                     (pEcLogContext, EC_LOG_LEVEL_WARNING, "ecatGetSlaveInpVarInfo() may not read all input variables!!\n"));
         }
 
+        for(int j = 0; j < pwInpReadEntries; j++) {
+            rocos::PdVar* pInpVar = &pSlave->input_vars[j];
+            memcpy(pInpVar->name, pSlaveInpVarInfoEntries[j].szName, sizeof(pSlaveInpVarInfoEntries[j].szName)); /// Input Var Name
+            pInpVar->offset = pSlaveInpVarInfoEntries[j].nBitOffs / 8; /// Input Var Offset
+            pInpVar->size = pSlaveInpVarInfoEntries[j].nBitSize / 8;   /// Input Var Size
 
-        //3. ec_velocity_actual_value
-        if (ecatFindInpVarByName(
-                const_cast<EC_T_CHAR *>(pEcatConfig->getEcInpVarName(i, VELOCITY_ACTUAL_VALUE).c_str()),
-                &VarInfo) !=
-            EC_E_NOERROR) {
-//            EcLogMsg(EC_LOG_LEVEL_WARNING,
-//                     (pEcLogContext, EC_LOG_LEVEL_WARNING, "[ecatFindInpVarByName()]: Can not find input var: %s , ignored !!\n", pEcatConfig->getEcInpVarName(
-//                             i, VELOCITY_ACTUAL_VALUE).c_str()));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[VELOCITY_ACTUAL_VALUE] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.velocity_actual_value = nullptr;
-        } else if (sizeof(int32_t) * 8 != VarInfo.nBitSize) {
-            EcLogMsg(EC_LOG_LEVEL_ERROR,
-                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "Velocity Actual Value Bit Size Error!!\n"));
-            goto Exit;
-        } else {
             EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[IN] Vel. Act. Val..: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[VELOCITY_ACTUAL_VALUE] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.velocity_actual_value = (int32_t *) (
-                    (char *) pEcatConfig->pdInputPtr + VarInfo.nBitOffs / 8);
+                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[%02d] ...............: %s, %d offs, %d size\n", j+1, pInpVar->name, pInpVar->offset, pInpVar->size));
         }
 
-
-        //4. ec_torque_actual_value
-        if (ecatFindInpVarByName(
-                const_cast<EC_T_CHAR *>(pEcatConfig->getEcInpVarName(i, TORQUE_ACTUAL_VALUE).c_str()),
-                &VarInfo) !=
-            EC_E_NOERROR) {
-//            EcLogMsg(EC_LOG_LEVEL_WARNING,
-//                     (pEcLogContext, EC_LOG_LEVEL_WARNING, "[ecatFindInpVarByName()]: Can not find input var: %s , ignored !!\n", pEcatConfig->getEcInpVarName(
-//                             i, TORQUE_ACTUAL_VALUE).c_str()));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[TORQUE_ACTUAL_VALUE] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.torque_actual_value = nullptr;
-        } else if (sizeof(int16_t) * 8 != VarInfo.nBitSize) {
-            EcLogMsg(EC_LOG_LEVEL_ERROR,
-                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "Torque Actual Value Bit Size Error!!\n"));
-            goto Exit;
-        } else {
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[IN] Tor. Act. Val..: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[TORQUE_ACTUAL_VALUE] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.torque_actual_value = (int16_t *) (
-                    (char *) pEcatConfig->pdInputPtr + VarInfo.nBitOffs / 8);
-        }
-
-
-
-        //5. ec_load_torque_value
-        if (ecatFindInpVarByName(
-                const_cast<EC_T_CHAR *>(pEcatConfig->getEcInpVarName(i, LOAD_TORQUE_VALUE).c_str()),
-                &VarInfo) !=
-            EC_E_NOERROR) {
-//            EcLogMsg(EC_LOG_LEVEL_WARNING,
-//                     (pEcLogContext, EC_LOG_LEVEL_WARNING, "[ecatFindInpVarByName()]: Can not find input var: %s , ignored !!\n", pEcatConfig->getEcInpVarName(
-//                             i, LOAD_TORQUE_VALUE).c_str()));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[LOAD_TORQUE_VALUE] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.load_torque_value = nullptr;
-        } else if (sizeof(int16_t) * 8 != VarInfo.nBitSize) {
-            EcLogMsg(EC_LOG_LEVEL_ERROR,
-                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "Load Torque Value Bit Size Error!!\n"));
-            goto Exit;
-        } else {
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[IN] Load Tor. Val.: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[LOAD_TORQUE_VALUE] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.load_torque_value = (int16_t *) ((char *) pEcatConfig->pdInputPtr +
-                                                                                     VarInfo.nBitOffs / 8);
-        }
-
-        //6. ec_secondary_position_value
-        if (ecatFindInpVarByName(
-                const_cast<EC_T_CHAR *>(pEcatConfig->getEcInpVarName(i, SECONDARY_POSITION_VALUE).c_str()),
-                &VarInfo) !=
-            EC_E_NOERROR) {
-//            EcLogMsg(EC_LOG_LEVEL_WARNING,
-//                     (pEcLogContext, EC_LOG_LEVEL_WARNING, "[ecatFindInpVarByName()]: Can not find input var: %s , ignored !!\n", pEcatConfig->getEcInpVarName(
-//                             i, SECONDARY_POSITION_VALUE).c_str()));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[SECONDARY_POSITION_VALUE] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.secondary_position_value = nullptr;
-        } else if (sizeof(int32_t) * 8 != VarInfo.nBitSize) {
-            EcLogMsg(EC_LOG_LEVEL_ERROR,
-                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "Secondary Position Value Bit Size Error!!\n"));
-            goto Exit;
-        } else {
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[IN] Sec. Pos. Val..: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[SECONDARY_POSITION_VALUE] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.secondary_position_value = (int32_t *) (
-                    (char *) pEcatConfig->pdInputPtr + VarInfo.nBitOffs / 8);
-        }
-
-        //7. ec_secondary_velocity_value
-        if (ecatFindInpVarByName(
-                const_cast<EC_T_CHAR *>(pEcatConfig->getEcInpVarName(i, SECONDARY_VELOCITY_VALUE).c_str()),
-                &VarInfo) !=
-            EC_E_NOERROR) {
-//            EcLogMsg(EC_LOG_LEVEL_WARNING,
-//                     (pEcLogContext, EC_LOG_LEVEL_WARNING, "[ecatFindInpVarByName()]: Can not find input var: %s , ignored !!\n", pEcatConfig->getEcInpVarName(
-//                             i, SECONDARY_VELOCITY_VALUE).c_str()));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[SECONDARY_VELOCITY_VALUE] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.secondary_velocity_value = nullptr;
-        } else if (sizeof(int32_t) * 8 != VarInfo.nBitSize) {
-            EcLogMsg(EC_LOG_LEVEL_ERROR,
-                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "Secondary Velocity Value Bit Size Error!!\n"));
-            goto Exit;
-        } else {
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[IN] Sec. Vel. Val..: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[SECONDARY_VELOCITY_VALUE] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.secondary_velocity_value = (int32_t *) (
-                    (char *) pEcatConfig->pdInputPtr + VarInfo.nBitOffs / 8);
-        }
-
-        //8. fx_value
-        if (ecatFindInpVarByName(
-                const_cast<EC_T_CHAR *>(pEcatConfig->getEcInpVarName(i, FX_VALUE).c_str()),
-                &VarInfo) != EC_E_NOERROR) {
-            pEcatConfig->slaveCfg[i].ecInpOffsets[FX_VALUE] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.fx_value = nullptr;
-        } else if (sizeof(float) * 8 != VarInfo.nBitSize) {
-            EcLogMsg(EC_LOG_LEVEL_ERROR,
-                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "Fx Value Bit Size Error!!\n"));
-            goto Exit;
-        } else {
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[IN] Fx Val.........: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[FX_VALUE] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.fx_value = (float *) (
-                    (char *) pEcatConfig->pdInputPtr + VarInfo.nBitOffs / 8);
-        }
-
-        //9. fy_value
-        if (ecatFindInpVarByName(
-                const_cast<EC_T_CHAR *>(pEcatConfig->getEcInpVarName(i, FY_VALUE).c_str()),
-                &VarInfo) != EC_E_NOERROR) {
-            pEcatConfig->slaveCfg[i].ecInpOffsets[FY_VALUE] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.fy_value = nullptr;
-        } else if (sizeof(float) * 8 != VarInfo.nBitSize) {
-            EcLogMsg(EC_LOG_LEVEL_ERROR,
-                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "Fy Value Bit Size Error!!\n"));
-            goto Exit;
-        } else {
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[IN] Fy Val.........: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[FY_VALUE] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.fy_value = (float *) (
-                    (char *) pEcatConfig->pdInputPtr + VarInfo.nBitOffs / 8);
-        }
-
-        //10. fz_value
-        if (ecatFindInpVarByName(
-                const_cast<EC_T_CHAR *>(pEcatConfig->getEcInpVarName(i, FZ_VALUE).c_str()),
-                &VarInfo) != EC_E_NOERROR) {
-            pEcatConfig->slaveCfg[i].ecInpOffsets[FZ_VALUE] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.fz_value = nullptr;
-        } else if (sizeof(float) * 8 != VarInfo.nBitSize) {
-            EcLogMsg(EC_LOG_LEVEL_ERROR,
-                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "Fz Value Bit Size Error!!\n"));
-            goto Exit;
-        } else {
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[IN] Fz Val.........: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[FZ_VALUE] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.fz_value = (float *) (
-                    (char *) pEcatConfig->pdInputPtr + VarInfo.nBitOffs / 8);
-        }
-
-        //11. mx_value
-        if (ecatFindInpVarByName(
-                const_cast<EC_T_CHAR *>(pEcatConfig->getEcInpVarName(i, MX_VALUE).c_str()),
-                &VarInfo) != EC_E_NOERROR) {
-            pEcatConfig->slaveCfg[i].ecInpOffsets[MX_VALUE] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.mx_value = nullptr;
-        } else if (sizeof(float) * 8 != VarInfo.nBitSize) {
-            EcLogMsg(EC_LOG_LEVEL_ERROR,
-                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "Mx Value Bit Size Error!!\n"));
-            goto Exit;
-        } else {
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[IN] Mx Val.........: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[MX_VALUE] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.mx_value = (float *) (
-                    (char *) pEcatConfig->pdInputPtr + VarInfo.nBitOffs / 8);
-        }
-
-        //12. my_value
-        if (ecatFindInpVarByName(
-                const_cast<EC_T_CHAR *>(pEcatConfig->getEcInpVarName(i, MY_VALUE).c_str()),
-                &VarInfo) != EC_E_NOERROR) {
-            pEcatConfig->slaveCfg[i].ecInpOffsets[MY_VALUE] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.my_value = nullptr;
-        } else if (sizeof(float) * 8 != VarInfo.nBitSize) {
-            EcLogMsg(EC_LOG_LEVEL_ERROR,
-                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "My Value Bit Size Error!!\n"));
-            goto Exit;
-        } else {
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[IN] My Val.........: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[MY_VALUE] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.my_value = (float *) (
-                    (char *) pEcatConfig->pdInputPtr + VarInfo.nBitOffs / 8);
-        }
-
-        //13. mz_value
-        if (ecatFindInpVarByName(
-                const_cast<EC_T_CHAR *>(pEcatConfig->getEcInpVarName(i, MZ_VALUE).c_str()),
-                &VarInfo) != EC_E_NOERROR) {
-            pEcatConfig->slaveCfg[i].ecInpOffsets[MZ_VALUE] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.mz_value = nullptr;
-        } else if (sizeof(float) * 8 != VarInfo.nBitSize) {
-            EcLogMsg(EC_LOG_LEVEL_ERROR,
-                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "Mz Value Bit Size Error!!\n"));
-            goto Exit;
-        } else {
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[IN] Mz Val.........: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecInpOffsets[MZ_VALUE] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).inputs.mz_value = (float *) (
-                    (char *) pEcatConfig->pdInputPtr + VarInfo.nBitOffs / 8);
-        }
 
 
         ////=================Process Data Outputs==================////
         EcLogMsg(EC_LOG_LEVEL_INFO,
                  (pEcLogContext, EC_LOG_LEVEL_INFO, "No. of PD OUT.......: %d\n", SlaveInfo.wNumProcessVarsOutp));
 
+        pSlave->output_var_num = SlaveInfo.wNumProcessVarsOutp; /// Input Var Num
 
-        // 1. ec_mode_of_operation
-        if (ecatFindOutpVarByName(
-                const_cast<EC_T_CHAR *>(pEcatConfig->getEcOutpVarName(i, MODE_OF_OPERATION).c_str()),
-                &VarInfo) !=
-            EC_E_NOERROR) {
-//            EcLogMsg(EC_LOG_LEVEL_WARNING,
-//                     (pEcLogContext, EC_LOG_LEVEL_WARNING, "[ecatFindOutpVarByName()]: Can not find output var: %s , ignored !!\n", pEcatConfig->getEcOutpVarName(
-//                             i, MODE_OF_OPERATION).c_str()));
-
-            pEcatConfig->slaveCfg[i].ecOutpOffsets[MODE_OF_OPERATION] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).outputs.mode_of_operation = nullptr;
-        } else if (sizeof(int8_t) * 8 != VarInfo.nBitSize) {
+        EC_T_PROCESS_VAR_INFO pSlaveOutpVarInfoEntries[SlaveInfo.wNumProcessVarsOutp]; // 存储Input Vars
+        EC_T_WORD pwOutpReadEntries;
+        if(ecatGetSlaveOutpVarInfo(EC_TRUE, slave_addr, SlaveInfo.wNumProcessVarsOutp, pSlaveOutpVarInfoEntries, &pwOutpReadEntries) != EC_E_NOERROR) {
             EcLogMsg(EC_LOG_LEVEL_ERROR,
-                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "Mode of Operation Bit Size Error!!\n"));
+                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "ecatGetSlaveOutpVarInfo() Error!!\n"));
             goto Exit;
-        } else {
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[OUT] Mod. of Op....: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecOutpOffsets[MODE_OF_OPERATION] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).outputs.mode_of_operation = (int8_t *) ((char *) pEcatConfig->pdOutputPtr +
-                                                                                     VarInfo.nBitOffs / 8);
         }
 
-
-        // 2. ec_control_word
-        if (ecatFindOutpVarByName(const_cast<EC_T_CHAR *>(pEcatConfig->getEcOutpVarName(i, CONTROL_WORD).c_str()),
-                                  &VarInfo) !=
-            EC_E_NOERROR) {
-//            EcLogMsg(EC_LOG_LEVEL_WARNING,
-//                     (pEcLogContext, EC_LOG_LEVEL_WARNING, "[ecatFindOutpVarByName()]: Can not find output var: %s , ignored !!\n", pEcatConfig->getEcOutpVarName(
-//                             i, CONTROL_WORD).c_str()));
-
-            pEcatConfig->slaveCfg[i].ecOutpOffsets[CONTROL_WORD] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).outputs.control_word = nullptr;
-        } else if (sizeof(uint16_t) * 8 != VarInfo.nBitSize) {
-                EcLogMsg(EC_LOG_LEVEL_ERROR,
-                         (pEcLogContext, EC_LOG_LEVEL_ERROR, "Control Word Bit Size Error!!\n"));
-                goto Exit;
-        } else {
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[OUT] Ctrl. Wrd.....: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecOutpOffsets[CONTROL_WORD] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).outputs.control_word = (uint16_t *) ((char *) pEcatConfig->pdOutputPtr +
-                                                                                   VarInfo.nBitOffs / 8);
+        if(pwOutpReadEntries != SlaveInfo.wNumProcessVarsOutp) {
+            EcLogMsg(EC_LOG_LEVEL_WARNING,
+                     (pEcLogContext, EC_LOG_LEVEL_WARNING, "ecatGetSlaveOutpVarInfo() may not read all output variables!!\n"));
         }
 
+        for(int j = 0; j < pwOutpReadEntries; j++) {
+            rocos::PdVar* pOutpVar = &pSlave->output_vars[j];
+            memcpy(pOutpVar->name, pSlaveInpVarInfoEntries[j].szName, sizeof(pSlaveOutpVarInfoEntries[j].szName)); /// Input Var Name
+            pOutpVar->offset = pSlaveOutpVarInfoEntries[j].nBitOffs / 8; /// Input Var Offset
+            pOutpVar->size = pSlaveOutpVarInfoEntries[j].nBitSize / 8;   /// Input Var Size
 
-
-        // 3. ec_target_position
-        if (ecatFindOutpVarByName(
-                const_cast<EC_T_CHAR *>(pEcatConfig->getEcOutpVarName(i, TARGET_POSITION).c_str()),
-                &VarInfo) !=
-            EC_E_NOERROR) {
-//            EcLogMsg(EC_LOG_LEVEL_WARNING,
-//                     (pEcLogContext, EC_LOG_LEVEL_WARNING, "[ecatFindOutpVarByName()]: Can not find output var: %s , ignored !!\n", pEcatConfig->getEcOutpVarName(
-//                             i, TARGET_POSITION).c_str()));
-
-            pEcatConfig->slaveCfg[i].ecOutpOffsets[TARGET_POSITION] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).outputs.target_position = nullptr;
-        } else if (sizeof(int32_t) * 8 != VarInfo.nBitSize) {
-                EcLogMsg(EC_LOG_LEVEL_ERROR,
-                         (pEcLogContext, EC_LOG_LEVEL_ERROR, "Target Position Bit Size Error!!\n"));
-                goto Exit;
-        } else {
             EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[OUT] Tar. Pos......: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecOutpOffsets[TARGET_POSITION] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).outputs.target_position = (int32_t *) ((char *) pEcatConfig->pdOutputPtr +
-                                                                                     VarInfo.nBitOffs / 8);
+                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[%02d] ...............: %s, %d offs, %d size\n", j+1, pOutpVar->name, pOutpVar->offset, pOutpVar->size));
         }
 
-
-        // 4. ec_target_velocity
-        if (ecatFindOutpVarByName(
-                const_cast<EC_T_CHAR *>(pEcatConfig->getEcOutpVarName(i, TARGET_VELOCITY).c_str()),
-                &VarInfo) !=
-            EC_E_NOERROR) {
-//            EcLogMsg(EC_LOG_LEVEL_WARNING,
-//                     (pEcLogContext, EC_LOG_LEVEL_WARNING, "[ecatFindOutpVarByName()]: Can not find output var: %s , ignored !!\n", pEcatConfig->getEcOutpVarName(
-//                             i, TARGET_VELOCITY).c_str()));
-
-            pEcatConfig->slaveCfg[i].ecOutpOffsets[TARGET_VELOCITY] = INT_MAX;
-            pEcatConfig->ecatSlaveVec->at(i).outputs.target_velocity = nullptr;
-        } else if (sizeof(int32_t) * 8 != VarInfo.nBitSize) {
-                EcLogMsg(EC_LOG_LEVEL_ERROR,
-                         (pEcLogContext, EC_LOG_LEVEL_ERROR, "Target Velocity Bit Size Error!!\n"));
-                goto Exit;
-        } else {
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[OUT] Tar. Vel......: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecOutpOffsets[TARGET_VELOCITY] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).outputs.target_velocity = (int32_t *) ((char *) pEcatConfig->pdOutputPtr +
-                                                                                     VarInfo.nBitOffs / 8);
-        }
-
-
-        // 5. ec_target_torque
-        if (ecatFindOutpVarByName(const_cast<EC_T_CHAR *>(pEcatConfig->getEcOutpVarName(i, TARGET_TORQUE).c_str()),
-                                  &VarInfo) !=
-            EC_E_NOERROR) {
-//            EcLogMsg(EC_LOG_LEVEL_WARNING,
-//                     (pEcLogContext, EC_LOG_LEVEL_WARNING, "[ecatFindOutpVarByName()]: Can not find output var: %s , ignored !!\n", pEcatConfig->getEcOutpVarName(
-//                             i, TARGET_TORQUE).c_str()));
-
-            pEcatConfig->slaveCfg[i].ecOutpOffsets[TARGET_TORQUE] = INT_MAX;
-        } else if (sizeof(int16_t) * 8 != VarInfo.nBitSize) {
-                EcLogMsg(EC_LOG_LEVEL_ERROR,
-                         (pEcLogContext, EC_LOG_LEVEL_ERROR, "Target Torque Bit Size Error!!\n"));
-                goto Exit;
-        } else {
-            EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[OUT] Tar. Tor......: %s\n", VarInfo.szName));
-
-            pEcatConfig->slaveCfg[i].ecOutpOffsets[TARGET_TORQUE] = VarInfo.nBitOffs;
-            pEcatConfig->ecatSlaveVec->at(i).outputs.target_torque = (int16_t *) ((char *) pEcatConfig->pdOutputPtr +
-                                                                                   VarInfo.nBitOffs / 8);
-        }
 
         EcLogMsg(EC_LOG_LEVEL_INFO,
                  (pEcLogContext, EC_LOG_LEVEL_INFO, "******************************************************************************\n"));
@@ -1844,7 +1486,8 @@ static EC_T_DWORD myAppWorkpd(T_EC_THREAD_PARAM *pEcThreadParam,
 ) {
 
     ////============== shared memory =================////
-    pEcatConfig->ecatInfo->timestamp = boost::chrono::system_clock::now();
+    gettimeofday(&tv, nullptr);
+    pEcatConfig->ecatBus->timestamp = tv.tv_sec * 1000000 + tv.tv_usec; // us
 
 
     for (auto &sem: pEcatConfig->sem_mutex) {
