@@ -115,4 +115,20 @@ void EcatConfig::print_message(const std::string &msg, EcatConfig::MessageLevel 
     std::cout << msg << _def << std::endl;
 }
 
+std::string EcatConfig::getSlaveName(int slaveId) {
+    return ecatBus->slaves[slaveId].name;
+}
+
+Slave EcatConfig::getSlave(int slaveId) {
+    return ecatBus->slaves[slaveId];
+}
+
+Slave EcatConfig::findSlaveByName(const std::string &slaveName) {
+    for(auto &slave : ecatBus->slaves) {
+        if(slave.name == slaveName.c_str()) {
+            return slave;
+        }
+    }
+}
+
 

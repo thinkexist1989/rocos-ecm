@@ -21,31 +21,54 @@ namespace rocos {
 
         void init();
 
-
         void wait();
 
+        double getBusMinCycleTime();
+
+        double getBusMaxCycleTime();
+
+        double getBusAvgCycleTime();
+
+        double getBusCurrentCycleTime();
+
+        bool isAuthorized();
+
+        long getTimestamp();
+
+        int getSlaveNum();
+
+
         std::string getSlaveName(int slaveId);
+
         Slave getSlave(int slaveId);
+
         Slave findSlaveByName(const std::string &slaveName);
+
         int findSlaveIdbyName(const std::string &slaveName);
 
         std::string getVarName(int slaveId, int varId);
-        PdVar getSlaveInputVar(int slaveId, int varId);
-        PdVar getSlaveOutputVar(int slaveId, int varId);
-        PdVar findSlaveInputVarByName(int slaveId, const std::string &varName);
-        int   findSlaveInputVarIdByName(int slaveId, const std::string &varName);
 
-        template<typename T>T getSlaveInputVar(int slaveId, int varId) {
-            if(sizeof(T) != ecatBus->slaves[slaveId].input_vars[varId].size) {
+        PdVar getSlaveInputVar(int slaveId, int varId);
+
+        PdVar getSlaveOutputVar(int slaveId, int varId);
+
+        PdVar findSlaveInputVarByName(int slaveId, const std::string &varName);
+
+        int findSlaveInputVarIdByName(int slaveId, const std::string &varName);
+
+        template<typename T>
+        T getSlaveInputVar(int slaveId, int varId) {
+            if (sizeof(T) != ecatBus->slaves[slaveId].input_vars[varId].size) {
                 print_message("Size of Var is not equal", MessageLevel::WARNING);
             }
-            return *(T*)((char*)pdInputPtr + ecatBus->slaves[slaveId].input_vars[varId].offset);
+            return *(T *) ((char *) pdInputPtr + ecatBus->slaves[slaveId].input_vars[varId].offset);
         }
 
 
     public:
 
         bool getSharedMemory();
+
         bool getPdDataMemoryProvider();
 
         void waitForSignal(int id = 0); // compact code, not recommended use. use wait() instead
@@ -66,7 +89,7 @@ namespace rocos {
         EcatBus *ecatBus = nullptr;
 
 
-        sem_t* sem_mutex[EC_SEM_NUM];
+        sem_t *sem_mutex[EC_SEM_NUM];
 
         //////////// OUTPUT FORMAT SETTINGS ////////////////////
         //Terminal Color Show
