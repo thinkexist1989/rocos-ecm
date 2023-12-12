@@ -1,5 +1,4 @@
 --config=${${PROJECT_NAME}_INSTALL_CONFIGDIR}/ecat_config_4.yaml
---eni=${${PROJECT_NAME}_INSTALL_CONFIGDIR}/eni4.xml
 --time=0
 --cycle=1000
 --perf

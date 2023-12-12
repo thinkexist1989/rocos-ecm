@@ -24,7 +24,21 @@ namespace rocos {
 
         void wait();
 
+        std::string getSlaveName(int slaveId);
+        Slave getSlave(int slaveId);
+        Slave findSlaveByName(const std::string &slaveName);
+        int findSlaveIdbyName(const std::string &slaveName);
+
+        std::string getVarName(int slaveId, int varId);
+        PdVar getSlaveInputVar(int slaveId, int varId);
+        PdVar getSlaveOutputVar(int slaveId, int varId);
+        PdVar findSlaveInputVarByName(int slaveId, const std::string &varName);
+        int   findSlaveInputVarIdByName(int slaveId, const std::string &varName);
+
         template<typename T>T getSlaveInputVar(int slaveId, int varId) {
+            if(sizeof(T) != ecatBus->slaves[slaveId].input_vars[varId].size) {
+                print_message("Size of Var is not equal", MessageLevel::WARNING);
+            }
             return *(T*)((char*)pdInputPtr + ecatBus->slaves[slaveId].input_vars[varId].offset);
         }
 
