@@ -335,11 +335,11 @@ EC_T_DWORD ecatProcess(
     //////////// MY OWN CODE /////////////////
     dwRes = ecatSetLicenseKey(const_cast<EC_T_CHAR *>(FLAGS_license.c_str()));
     if (dwRes != EC_E_NOERROR) {
-        pEcatConfig->ecatBus->is_authorized = true; // ecMaster is authorized
+        pEcatConfig->ecatBus->is_authorized = false; // ecMaster is not authorized
         EcLogMsg(EC_LOG_LEVEL_ERROR,
                  (pEcLogContext, EC_LOG_LEVEL_ERROR, "\033[31m\033[1mThe license key: %s is not correct.\033[0m\n", FLAGS_license.c_str()));
     } else {
-        pEcatConfig->ecatBus->is_authorized = false; // ecMaster is not authorized
+        pEcatConfig->ecatBus->is_authorized = true; // ecMaster is authorized
         EcLogMsg(EC_LOG_LEVEL_INFO,
                  (pEcLogContext, EC_LOG_LEVEL_ERROR, "\033[32m\033[1mThe license key: %s is correct.\033[0m\n", FLAGS_license.c_str()));
     }
@@ -819,6 +819,12 @@ EC_T_DWORD ecatProcess(
                 if (nVerbose >= 2) {
                     PERF_MEASURE_JOBS_SHOW(); /* show job times */
                 }
+
+                if(pEcatConfig->ecatBus->resetCycleTime) {
+                    ecatPerfMeasReset(&pEcThreadParam->TscMeasDesc, 0xFFFFFFFF); /* clear job times of startup phase */
+                    pEcatConfig->ecatBus->resetCycleTime = false;
+                }
+
                 bRun = !OsTerminateAppRequest(); /* check if demo shall terminate */
 
                 /*****************************************************************************************/
@@ -1114,7 +1120,7 @@ static EC_T_VOID tEcJobTask(EC_T_VOID *pvThreadParamDesc) {
             } else if (eEcatState_SAFEOP == eMasterState) {
                 myAppReadypd(pEcThreadParam, abyPdIn, abyPdOut);
             } else {
-                ecatPerfMeasReset(&pEcThreadParam->TscMeasDesc, 0xFFFFFFFF); // 如果不是OP或者SafeOP就一直重置
+//                ecatPerfMeasReset(&pEcThreadParam->TscMeasDesc, 0xFFFFFFFF); // 如果不是OP或者SafeOP就一直重置
             }
         }
         PERF_JOB_END(PERF_myAppWorkpd);
@@ -1365,6 +1371,7 @@ static EC_T_DWORD myAppSetup(T_EC_THREAD_PARAM *pEcThreadParam) {
         EcLogMsg(EC_LOG_LEVEL_INFO,
                  (pEcLogContext, EC_LOG_LEVEL_INFO, "******************************************************************************\n"));
 
+
         memcpy(pSlave->name, SlaveInfo.abyDeviceName, sizeof(SlaveInfo.abyDeviceName)); /// Slave Name
 
         EcLogMsg(EC_LOG_LEVEL_INFO,
@@ -1396,7 +1403,17 @@ static EC_T_DWORD myAppSetup(T_EC_THREAD_PARAM *pEcThreadParam) {
 
         for(int j = 0; j < pwInpReadEntries; j++) {
             rocos::PdVar* pInpVar = &pSlave->input_vars[j];
-            memcpy(pInpVar->name, pSlaveInpVarInfoEntries[j].szName, sizeof(pSlaveInpVarInfoEntries[j].szName)); /// Input Var Name
+
+
+            memset(pInpVar->name, '\0', sizeof(pInpVar->name)); /// Slave Name
+
+            char* p = strtok(pSlaveInpVarInfoEntries[j].szName, "."); //分割字符串，只要最后的变量名
+            p = strtok(nullptr, "."); // Slave_1001 [Elmo Drive ]
+            p = strtok(nullptr, "."); // Inputs
+//            p = strtok(nullptr, "."); // Status word
+
+            memcpy(pInpVar->name, p, strlen(p)); /// Input Var Name
+
             pInpVar->offset = pSlaveInpVarInfoEntries[j].nBitOffs / 8; /// Input Var Offset
             pInpVar->size = pSlaveInpVarInfoEntries[j].nBitSize / 8;   /// Input Var Size
 
@@ -1427,7 +1444,15 @@ static EC_T_DWORD myAppSetup(T_EC_THREAD_PARAM *pEcThreadParam) {
 
         for(int j = 0; j < pwOutpReadEntries; j++) {
             rocos::PdVar* pOutpVar = &pSlave->output_vars[j];
-            memcpy(pOutpVar->name, pSlaveInpVarInfoEntries[j].szName, sizeof(pSlaveOutpVarInfoEntries[j].szName)); /// Input Var Name
+
+            memset(pOutpVar->name, '\0', sizeof(pOutpVar->name)); /// Slave Name
+
+            char* p = strtok(pSlaveOutpVarInfoEntries[j].szName, "."); //分割字符串，只要最后的变量名
+            p = strtok(nullptr, "."); // Slave_1001 [Elmo Drive ]
+            p = strtok(nullptr, "."); // Inputs
+//            p = strtok(nullptr, "."); // Status word
+
+            memcpy(pOutpVar->name, p, strlen(p)); /// Input Var Name
             pOutpVar->offset = pSlaveOutpVarInfoEntries[j].nBitOffs / 8; /// Input Var Offset
             pOutpVar->size = pSlaveOutpVarInfoEntries[j].nBitSize / 8;   /// Input Var Size
 

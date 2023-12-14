@@ -182,12 +182,33 @@ PdVar EcatConfig::getSlaveOutputVar(int slaveId, int varId) {
     return ecatBus->slaves[slaveId].output_vars[varId];
 }
 
-PdVar EcatConfig::findSlaveInputVarByName(int slaveId, const std::string &varName) {
-    return PdVar();
-}
 
 PdVar EcatConfig::getSlaveInputVar(int slaveId, int varId) {
     return ecatBus->slaves[slaveId].input_vars[varId];
+}
+
+PdVar EcatConfig::findSlaveInputVarByName(int slaveId, const std::string &varName) {
+    for (int i = 0; i < ecatBus->slaves[slaveId].input_var_num; ++i) {
+        if(ecatBus->slaves[slaveId].input_vars[i].name == varName.c_str()) {
+            return ecatBus->slaves[slaveId].input_vars[i];
+        }
+    }
+
+    return {};
+}
+
+int EcatConfig::findSlaveInputVarIdByName(int slaveId, const std::string &varName) {
+    for (int i = 0; i < ecatBus->slaves[slaveId].input_var_num; ++i) {
+        if(ecatBus->slaves[slaveId].input_vars[i].name == varName.c_str()) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+void EcatConfig::resetCycleTime() {
+    ecatBus->resetCycleTime = true;
 }
 
 

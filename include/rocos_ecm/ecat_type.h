@@ -57,37 +57,39 @@ Yang Luo, PHD
 
 namespace rocos {
     struct PdVar {
-        char name[MAX_PD_NAME_LEN];
-        int  offset;
-        int  size;
+        char name[MAX_PD_NAME_LEN]      {'\0'};
+        int  offset                     {-1};
+        int  size                       {-1};
     };
 
     struct Slave {
-        int id;
-        char name[MAX_SLAVE_NAME_LEN];
+        int id                          {-1};
+        char name[MAX_SLAVE_NAME_LEN]   {'\0'};;
 
-        int input_var_num;
-        int output_var_num;
+        int input_var_num               {0};
+        int output_var_num              {0};
 
         PdVar input_vars[MAX_PDINPUT_NUM];
         PdVar output_vars[MAX_PDOUTPUT_NUM];
     };
 
     struct EcatBus {
-        long timestamp;
+        long timestamp               {0};
 
-        double min_cycle_time;
-        double max_cycle_time;
-        double avg_cycle_time;
-        double current_cycle_time;
+        double min_cycle_time        {0.0};
+        double max_cycle_time        {0.0};
+        double avg_cycle_time        {0.0};
+        double current_cycle_time    {0.0};
 
-        int current_state;
-        int request_state;
-        int next_expected_state; // internal use by think
+        bool   resetCycleTime        {false};
 
-        bool is_authorized;
+        int current_state            {ECAT_STATE_INIT};
+        int request_state            {ECAT_STATE_OP};
+        int next_expected_state      {}; // internal use by think
 
-        int slave_num;
+        bool is_authorized           {false};
+
+        int slave_num                 {0};
         Slave slaves[MAX_SLAVE_NUM];
 
     };
