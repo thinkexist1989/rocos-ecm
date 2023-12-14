@@ -151,7 +151,7 @@ include(CMakePackageConfigHelpers)
 #        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
 #        )
 
-install(FILES ${CMAKE_BINARY_DIR}/ver.h include/rocos_ecm/ecat_config_master.h
+install(FILES ${CMAKE_BINARY_DIR}/ver.h include/rocos_ecm/ecat_config.h include/rocos_ecm/ecat_type.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocos_ecm
         )
 
