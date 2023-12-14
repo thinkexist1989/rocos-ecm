@@ -67,6 +67,7 @@ namespace rocos {
             }
             return *(T *) ((char *) pdInputPtr + ecatBus->slaves[slaveId].input_vars[varId].offset);
         }
+       
 
         template<typename T>
         T getSlaveOutputVarValue(int slaveId, int varId) {
@@ -77,6 +78,7 @@ namespace rocos {
         }
 
         template<typename T>
+        // 这个值是从 EtherCAT 通信中读取的指定输入变量的值。函数的目的是根据变量名查找从站的输入变量的值，确保找到的变量的类型与期望的类型匹配
         T findSlaveInputVarValueByName(int slaveId, const std::string &varName) {
             for (int i = 0; i < ecatBus->slaves[slaveId].input_var_num; ++i) {
                 if (strcmp(ecatBus->slaves[slaveId].input_vars[i].name, varName.c_str()) == 0) {
@@ -139,11 +141,12 @@ namespace rocos {
                         print_message("Size of Var is not equal", MessageLevel::WARNING);
                     }
                     return (T *) ((char *) pdOutputPtr + ecatBus->slaves[slaveId].output_vars[i].offset);
+
+                    // 变量的地址。
                 }
             }
             return nullptr;
         }
-
 
     public:
 

@@ -33,7 +33,7 @@
 /*-EtherCAT Configuration------------------------------------------------------*/
 #include "rocos_ecm/ecat_config_master.h"
 
-static EcatConfigMaster *pEcatConfig = new EcatConfigMaster();
+static EcatConfigMaster *pEcatConfig = new EcatConfigMaster();//手动管理内存
 
 static timeval tv; // time stamp
 
