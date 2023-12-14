@@ -93,8 +93,6 @@ void EcatConfig::init() {
     }
 
     getPdDataMemoryProvider();
-
-    print_message("[INIT] Ready!", MessageLevel::NORMAL);
 }
 
 void EcatConfig::print_message(const std::string &msg, EcatConfig::MessageLevel msgLvl) {
@@ -115,6 +113,35 @@ void EcatConfig::print_message(const std::string &msg, EcatConfig::MessageLevel 
     std::cout << msg << _def << std::endl;
 }
 
+
+double EcatConfig::getBusMinCycleTime() const {
+    return ecatBus->min_cycle_time;
+}
+
+double EcatConfig::getBusMaxCycleTime() const {
+    return ecatBus->max_cycle_time;
+}
+
+double EcatConfig::getBusAvgCycleTime() const {
+    return ecatBus->avg_cycle_time;
+}
+
+double EcatConfig::getBusCurrentCycleTime() const {
+    return ecatBus->current_cycle_time;
+}
+
+bool EcatConfig::isAuthorized() const {
+    return ecatBus->is_authorized;
+}
+
+long EcatConfig::getTimestamp() const {
+    return ecatBus->timestamp;
+}
+
+int EcatConfig::getSlaveNum() const {
+    return ecatBus->slave_num;
+}
+
 std::string EcatConfig::getSlaveName(int slaveId) {
     return ecatBus->slaves[slaveId].name;
 }
@@ -124,11 +151,43 @@ Slave EcatConfig::getSlave(int slaveId) {
 }
 
 Slave EcatConfig::findSlaveByName(const std::string &slaveName) {
-    for(auto &slave : ecatBus->slaves) {
-        if(slave.name == slaveName.c_str()) {
-            return slave;
+    for (int i = 0; i < ecatBus->slave_num; ++i) {
+        if(ecatBus->slaves[i].name == slaveName.c_str()) {
+            return ecatBus->slaves[i];
         }
     }
+
+    return {};
+}
+
+int EcatConfig::findSlaveIdbyName(const std::string &slaveName) {
+    for (int i = 0; i < ecatBus->slave_num; ++i) {
+        if(ecatBus->slaves[i].name == slaveName.c_str()) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+std::string EcatConfig::getInputVarName(int slaveId, int varId) const {
+    return ecatBus->slaves[slaveId].input_vars[varId].name;
+}
+
+std::string EcatConfig::getOutputVarName(int slaveId, int varId) const {
+    return ecatBus->slaves[slaveId].output_vars[varId].name;
+}
+
+PdVar EcatConfig::getSlaveOutputVar(int slaveId, int varId) {
+    return ecatBus->slaves[slaveId].output_vars[varId];
+}
+
+PdVar EcatConfig::findSlaveInputVarByName(int slaveId, const std::string &varName) {
+    return PdVar();
+}
+
+PdVar EcatConfig::getSlaveInputVar(int slaveId, int varId) {
+    return ecatBus->slaves[slaveId].input_vars[varId];
 }
 
 

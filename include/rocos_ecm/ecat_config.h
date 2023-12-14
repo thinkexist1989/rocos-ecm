@@ -23,19 +23,19 @@ namespace rocos {
 
         void wait();
 
-        double getBusMinCycleTime();
+        double getBusMinCycleTime() const;
 
-        double getBusMaxCycleTime();
+        double getBusMaxCycleTime() const;
 
-        double getBusAvgCycleTime();
+        double getBusAvgCycleTime() const;
 
-        double getBusCurrentCycleTime();
+        double getBusCurrentCycleTime() const;
 
-        bool isAuthorized();
+        bool isAuthorized() const;
 
-        long getTimestamp();
+        long getTimestamp() const;
 
-        int getSlaveNum();
+        int getSlaveNum() const;
 
 
         std::string getSlaveName(int slaveId);
@@ -46,7 +46,9 @@ namespace rocos {
 
         int findSlaveIdbyName(const std::string &slaveName);
 
-        std::string getVarName(int slaveId, int varId);
+        std::string getInputVarName(int slaveId, int varId) const;
+
+        std::string getOutputVarName(int slaveId, int varId) const;
 
         PdVar getSlaveInputVar(int slaveId, int varId);
 
@@ -57,11 +59,19 @@ namespace rocos {
         int findSlaveInputVarIdByName(int slaveId, const std::string &varName);
 
         template<typename T>
-        T getSlaveInputVar(int slaveId, int varId) {
+        T getSlaveInputVarValue(int slaveId, int varId) {
             if (sizeof(T) != ecatBus->slaves[slaveId].input_vars[varId].size) {
                 print_message("Size of Var is not equal", MessageLevel::WARNING);
             }
             return *(T *) ((char *) pdInputPtr + ecatBus->slaves[slaveId].input_vars[varId].offset);
+        }
+
+        template<typename T>
+        T getSlaveOutputVarValue(int slaveId, int varId) {
+            if (sizeof(T) != ecatBus->slaves[slaveId].output_vars[varId].size) {
+                print_message("Size of Var is not equal", MessageLevel::WARNING);
+            }
+            return *(T *) ((char *) pdOutputPtr + ecatBus->slaves[slaveId].output_vars[varId].offset);
         }
 
 

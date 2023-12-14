@@ -83,7 +83,7 @@ namespace rocos {
 
         int current_state;
         int request_state;
-        int next_expected_state;
+        int next_expected_state; // internal use by think
 
         bool is_authorized;
 

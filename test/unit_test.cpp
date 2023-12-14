@@ -30,7 +30,6 @@ Shenyang Institute of Automation, Chinese Academy of Sciences.
 
 TEST_CASE("Shared memory test") {
     rocos::EcatConfig ecatConfig;
-    std::cout << "here!!" << std::endl;
     ecatConfig.init();
 //    ecatConfig.getPdDataMemoryProvider();
 
@@ -38,9 +37,11 @@ TEST_CASE("Shared memory test") {
 
     std::cout << ecatConfig.ecatBus->slave_num << std::endl;
 
-    std::cout << ecatConfig.getSlaveInputVar<int>(0, 1) << std::endl;
+    std::cout << ecatConfig.getSlaveInputVarValue<int>(0, 1) << std::endl;
 //
-    std::cout << ecatConfig.getSlaveInputVar<uint16_t>(0, 0) << std::endl;
+    std::cout << ecatConfig.getSlaveInputVarValue<uint16_t>(0, 0) << std::endl;
+
+//    std::cout << ecatConfig.getSlaveOutputVarValue<>()
 
 
 
