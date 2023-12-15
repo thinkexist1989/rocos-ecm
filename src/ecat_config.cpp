@@ -160,7 +160,7 @@ Slave EcatConfig::findSlaveByName(const std::string &slaveName) {
     return {};
 }
 
-int EcatConfig::findSlaveIdbyName(const std::string &slaveName) {
+int EcatConfig::findSlaveIdByName(const std::string &slaveName) {
     for (int i = 0; i < ecatBus->slave_num; ++i) {
         if(ecatBus->slaves[i].name == slaveName.c_str()) {
             return i;

@@ -46,7 +46,7 @@ namespace rocos {
 
         Slave findSlaveByName(const std::string &slaveName);
 
-        int findSlaveIdbyName(const std::string &slaveName);
+        int findSlaveIdByName(const std::string &slaveName);
 
         std::string getInputVarName(int slaveId, int varId) const;
 
