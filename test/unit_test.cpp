@@ -81,6 +81,28 @@ TEST_CASE("reset cycle time") {
 
 }
 
+TEST_CASE("kunwei") {
+    rocos::EcatConfig ecatConfig;
+    ecatConfig.init();
+
+    std::cout << "---------------------------------------------------------------" << std::endl;
+    std::cout << "Slave name: " << ecatConfig.ecatBus->slaves[0].name << std::endl;
+    std::cout << "  -input_count  : " << ecatConfig.ecatBus->slaves[0].input_var_num << std::endl;
+
+    for(int i = 0; i < 100000; i++) {
+        std::cout << std::fixed << std::setw(8) <<"\r";
+        std::cout << "fx: " << ecatConfig.findSlaveInputVarValueByName<float>(0, "FloatFx") << "; ";
+        std::cout << "fy: " << ecatConfig.findSlaveInputVarValueByName<float>(0, "FloatFy") << "; ";
+        std::cout << "fz: " << ecatConfig.findSlaveInputVarValueByName<float>(0, "FloatFz") << "; ";
+        std::cout << "mx: " << ecatConfig.findSlaveInputVarValueByName<float>(0, "FloatMx") << "; ";
+        std::cout << "my: " << ecatConfig.findSlaveInputVarValueByName<float>(0, "FloatMy") << "; ";
+        std::cout << "mz: " << ecatConfig.findSlaveInputVarValueByName<float>(0, "FloatMz") << std::flush;
+
+        usleep(10000);
+    }
+
+}
+
 TEST_CASE("sea_move") {
 //    EcatConfigMaster ecatConfig;
 //    ecatConfig.getSharedMemory();
