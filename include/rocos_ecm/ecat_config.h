@@ -69,6 +69,14 @@ namespace rocos {
         }
 
         template<typename T>
+        void setSlaveInputVarValue(int slaveId, int varId, T& value) {
+            if (sizeof(T) != ecatBus->slaves[slaveId].input_vars[varId].size) {
+                print_message("Size of Var is not equal", MessageLevel::WARNING);
+            }
+            *(T *) ((char *) pdInputPtr + ecatBus->slaves[slaveId].input_vars[varId].offset) = value;
+        }
+
+        template<typename T>
         T getSlaveOutputVarValue(int slaveId, int varId) {
             if (sizeof(T) != ecatBus->slaves[slaveId].output_vars[varId].size) {
                 print_message("Size of Var is not equal", MessageLevel::WARNING);
@@ -77,7 +85,15 @@ namespace rocos {
         }
 
         template<typename T>
-        T findSlaveInputVarValueByName(int slaveId, const std::string &varName) {
+        void setSlaveOutputVarValue(int slaveId, int varId, T& value) {
+            if (sizeof(T) != ecatBus->slaves[slaveId].output_vars[varId].size) {
+                print_message("Size of Var is not equal", MessageLevel::WARNING);
+            }
+            *(T *) ((char *) pdOutputPtr + ecatBus->slaves[slaveId].output_vars[varId].offset) = value;
+        }
+
+        template<typename T>
+        T getSlaveInputVarValueByName(int slaveId, const std::string &varName) {
             for (int i = 0; i < ecatBus->slaves[slaveId].input_var_num; ++i) {
                 if (strcmp(ecatBus->slaves[slaveId].input_vars[i].name, varName.c_str()) == 0) {
                     if (sizeof(T) != ecatBus->slaves[slaveId].input_vars[i].size) {
@@ -90,7 +106,19 @@ namespace rocos {
         }
 
         template<typename T>
-        T findSlaveOutputVarValueByName(int slaveId, const std::string &varName) {
+        void setSlaveInputVarValueByName(int slaveId, const std::string &varName, T& value) {
+            for (int i = 0; i < ecatBus->slaves[slaveId].input_var_num; ++i) {
+                if (strcmp(ecatBus->slaves[slaveId].input_vars[i].name, varName.c_str()) == 0) {
+                    if (sizeof(T) != ecatBus->slaves[slaveId].input_vars[i].size) {
+                        print_message("Size of Var is not equal", MessageLevel::WARNING);
+                    }
+                    *(T *) ((char *) pdInputPtr + ecatBus->slaves[slaveId].input_vars[i].offset) = value;
+                }
+            }
+        }
+
+        template<typename T>
+        T getSlaveOutputVarValueByName(int slaveId, const std::string &varName) {
             for (int i = 0; i < ecatBus->slaves[slaveId].output_var_num; ++i) {
                 if (strcmp(ecatBus->slaves[slaveId].output_vars[i].name, varName.c_str()) == 0) {
                     if (sizeof(T) != ecatBus->slaves[slaveId].output_vars[i].size) {
@@ -100,6 +128,18 @@ namespace rocos {
                 }
             }
             return std::numeric_limits<T>::max();
+        }
+
+        template<typename T>
+        void setSlaveOutputVarValueByName(int slaveId, const std::string &varName, T& value) {
+            for (int i = 0; i < ecatBus->slaves[slaveId].output_var_num; ++i) {
+                if (strcmp(ecatBus->slaves[slaveId].output_vars[i].name, varName.c_str()) == 0) {
+                    if (sizeof(T) != ecatBus->slaves[slaveId].output_vars[i].size) {
+                        print_message("Size of Var is not equal", MessageLevel::WARNING);
+                    }
+                    *(T *) ((char *) pdOutputPtr + ecatBus->slaves[slaveId].output_vars[i].offset) = value;
+                }
+            }
         }
 
         template<typename T>

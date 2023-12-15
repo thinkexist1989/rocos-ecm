@@ -2,8 +2,8 @@
 
 echo "====================ROCOS-ECM======================"
 echo "=== Author: Yang Luo                            ==="
-echo "=== Create: 2021.07.17 00:05                    ==="
-echo "=== Last Modified: 2023.04.08 23:44             ==="
+echo "=== Create: 2021.07.17                          ==="
+echo "=== Last Modified: 2023.12.15                   ==="
 echo "=== Ver: @rocos_ecm_VERSION@                                  ==="
 echo "=== usage: ./runECM.sh [flagfile] [no.]         ==="
 echo "==================================================="

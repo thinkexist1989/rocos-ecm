@@ -47,16 +47,17 @@ TEST_CASE("info") {
         std::cout << "---------------------------------------------------------------" << std::endl;
         std::cout << "Slave name: " << ecatConfig.ecatBus->slaves[i].name << std::endl;
         std::cout << "  -input_count  : " << ecatConfig.ecatBus->slaves[i].input_var_num << std::endl;
-        std::cout << "    -status_word: " << ecatConfig.findSlaveInputVarValueByName<uint16_t>(i, "Status word") << std::endl;
-        std::cout << "    -pos_act_val: " << ecatConfig.findSlaveInputVarValueByName<int32_t>(i, "Position actual value") << std::endl;
-        std::cout << "    -vel_act_val: " << ecatConfig.findSlaveInputVarValueByName<int32_t>(i, "Velocity actual value") << std::endl;
-        std::cout << "    -tor_act_val: " << ecatConfig.findSlaveInputVarValueByName<int16_t>(i, "Torque actual value") << std::endl;
+        std::cout << "    -status_word: " << ecatConfig.getSlaveInputVarValueByName<uint16_t>(i, "Status word") << std::endl;
+        std::cout << "    -pos_act_val: " << ecatConfig.getSlaveInputVarValueByName<int32_t>(i, "Position actual value") << std::endl;
+        std::cout << "    -vel_act_val: " << ecatConfig.getSlaveInputVarValueByName<int32_t>(i, "Velocity actual value") << std::endl;
+        std::cout << "    -tor_act_val: " << ecatConfig.getSlaveInputVarValueByName<int16_t>(i, "Torque actual value") << std::endl;
         std::cout << "  -output_count : " << ecatConfig.ecatBus->slaves[i].output_var_num << std::endl;
-        std::cout << "    -ctrl_word  : " << ecatConfig.findSlaveOutputVarValueByName<uint16_t>(i, "Control word") << std::endl;
-        std::cout << "    -mode_op    : " << (int)ecatConfig.findSlaveOutputVarValueByName<uint8_t>(i, "Mode of operation") << std::endl;
-        std::cout << "    -tar_pos    : " << ecatConfig.findSlaveOutputVarValueByName<int32_t>(i, "Target Position") << std::endl;
-        std::cout << "    -tar_vel    : " << ecatConfig.findSlaveOutputVarValueByName<int32_t>(i, "Target Velocity") << std::endl;
-        std::cout << "    -tar_tor    : " << ecatConfig.findSlaveOutputVarValueByName<int16_t>(i, "Target Torque") << std::endl;
+        std::cout << "    -ctrl_word  : " << ecatConfig.getSlaveOutputVarValueByName<uint16_t>(i, "Control word") << std::endl;
+        std::cout << "    -mode_op    : " << (int) ecatConfig.getSlaveOutputVarValueByName<uint8_t>(i,
+                                                                                                    "Mode of operation") << std::endl;
+        std::cout << "    -tar_pos    : " << ecatConfig.getSlaveOutputVarValueByName<int32_t>(i, "Target Position") << std::endl;
+        std::cout << "    -tar_vel    : " << ecatConfig.getSlaveOutputVarValueByName<int32_t>(i, "Target Velocity") << std::endl;
+        std::cout << "    -tar_tor    : " << ecatConfig.getSlaveOutputVarValueByName<int16_t>(i, "Target Torque") << std::endl;
     }
 
 }
@@ -91,12 +92,12 @@ TEST_CASE("kunwei") {
 
     for(int i = 0; i < 100000; i++) {
         std::cout << std::fixed << std::setw(8) <<"\r";
-        std::cout << "fx: " << ecatConfig.findSlaveInputVarValueByName<float>(0, "FloatFx") << "; ";
-        std::cout << "fy: " << ecatConfig.findSlaveInputVarValueByName<float>(0, "FloatFy") << "; ";
-        std::cout << "fz: " << ecatConfig.findSlaveInputVarValueByName<float>(0, "FloatFz") << "; ";
-        std::cout << "mx: " << ecatConfig.findSlaveInputVarValueByName<float>(0, "FloatMx") << "; ";
-        std::cout << "my: " << ecatConfig.findSlaveInputVarValueByName<float>(0, "FloatMy") << "; ";
-        std::cout << "mz: " << ecatConfig.findSlaveInputVarValueByName<float>(0, "FloatMz") << std::flush;
+        std::cout << "fx: " << ecatConfig.getSlaveInputVarValueByName<float>(0, "FloatFx") << "; ";
+        std::cout << "fy: " << ecatConfig.getSlaveInputVarValueByName<float>(0, "FloatFy") << "; ";
+        std::cout << "fz: " << ecatConfig.getSlaveInputVarValueByName<float>(0, "FloatFz") << "; ";
+        std::cout << "mx: " << ecatConfig.getSlaveInputVarValueByName<float>(0, "FloatMx") << "; ";
+        std::cout << "my: " << ecatConfig.getSlaveInputVarValueByName<float>(0, "FloatMy") << "; ";
+        std::cout << "mz: " << ecatConfig.getSlaveInputVarValueByName<float>(0, "FloatMz") << std::flush;
 
         usleep(10000);
     }
@@ -125,7 +126,7 @@ TEST_CASE("4 motor moving") {
     std::cout <<"Timestamp: " << ecatConfig.ecatBus->timestamp << std::endl;
     std::cout << "  Ethercat State: " << ecatConfig.ecatBus->current_state << std::endl;
 
-    std::cout << "  " << ecatConfig.findSlaveInputVarValueByName<int32_t>(0, "Position actual value") << std::endl;
+    std::cout << "  " << ecatConfig.getSlaveInputVarValueByName<int32_t>(0, "Position actual value") << std::endl;
     std::cout << "  Slave number: " << ecatConfig.ecatBus->slave_num << std::endl;
 
     for(int i = 0; i < ecatConfig.ecatBus->slave_num; i++) {
@@ -135,7 +136,7 @@ TEST_CASE("4 motor moving") {
 
         *ecatConfig.findSlaveOutputVarPtrByName<int32_t>(i, "Target Position") = *ecatConfig.findSlaveInputVarPtrByName<int32_t>(i, "Position actual value");
 
-        std::cout << "Pos is: " << ecatConfig.findSlaveInputVarValueByName<int32_t>(i, "Position actual value") << std::endl;
+        std::cout << "Pos is: " << ecatConfig.getSlaveInputVarValueByName<int32_t>(i, "Position actual value") << std::endl;
         usleep(10000);
 
         *ecatConfig.findSlaveOutputVarPtrByName<int16_t>(i, "Control word") = 6;
