@@ -1359,7 +1359,7 @@ static EC_T_DWORD myAppSetup(T_EC_THREAD_PARAM *pEcThreadParam) {
         EC_T_CFG_SLAVE_INFO SlaveInfo;
 
         EC_T_WORD slave_addr = i + 1001;
-
+        // 这里通过调用ecatGetCfgSlaveInfo函数获取每个从站的配置信息，并将结果存储在SlaveInfo变量中。如果获取信息的过程中发生错误，将记录错误信息并跳转到标签Exit处。
         if (ecatGetCfgSlaveInfo(EC_TRUE, slave_addr, &SlaveInfo) != EC_E_NOERROR) {
             EcLogMsg(EC_LOG_LEVEL_ERROR,
                      (pEcLogContext, EC_LOG_LEVEL_ERROR, "ecatGetCfgSlaveInfo() Error!!\n"));
@@ -1371,8 +1371,9 @@ static EC_T_DWORD myAppSetup(T_EC_THREAD_PARAM *pEcThreadParam) {
         EcLogMsg(EC_LOG_LEVEL_INFO,
                  (pEcLogContext, EC_LOG_LEVEL_INFO, "******************************************************************************\n"));
 
-
+        // 这里将从SlaveInfo.abyDeviceName中获取的从站名称数据通过memcpy函数复制到rocos::Slave对象的name属性中。这样的操作可能是为了更新每个从站对象的名称属性。
         memcpy(pSlave->name, SlaveInfo.abyDeviceName, sizeof(SlaveInfo.abyDeviceName)); /// Slave Name
+        // pEcatConfig->ecatBus->slaves[i]->name 的值被更新，相当于更改了相应EtherCAT从站对象的名称。
 
         EcLogMsg(EC_LOG_LEVEL_INFO,
                  (pEcLogContext, EC_LOG_LEVEL_INFO, "Slave Name..........: %s\n", pSlave->name));
