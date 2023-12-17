@@ -39,6 +39,9 @@ namespace rocos {
 
         void resetCycleTime();
 
+        void setBusRequestState(int state);
+        int  getBusCurrentState() const;
+
 
         std::string getSlaveName(int slaveId);
 

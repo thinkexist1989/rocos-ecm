@@ -211,4 +211,12 @@ void EcatConfig::resetCycleTime() {
     ecatBus->resetCycleTime = true;
 }
 
+void EcatConfig::setBusRequestState(int state) {
+    ecatBus->request_state = state;
+}
+
+int EcatConfig::getBusCurrentState() const {
+    return ecatBus->current_state;
+}
+
 
