@@ -14,10 +14,12 @@
 
 namespace rocos {
     class EcatConfig {
-    public:
-        explicit EcatConfig();
+    private:
+        EcatConfig();
+        ~EcatConfig();
 
-        virtual ~EcatConfig();
+    public:
+        static EcatConfig* getInstance();
 
         void init();
 

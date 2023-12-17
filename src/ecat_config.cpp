@@ -219,4 +219,9 @@ int EcatConfig::getBusCurrentState() const {
     return ecatBus->current_state;
 }
 
+EcatConfig *EcatConfig::getInstance() {
+    static EcatConfig instance;
+    return &instance;
+}
+
 
