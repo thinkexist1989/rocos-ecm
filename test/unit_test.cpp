@@ -25,6 +25,9 @@ Shenyang Institute of Automation, Chinese Academy of Sciences.
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <test/doctest.h>
 
+#define private public
+#define protected public
+
 #include <rocos_ecm/ecat_config.h>
 #include <iostream>
 
@@ -289,6 +292,9 @@ TEST_CASE("Cycling Time Print") {
 
 
 }
+
+#undef private 
+#undef protected
 
 
 //int main(int argc, char** argv) {
