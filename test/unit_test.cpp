@@ -30,7 +30,6 @@ Shenyang Institute of Automation, Chinese Academy of Sciences.
 
 TEST_CASE("info") {
     auto ecatConfig = rocos::EcatConfig::getInstance();
-    ecatConfig->init();
 
     std::cout << "Slave count: " << ecatConfig->ecatBus->slave_num << std::endl;
 
@@ -64,7 +63,6 @@ TEST_CASE("info") {
 
 TEST_CASE("reset cycle time") {
     auto ecatConfig = rocos::EcatConfig::getInstance();
-    ecatConfig->init();
 
     std::cout << "Min cycle time: " << ecatConfig->getBusMinCycleTime() << std::endl;
     std::cout << "Max cycle time: " << ecatConfig->getBusMaxCycleTime() << std::endl;
@@ -84,7 +82,6 @@ TEST_CASE("reset cycle time") {
 
 TEST_CASE("kunwei") {
     auto ecatConfig = rocos::EcatConfig::getInstance();
-    ecatConfig->init();
 
     std::cout << "---------------------------------------------------------------" << std::endl;
     std::cout << "Slave name: " << ecatConfig->ecatBus->slaves[0].name << std::endl;
@@ -121,7 +118,6 @@ TEST_CASE("sea_move") {
 
 TEST_CASE("4 motor moving") {
     auto ecatConfig = rocos::EcatConfig::getInstance();
-    ecatConfig->init();
 
     std::cout <<"Timestamp: " << ecatConfig->ecatBus->timestamp << std::endl;
     std::cout << "  Ethercat State: " << ecatConfig->ecatBus->current_state << std::endl;

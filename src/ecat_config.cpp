@@ -10,7 +10,7 @@
 using namespace rocos;
 
 EcatConfig::EcatConfig() {
-
+    init();
 }
 
 EcatConfig::~EcatConfig() {

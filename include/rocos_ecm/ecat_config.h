@@ -21,8 +21,6 @@ namespace rocos {
     public:
         static EcatConfig* getInstance();
 
-        void init();
-
         void wait();
 
         double getBusMinCycleTime() const;
@@ -190,7 +188,8 @@ namespace rocos {
         }
 
 
-    public:
+    private:
+        void init();
 
         bool getSharedMemory();
 
