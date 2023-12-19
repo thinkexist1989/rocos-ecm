@@ -5,7 +5,7 @@
 #   - Contiguous DMA memory
 #   - Single device interrupt
 # 
-# Copyright (c) 2009 - 2018 acontis technologies GmbH, Weingarten, Germany <info@acontis.com>
+# Copyright (c) 2009 - 2018 acontis technologies GmbH, Ravensburg, Germany <info@acontis.com>
 # All rights reserved.
 #
 # Author: K. Olbrich <k.olbrich@acontis.com>
