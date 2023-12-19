@@ -1046,6 +1046,10 @@ static EC_T_VOID tEcJobTask(EC_T_VOID *pvThreadParamDesc) {
         OsWaitForEvent(pEcThreadParam->pvTimingEvent, EC_WAITINFINITE); // 阻塞等待定时器事件
 #endif
 
+        // 更新时间戳 by think
+        gettimeofday(&tv, nullptr);
+        pEcatConfig->ecatBus->timestamp = tv.tv_sec * 1000000 + tv.tv_usec; // us
+
         PERF_JOB_END(PERF_CycleTime);
         ////////===========My Own Code============/////////
         pEcatConfig->ecatBus->min_cycle_time = pEcThreadParam->TscMeasDesc.aTscTime[PERF_CycleTime].dwMin / 10.0;
@@ -1159,6 +1163,16 @@ static EC_T_VOID tEcJobTask(EC_T_VOID *pvThreadParamDesc) {
                              dwRes), dwRes));
         }
         PERF_JOB_END(JOB_SendAcycFrames);
+
+    ////============== semphore update =================////
+    // 通知其他进程可以更新这个周期的数据了 by think
+    for (auto &sem: pEcatConfig->sem_mutex) {
+        int val = 0;
+        sem_getvalue(sem, &val);
+        if (val < 1)
+            sem_post(sem);
+    }
+        
 
 #if !(defined NO_OS)
     } while (!pEcThreadParam->bJobThreadShutdown);
@@ -1510,29 +1524,7 @@ static EC_T_DWORD myAppWorkpd(T_EC_THREAD_PARAM *pEcThreadParam,
                               EC_T_BYTE *pbyPDOut /* [in]  pointer to process data output buffer */
 ) {
 
-    ////============== shared memory =================////
-    gettimeofday(&tv, nullptr);
-    pEcatConfig->ecatBus->timestamp = tv.tv_sec * 1000000 + tv.tv_usec; // us
-
-
-    for (auto &sem: pEcatConfig->sem_mutex) {
-        int val = 0;
-        sem_getvalue(sem, &val);
-        if (val < 1)
-            sem_post(sem);
-    }
-
-
     return EC_E_NOERROR;
-
-    Exit:
-
-    for (auto &sem: pEcatConfig->sem_mutex) {
-        sem_post(sem);
-    }
-
-
-    return EC_E_ERROR;
 }
 
 /***************************************************************************************************/
