@@ -41,6 +41,7 @@ namespace rocos {
 
         void setBusRequestState(int state);
         int  getBusCurrentState() const;
+        void waitForSignal(int id = 0); // compact code, not recommended use. use wait() instead
 
 
         std::string getSlaveName(int slaveId);
@@ -195,7 +196,6 @@ namespace rocos {
 
         bool getPdDataMemoryProvider();
 
-        void waitForSignal(int id = 0); // compact code, not recommended use. use wait() instead
 
         std::vector<std::thread::id> threadId;
 
