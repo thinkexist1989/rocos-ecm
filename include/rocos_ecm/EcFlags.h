@@ -25,8 +25,6 @@ Yang Luo, PHD
 
 #include "gflags/gflags.h"
 
-//! @brief the path of EtherCAT configuration file(YAML). Default value is "/etc/rocos-ecm/ecat_config.yaml"
-DECLARE_string(config);
 //! @brief the path of eni file(EtherCAT Network Information). Default value is "/etc/rocos-ecm/eni.xml"
 DECLARE_string(eni);
 //! @brief the running duration of Ec-Master in msec, 0 is forever
@@ -54,10 +52,13 @@ DECLARE_bool(ctloff);
 
 //! @brief Intel network card instances and mode
 DECLARE_int32(link);
-DECLARE_string(instance);
+DECLARE_int32(instance);
 DECLARE_int32(mode);
 
 DECLARE_string(state);
+
+//! @brief license
+DECLARE_string(license);
 
 
 #endif // EC_FLAGS_H

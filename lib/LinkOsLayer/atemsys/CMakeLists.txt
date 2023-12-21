@@ -6,7 +6,8 @@ cmake_minimum_required(VERSION 3.0.0 FATAL_ERROR)
 # https://gitioc.upc.edu/open-source/xenomai-cmake/blob/master/cmake-modules/FindKernelHeaders.cmake
 # https://stackoverflow.com/questions/50877135/cmake-specify-linux-kernel-module-output-build-directory
 
-project(atemsys VERSION 0.1.0 LANGUAGES C)
+#Source code can be download from https://github.com/acontis/atemsys 
+project(atemsys VERSION 1.4.27 LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
@@ -45,7 +46,7 @@ set(BUILD_CMD make -C ${KERNELHEADERS_DIR} modules M=${CMAKE_CURRENT_BINARY_DIR}
 add_custom_command(OUTPUT ${DRIVER_FILE}
         COMMAND ${BUILD_CMD} CONFIG_STACK_VALIDATION=
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS ${PROJECT_NAME}.c ${PROJECT_NAME}.bb ${PROJECT_NAME}.h VERBATIM)
+        DEPENDS ${PROJECT_NAME}.c ${PROJECT_NAME}.h VERBATIM)
 
 add_custom_target(${PROJECT_NAME} ALL DEPENDS ${DRIVER_FILE}
         COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_NAME}.ko ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}.ko) #copy atemsys.ko to bin/

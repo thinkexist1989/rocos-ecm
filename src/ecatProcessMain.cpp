@@ -252,8 +252,6 @@ int main(int nArgc, char *ppArgv[]) {
     std::cout << termcolor::blue << "==                  Version: " << ROCOS_ECM_VERSION << "                   =="
               << termcolor::reset << std::endl;
 
-    std::cout << termcolor::blue << "== Configuration file(-config): " << termcolor::reset << termcolor::bold
-              << FLAGS_config << termcolor::reset << std::endl;
     std::cout << termcolor::blue << "== EtherCAT network information file(-eni): " << termcolor::reset
               << termcolor::bold << FLAGS_eni << termcolor::reset << std::endl;
     std::cout << termcolor::blue << "== Performance measure: " << termcolor::reset << termcolor::bold
@@ -387,8 +385,8 @@ int main(int nArgc, char *ppArgv[]) {
     //! Process commandline arguments
     {
         // -config
-        OsSnprintf(szConfigFilename, sizeof(szConfigFilename) - 1, "%s",
-                   FLAGS_config.c_str()); // 将config文件名保存到szConfigFilename中
+//        OsSnprintf(szConfigFilename, sizeof(szConfigFilename) - 1, "%s",
+//                   FLAGS_config.c_str()); // 将config文件名保存到szConfigFilename中
 
         pbyCnf = (EC_T_PBYTE) &szConfigFilename[0];
 
@@ -479,9 +477,9 @@ int main(int nArgc, char *ppArgv[]) {
         EC_T_CHAR *szNextParm = ptcWord;
         EC_T_DWORD dwNewCycleDurationUsec = 0;
 
-        auto instance = std::strtol(FLAGS_instance.c_str(), nullptr, 0);
+//        auto instance = std::strtol(FLAGS_instance.c_str(), nullptr, 0);
 
-        dwRes = CreateLinkParms(FLAGS_link, instance, FLAGS_mode, &apLinkParms[dwNumLinkLayer]);
+        dwRes = CreateLinkParms(FLAGS_link, FLAGS_instance, FLAGS_mode, &apLinkParms[dwNumLinkLayer]);
         if (EC_E_NOERROR != dwRes) {
             EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "SYNTAX_ERROR: %s!\n", szNextParm));
             nRetVal = SYNTAX_ERROR;
@@ -905,7 +903,7 @@ int main(int nArgc, char *ppArgv[]) {
         }
     }
     EcLogMsg(EC_LOG_LEVEL_INFO,
-             (pEcLogContext, EC_LOG_LEVEL_INFO, "Run demo now with cycle time %d usec\n", TimingDesc.dwBusCycleTimeUsec));
+             (pEcLogContext, EC_LOG_LEVEL_INFO, "ROCOS-ECM now with cycle time %d usec\n", TimingDesc.dwBusCycleTimeUsec));
 #if (defined AUXCLOCK_SUPPORTED)
     EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "Using %s\n",
             (TimingDesc.bUseAuxClock ? "AuxClock" : "Sleep")));
