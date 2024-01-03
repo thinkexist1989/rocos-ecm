@@ -6,6 +6,7 @@
 -->
 
 <div align="center">
+  <img src="./rocos-ecm.png" alt="" height="150">
   <h1>ROCOS-EtherCAT-Master</h1>
   <blockquote>The EtherCAT Master for ROCOS based on Acontis Ec-Master </blockquote>
 </div>
