@@ -7,6 +7,9 @@
 #include "EcFlags.h"
 
 
+//! @brief Ec-Master ID (Multi-Master can be used)
+DEFINE_int32(id, 0, "Ec-Master ID (Multi-Master can be used)");
+
 //! @brief the path of eni file(EtherCAT Network Information). Default value is "/etc/rocos-ecm/eni.xml"
 DEFINE_string(eni, "/opt/rocos/ecm/config/eni.xml", "Path to ENI file in XML format.");
 

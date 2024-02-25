@@ -25,6 +25,8 @@ Yang Luo, PHD
 
 #include "gflags/gflags.h"
 
+//! @brief Ec-Master ID (Multi-Master can be used)
+DECLARE_int32(id);
 //! @brief the path of eni file(EtherCAT Network Information). Default value is "/etc/rocos-ecm/eni.xml"
 DECLARE_string(eni);
 //! @brief the running duration of Ec-Master in msec, 0 is forever

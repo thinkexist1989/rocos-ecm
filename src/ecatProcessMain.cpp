@@ -252,6 +252,8 @@ int main(int nArgc, char *ppArgv[]) {
     std::cout << termcolor::blue << "==                  Version: " << ROCOS_ECM_VERSION << "                   =="
               << termcolor::reset << std::endl;
 
+    std::cout << termcolor::blue << "== Ec-Master ID(-id): " << termcolor::reset
+              << termcolor::bold << FLAGS_id << termcolor::reset << std::endl;
     std::cout << termcolor::blue << "== EtherCAT network information file(-eni): " << termcolor::reset
               << termcolor::bold << FLAGS_eni << termcolor::reset << std::endl;
     std::cout << termcolor::blue << "== Performance measure: " << termcolor::reset << termcolor::bold
@@ -411,7 +413,7 @@ int main(int nArgc, char *ppArgv[]) {
         nVerbose = FLAGS_verbose; // 将verbose保存到nVerbose中
 
         // -cpuidx
-        dwCpuIndex = FLAGS_cpuidx; // 将cpuidx保存到dwCpuIndex中
+        dwCpuIndex = FLAGS_id; // 将cpuidx保存到dwCpuIndex中(现在根据主站ID走)
 
         // -perf
         bEnaPerfJobs = FLAGS_perf; // 将perf保存到bEnaPerfJobs中

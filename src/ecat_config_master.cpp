@@ -7,7 +7,11 @@
 
 using namespace rocos;
 
-EcatConfigMaster::EcatConfigMaster() {
+EcatConfigMaster::EcatConfigMaster(int id) {
+    ecmName = EC_SHM + std::to_string(id);
+    mutexName = EC_SEM_MUTEX + std::to_string(id) + "_";
+    pdInputName = "pd_input" + std::to_string(id);
+    pdOutputName = "pd_output" + std::to_string(id);
 
 }
 
@@ -20,9 +24,9 @@ bool EcatConfigMaster::createSharedMemory() {
 
     //////////////////// Shared Memory Object //////////////////////////
     using namespace boost::interprocess;
-    shared_memory_object::remove(EC_SHM);
+    shared_memory_object::remove(ecmName.c_str());
 
-    managedSharedMemory = new managed_shared_memory{open_or_create, EC_SHM, EC_SHM_MAX_SIZE};
+    managedSharedMemory = new managed_shared_memory{open_or_create, ecmName.c_str(), EC_SHM_MAX_SIZE};
 
     ecatBus = managedSharedMemory->find_or_construct<EcatBus>("ecat")();
 
@@ -30,9 +34,9 @@ bool EcatConfigMaster::createSharedMemory() {
 
     //////////////////// Semaphore //////////////////////////
     for (int i = 0; i < EC_SEM_NUM; i++) {
-        sem_mutex[i] = sem_open((EC_SEM_MUTEX + std::to_string(i)).c_str(), O_CREAT | O_RDWR, 0777, 1);
+        sem_mutex[i] = sem_open((mutexName + std::to_string(i)).c_str(), O_CREAT | O_RDWR, 0777, 1);
         if (sem_mutex[i] == SEM_FAILED) {
-            print_message("[SHM] Can not open or create semaphore mutex " + std::to_string(i) + ".",
+            print_message("[SHM] Can not open or create semaphore mutex " + mutexName + std::to_string(i) + ".",
                           MessageLevel::ERROR);
             return false;
         }
@@ -42,13 +46,13 @@ bool EcatConfigMaster::createSharedMemory() {
 //        std::cout << "value of sem_mutex is: " << val << std::endl;
         if (val != 1) {
             sem_destroy(sem_mutex[i]);
-            sem_unlink((EC_SEM_MUTEX + std::to_string(i)).c_str());
-            sem_mutex[i] = sem_open((EC_SEM_MUTEX + std::to_string(i)).c_str(), O_CREAT | O_RDWR, 0777, 1);
+            sem_unlink((mutexName + std::to_string(i)).c_str());
+            sem_mutex[i] = sem_open((mutexName + std::to_string(i)).c_str(), O_CREAT | O_RDWR, 0777, 1);
         }
 
         sem_getvalue(sem_mutex[i], &val);
         if (val != 1) {
-            print_message("[SHM] Can not set semaphore mutex " + std::to_string(i) + " to value 1.",
+            print_message("[SHM] Can not set semaphore mutex " + mutexName + std::to_string(i) + " to value 1.",
                           MessageLevel::ERROR);
             return false;
         }
@@ -68,16 +72,16 @@ bool EcatConfigMaster::getSharedMemory() {
     mode_t mask = umask(0); // 取消屏蔽的权限位
 
     for (int i = 0; i < EC_SEM_NUM; i++) {
-        sem_mutex[i] = sem_open((EC_SEM_MUTEX + std::to_string(i)).c_str(), O_CREAT, 0777, 1);
+        sem_mutex[i] = sem_open((mutexName + std::to_string(i)).c_str(), O_CREAT, 0777, 1);
         if (sem_mutex[i] == SEM_FAILED) {
-            print_message("[SHM] Can not open or create semaphore mutex " + std::to_string(i) + ".",
+            print_message("[SHM] Can not open or create semaphore mutex " + mutexName + std::to_string(i) + ".",
                           MessageLevel::ERROR);
             return false;
         }
     }
 
     using namespace boost::interprocess;
-    managedSharedMemory = new managed_shared_memory{open_or_create, EC_SHM, EC_SHM_MAX_SIZE};
+    managedSharedMemory = new managed_shared_memory{open_or_create, ecmName.c_str(), EC_SHM_MAX_SIZE};
 
     std::pair<EcatBus *, std::size_t> p1 = managedSharedMemory->find<EcatBus>("ecat");
     if (p1.first) {
@@ -147,11 +151,11 @@ void EcatConfigMaster::init() {
 bool EcatConfigMaster::createPdDataMemoryProvider(int pdInputSize, int pdOutputSize) {
     using namespace boost::interprocess;
 
-    shared_memory_object::remove("pd_input");
-    shared_memory_object::remove("pd_output");
+    shared_memory_object::remove(pdInputName.c_str());
+    shared_memory_object::remove(pdOutputName.c_str());
 
-    pdInputShm = new shared_memory_object(open_or_create, "pd_input", read_write);
-    pdOutputShm = new shared_memory_object(open_or_create, "pd_output", read_write);
+    pdInputShm = new shared_memory_object(open_or_create, pdInputName.c_str(), read_write);
+    pdOutputShm = new shared_memory_object(open_or_create, pdOutputName.c_str(), read_write);
 
     pdInputShm->truncate(pdInputSize);
     pdOutputShm->truncate(pdOutputSize);
@@ -168,8 +172,8 @@ bool EcatConfigMaster::createPdDataMemoryProvider(int pdInputSize, int pdOutputS
 bool EcatConfigMaster::getPdDataMemoryProvider() {
     using namespace boost::interprocess;
 
-    pdInputShm = new shared_memory_object(open_or_create, "pd_input", read_write);
-    pdOutputShm = new shared_memory_object(open_or_create, "pd_output", read_write);
+    pdInputShm = new shared_memory_object(open_or_create, pdInputName.c_str(), read_write);
+    pdOutputShm = new shared_memory_object(open_or_create, pdOutputName.c_str(), read_write);
 
     pdInputRegion = new mapped_region(*pdInputShm, read_write);
     pdOutputRegion = new mapped_region(*pdOutputShm, read_write);

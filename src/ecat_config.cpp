@@ -9,7 +9,12 @@
 
 using namespace rocos;
 
-EcatConfig::EcatConfig() {
+EcatConfig::EcatConfig(int id) {
+    ecmName = EC_SHM + std::to_string(id);
+    mutexName = EC_SEM_MUTEX + std::to_string(id) + "_";
+    pdInputName = "pd_input" + std::to_string(id);
+    pdOutputName = "pd_output" + std::to_string(id);
+
     init();
 }
 
@@ -25,7 +30,7 @@ bool EcatConfig::getSharedMemory() {
 
 
     using namespace boost::interprocess;
-    managedSharedMemory = new managed_shared_memory{open_or_create, EC_SHM, EC_SHM_MAX_SIZE};
+    managedSharedMemory = new managed_shared_memory{open_or_create, ecmName.c_str(), EC_SHM_MAX_SIZE};
 //    managedSharedMemory = new managed_shared_memory{open_only, EC_SHM};
 
     std::pair<EcatBus *, std::size_t> p1 = managedSharedMemory->find<EcatBus>("ecat");
@@ -37,9 +42,9 @@ bool EcatConfig::getSharedMemory() {
     }
 
     for (int i = 0; i < EC_SEM_NUM; i++) {
-        sem_mutex[i] = sem_open((EC_SEM_MUTEX + std::to_string(i)).c_str(), O_CREAT, 0777, 1);
+        sem_mutex[i] = sem_open((mutexName + std::to_string(i)).c_str(), O_CREAT, 0777, 1);
         if (sem_mutex[i] == SEM_FAILED) {
-            print_message("[SHM] Can not open or create semaphore mutex " + std::to_string(i) + ".",
+            print_message("[SHM] Can not open or create semaphore mutex " + mutexName + std::to_string(i) + ".",
                           MessageLevel::ERROR);
             return false;
         }
@@ -53,8 +58,8 @@ bool EcatConfig::getSharedMemory() {
 bool EcatConfig::getPdDataMemoryProvider() {
     using namespace boost::interprocess;
 
-    pdInputShm = new shared_memory_object(open_or_create, "pd_input", read_write);
-    pdOutputShm = new shared_memory_object(open_or_create, "pd_output", read_write);
+    pdInputShm = new shared_memory_object(open_or_create, pdInputName.c_str(), read_write);
+    pdOutputShm = new shared_memory_object(open_or_create, pdOutputName.c_str(), read_write);
 
     pdInputRegion = new mapped_region(*pdInputShm, read_write);
     pdOutputRegion = new mapped_region(*pdOutputShm, read_write);
@@ -219,9 +224,15 @@ int EcatConfig::getBusCurrentState() const {
     return ecatBus->current_state;
 }
 
-EcatConfig *EcatConfig::getInstance() {
-    static EcatConfig instance;
-    return &instance;
+EcatConfig *EcatConfig::getInstance(int id) {
+    if(instances.find(id) == instances.end()) {
+        static EcatConfig instance(id);
+        instances[id] = &instance;
+    }
+
+    return instances[id];
 }
 
+
+std::map<int, EcatConfig*> EcatConfig::instances;
 

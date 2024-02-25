@@ -11,15 +11,16 @@
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/format.hpp>
+#include <map>
 
 namespace rocos {
     class EcatConfig {
     private:
-        EcatConfig();
+        EcatConfig(int id = 0);
         ~EcatConfig();
 
     public:
-        static EcatConfig* getInstance();
+        static EcatConfig* getInstance(int id = 0);
 
         void wait();
 
@@ -190,6 +191,8 @@ namespace rocos {
 
 
     private:
+        static std::map<int, EcatConfig*> instances;
+
         void init();
 
         bool getSharedMemory();
@@ -198,6 +201,11 @@ namespace rocos {
 
 
         std::vector<std::thread::id> threadId;
+
+        std::string ecmName {EC_SHM};
+        std::string mutexName {EC_SEM_MUTEX};
+        std::string pdInputName {"pd_input"};
+        std::string pdOutputName {"pd_output"};
 
         boost::interprocess::managed_shared_memory *managedSharedMemory = nullptr;
 
