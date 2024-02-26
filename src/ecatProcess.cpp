@@ -33,7 +33,7 @@
 /*-EtherCAT Configuration------------------------------------------------------*/
 #include "rocos_ecm/ecat_config_master.h"
 
-static EcatConfigMaster *pEcatConfig = new EcatConfigMaster();
+static EcatConfigMaster *pEcatConfig = nullptr;
 
 static timeval tv; // time stamp
 
@@ -1268,6 +1268,8 @@ static EC_T_DWORD myAppInit(T_EC_THREAD_PARAM *pEcThreadParam) {
     //    return EC_E_NOERROR;
 
     ////////===========My Own Code============/////////
+
+    pEcatConfig = new EcatConfigMaster(FLAGS_id);
 
     if (!pEcatConfig->createSharedMemory()) // 创建共享内存 by think
         goto Exit;

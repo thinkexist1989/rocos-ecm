@@ -238,4 +238,10 @@ target_link_libraries(unit_test
         PRIVATE
         ecat_config
         )
+add_executable(ecm_test test/ecm_test.cpp)
+target_link_libraries(ecm_test
+                PRIVATE
+                ecat_config
+                )
 add_test(NAME unit_test COMMAND unit_test)
+add_test(NAME ecm_test COMMAND ecm_test)

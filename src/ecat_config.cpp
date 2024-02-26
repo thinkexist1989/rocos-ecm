@@ -226,8 +226,8 @@ int EcatConfig::getBusCurrentState() const {
 
 EcatConfig *EcatConfig::getInstance(int id) {
     if(instances.find(id) == instances.end()) {
-        static EcatConfig instance(id);
-        instances[id] = &instance;
+        std::cout << "Create New Ecat Config Instance: " << id << std::endl;
+        instances[id] = new EcatConfig(id);
     }
 
     return instances[id];

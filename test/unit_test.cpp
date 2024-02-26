@@ -32,7 +32,7 @@ Shenyang Institute of Automation, Chinese Academy of Sciences.
 #include <iostream>
 
 TEST_CASE("info") {
-    auto ecatConfig = rocos::EcatConfig::getInstance();
+    auto ecatConfig = rocos::EcatConfig::getInstance(0);
 
     std::cout << "Slave count: " << ecatConfig->ecatBus->slave_num << std::endl;
 
@@ -84,23 +84,23 @@ TEST_CASE("reset cycle time") {
 }
 
 TEST_CASE("kunwei") {
-    auto ecatConfig = rocos::EcatConfig::getInstance();
+    // auto ecatConfig = rocos::EcatConfig::getInstance();
 
-    std::cout << "---------------------------------------------------------------" << std::endl;
-    std::cout << "Slave name: " << ecatConfig->ecatBus->slaves[0].name << std::endl;
-    std::cout << "  -input_count  : " << ecatConfig->ecatBus->slaves[0].input_var_num << std::endl;
+    // std::cout << "---------------------------------------------------------------" << std::endl;
+    // std::cout << "Slave name: " << ecatConfig->ecatBus->slaves[0].name << std::endl;
+    // std::cout << "  -input_count  : " << ecatConfig->ecatBus->slaves[0].input_var_num << std::endl;
 
-    for(int i = 0; i < 100000; i++) {
-        std::cout << std::fixed << std::setw(8) <<"\r";
-        std::cout << "fx: " << ecatConfig->getSlaveInputVarValueByName<float>(0, "FloatFx") << "; ";
-        std::cout << "fy: " << ecatConfig->getSlaveInputVarValueByName<float>(0, "FloatFy") << "; ";
-        std::cout << "fz: " << ecatConfig->getSlaveInputVarValueByName<float>(0, "FloatFz") << "; ";
-        std::cout << "mx: " << ecatConfig->getSlaveInputVarValueByName<float>(0, "FloatMx") << "; ";
-        std::cout << "my: " << ecatConfig->getSlaveInputVarValueByName<float>(0, "FloatMy") << "; ";
-        std::cout << "mz: " << ecatConfig->getSlaveInputVarValueByName<float>(0, "FloatMz") << std::flush;
+    // for(int i = 0; i < 100000; i++) {
+    //     std::cout << std::fixed << std::setw(8) <<"\r";
+    //     std::cout << "fx: " << ecatConfig->getSlaveInputVarValueByName<float>(0, "FloatFx") << "; ";
+    //     std::cout << "fy: " << ecatConfig->getSlaveInputVarValueByName<float>(0, "FloatFy") << "; ";
+    //     std::cout << "fz: " << ecatConfig->getSlaveInputVarValueByName<float>(0, "FloatFz") << "; ";
+    //     std::cout << "mx: " << ecatConfig->getSlaveInputVarValueByName<float>(0, "FloatMx") << "; ";
+    //     std::cout << "my: " << ecatConfig->getSlaveInputVarValueByName<float>(0, "FloatMy") << "; ";
+    //     std::cout << "mz: " << ecatConfig->getSlaveInputVarValueByName<float>(0, "FloatMz") << std::flush;
 
-        usleep(10000);
-    }
+    //     usleep(10000);
+    // }
 
 }
 
@@ -120,47 +120,47 @@ TEST_CASE("sea_move") {
 }
 
 TEST_CASE("4 motor moving") {
-    auto ecatConfig = rocos::EcatConfig::getInstance();
+    // auto ecatConfig = rocos::EcatConfig::getInstance();
 
-    std::cout <<"Timestamp: " << ecatConfig->ecatBus->timestamp << std::endl;
-    std::cout << "  Ethercat State: " << ecatConfig->ecatBus->current_state << std::endl;
+    // std::cout <<"Timestamp: " << ecatConfig->ecatBus->timestamp << std::endl;
+    // std::cout << "  Ethercat State: " << ecatConfig->ecatBus->current_state << std::endl;
 
-    std::cout << "  " << ecatConfig->getSlaveInputVarValueByName<int32_t>(0, "Position actual value") << std::endl;
-    std::cout << "  Slave number: " << ecatConfig->ecatBus->slave_num << std::endl;
+    // std::cout << "  " << ecatConfig->getSlaveInputVarValueByName<int32_t>(0, "Position actual value") << std::endl;
+    // std::cout << "  Slave number: " << ecatConfig->ecatBus->slave_num << std::endl;
 
-    for(int i = 0; i < ecatConfig->ecatBus->slave_num; i++) {
-        std::cout << "  Slave name:  " << ecatConfig->ecatBus->slaves[i].name << std::endl;
-        *ecatConfig->findSlaveOutputVarPtrByName<uint8_t>(i, "Mode of operation") = 9;
-        *ecatConfig->findSlaveOutputVarPtrByName<int16_t>(i, "Control word") = 128;
+    // for(int i = 0; i < ecatConfig->ecatBus->slave_num; i++) {
+    //     std::cout << "  Slave name:  " << ecatConfig->ecatBus->slaves[i].name << std::endl;
+    //     *ecatConfig->findSlaveOutputVarPtrByName<uint8_t>(i, "Mode of operation") = 9;
+    //     *ecatConfig->findSlaveOutputVarPtrByName<int16_t>(i, "Control word") = 128;
 
-        *ecatConfig->findSlaveOutputVarPtrByName<int32_t>(i, "Target Position") = *ecatConfig->findSlaveInputVarPtrByName<int32_t>(i, "Position actual value");
+    //     *ecatConfig->findSlaveOutputVarPtrByName<int32_t>(i, "Target Position") = *ecatConfig->findSlaveInputVarPtrByName<int32_t>(i, "Position actual value");
 
-        std::cout << "Pos is: " << ecatConfig->getSlaveInputVarValueByName<int32_t>(i, "Position actual value") << std::endl;
-        usleep(10000);
+    //     std::cout << "Pos is: " << ecatConfig->getSlaveInputVarValueByName<int32_t>(i, "Position actual value") << std::endl;
+    //     usleep(10000);
 
-        *ecatConfig->findSlaveOutputVarPtrByName<int16_t>(i, "Control word") = 6;
-        usleep(10000);
-        std::cout << "Status is:  " << *ecatConfig->findSlaveInputVarPtrByName<uint16_t>(i, "Status word") << std::endl;
+    //     *ecatConfig->findSlaveOutputVarPtrByName<int16_t>(i, "Control word") = 6;
+    //     usleep(10000);
+    //     std::cout << "Status is:  " << *ecatConfig->findSlaveInputVarPtrByName<uint16_t>(i, "Status word") << std::endl;
 
-        *ecatConfig->findSlaveOutputVarPtrByName<int16_t>(i, "Control word") = 7;
-        usleep(10000);
-        std::cout << "Status is:  " << *ecatConfig->findSlaveInputVarPtrByName<uint16_t>(i, "Status word") << std::endl;
+    //     *ecatConfig->findSlaveOutputVarPtrByName<int16_t>(i, "Control word") = 7;
+    //     usleep(10000);
+    //     std::cout << "Status is:  " << *ecatConfig->findSlaveInputVarPtrByName<uint16_t>(i, "Status word") << std::endl;
 
 
-        *ecatConfig->findSlaveOutputVarPtrByName<int16_t>(i, "Control word") = 15;
-        *ecatConfig->findSlaveOutputVarPtrByName<int32_t>(i, "Target Velocity") = 100000;
-        if(i == 3) {
-            *ecatConfig->findSlaveOutputVarPtrByName<int32_t>(i, "Target Velocity") = 100000;
-        }
-        usleep(10000);
-        std::cout << "Status is:  " << *ecatConfig->findSlaveInputVarPtrByName<uint16_t>(i, "Status word") << std::endl;
+    //     *ecatConfig->findSlaveOutputVarPtrByName<int16_t>(i, "Control word") = 15;
+    //     *ecatConfig->findSlaveOutputVarPtrByName<int32_t>(i, "Target Velocity") = 100000;
+    //     if(i == 3) {
+    //         *ecatConfig->findSlaveOutputVarPtrByName<int32_t>(i, "Target Velocity") = 100000;
+    //     }
+    //     usleep(10000);
+    //     std::cout << "Status is:  " << *ecatConfig->findSlaveInputVarPtrByName<uint16_t>(i, "Status word") << std::endl;
 
-        usleep(5000000);
+    //     usleep(5000000);
 
-        *ecatConfig->findSlaveOutputVarPtrByName<int16_t>(i, "Control word") = 0;
-        usleep(10000);
-        std::cout << "Status is:  " << *ecatConfig->findSlaveInputVarPtrByName<uint16_t>(i, "Status word") << std::endl;
-    }
+    //     *ecatConfig->findSlaveOutputVarPtrByName<int16_t>(i, "Control word") = 0;
+    //     usleep(10000);
+    //     std::cout << "Status is:  " << *ecatConfig->findSlaveInputVarPtrByName<uint16_t>(i, "Status word") << std::endl;
+    // }
 }
 
 TEST_CASE("csp") {
