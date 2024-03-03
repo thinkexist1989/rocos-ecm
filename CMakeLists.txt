@@ -95,28 +95,12 @@ target_link_libraries(ecat_config
         rt
         )
 
+
 ## rocos_ecm executable
-#add_executable(${PROJECT_NAME} ${SRCS})
-#target_link_libraries(${PROJECT_NAME}
-#        PRIVATE
-#        AtemRasSrv
-#        EcMaster
-#        emllI8254x
-#        dl
-#        rt
-#        Threads::Threads
-#        gflags::gflags
-#        ecat_config
-#        pthread
-#        termcolor::termcolor
-#        )
-
-
-# Test EcMasterDemoDc
 file(GLOB_RECURSE MAIN_SRC Main/*.cpp)
 file(GLOB_RECURSE COMMON_SRC Sources/Common/*.cpp)
-add_executable(EcMasterDemoDc ${MAIN_SRC} ${COMMON_SRC})
-target_link_libraries(EcMasterDemoDc
+add_executable(${PROJECT_NAME} ${MAIN_SRC} ${COMMON_SRC})
+target_link_libraries(${PROJECT_NAME}
         PRIVATE
         EcMaster
         EcMasterRasServer
@@ -154,6 +138,8 @@ file(COPY ${CMAKE_BINARY_DIR}/rocos-ecm.service
         )
 
 configure_file(include/ver.h.in ver.h) # Version Definition
+configure_file(config/ecm.flagfile.in ecm.flagfile) # because in ecm.flagfile.in, ${${PROJECT_NAME}_INSTALL_CONFIGDIR} must be defined
+
 
 #############
 ## Install ##
@@ -196,7 +182,6 @@ configure_file(include/ver.h.in ver.h) # Version Definition
 #        )
 #
 ## install gflags config file
-#configure_file(config/ecm.flagfile.in ecm.flagfile) # because in ecm.flagfile.in, ${${PROJECT_NAME}_INSTALL_CONFIGDIR} must be defined
 #install(FILES ${CMAKE_BINARY_DIR}/ecm.flagfile
 #        DESTINATION ${${PROJECT_NAME}_INSTALL_CONFIGDIR}
 #        )
