@@ -662,6 +662,310 @@ EC_T_DWORD EcDemoApp(T_EC_DEMO_APP_CONTEXT* pAppContext)
     EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "=====================\n"));
 
 
+    //////////// WHILE LOOP by think ///////////////
+    while (bRun) { //while process
+        pEcatConfig->ecatBus->current_state = ecatGetMasterState(); // Get Ec Master State
+        //! Process EtherCAT state machine
+        switch (pEcatConfig->ecatBus->request_state) {
+            case eEcatState_INIT:
+                pEcatConfig->ecatBus->next_expected_state = eEcatState_INIT;
+                break;
+            case eEcatState_PREOP:
+                switch (pEcatConfig->ecatBus->current_state) {
+                    case eEcatState_UNKNOWN:
+                    case eEcatState_BOOTSTRAP:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_INIT;
+                        break;
+                    default:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_PREOP;
+                        break;
+                }
+                break;
+            case eEcatState_SAFEOP:
+                switch (pEcatConfig->ecatBus->current_state) {
+                    case eEcatState_INIT:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_PREOP;
+                        break;
+                    case eEcatState_UNKNOWN:
+                    case eEcatState_BOOTSTRAP:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_INIT;
+                        break;
+                    case eEcatState_PREOP:
+                    case eEcatState_OP:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_SAFEOP;
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case eEcatState_OP:
+                switch (pEcatConfig->ecatBus->current_state) {
+                    case eEcatState_INIT:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_PREOP;
+                        break;
+                    case eEcatState_UNKNOWN:
+                    case eEcatState_BOOTSTRAP:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_INIT;
+                        break;
+                    case eEcatState_PREOP:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_SAFEOP;
+                    case eEcatState_SAFEOP:
+                        pEcatConfig->ecatBus->next_expected_state = eEcatState_OP;
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case eEcatState_BOOTSTRAP:
+            case eEcatState_UNKNOWN:
+            default:
+                EcLogMsg(EC_LOG_LEVEL_ERROR,
+                         (pEcLogContext, EC_LOG_LEVEL_ERROR, "Invaid Request Master State!\n"));
+                break;
+        }
+
+
+        // Dive into state switch
+        if (pEcatConfig->ecatBus->next_expected_state == eEcatState_INIT) { // set state to INIT
+            /* set master to INIT */
+            dwRes = ecatSetMasterState(ETHERCAT_STATE_CHANGE_TIMEOUT, eEcatState_INIT); // 切换到Init状态  by think
+            pAppContext->pNotificationHandler->ProcessNotificationJobs();
+            if (dwRes != EC_E_NOERROR) {
+                EcLogMsg(EC_LOG_LEVEL_ERROR,
+                         (pEcLogContext, EC_LOG_LEVEL_ERROR, "Cannot start set master state to INIT: %s (0x%lx))\n", ecatGetText(
+                                 dwRes), dwRes));
+                dwRetVal = dwRes;
+                goto Exit;
+            }
+
+            //////////////    MY OWN CODE     /////////////////
+            ///////////// Prepare Application /////////////////
+            dwRes = myAppPrepare(pAppContext); // 判断ecat_config.yaml中的slave数量与eni.xml中的是否相同 by think
+            if (EC_E_NOERROR != dwRes) {
+                EcLogMsg(EC_LOG_LEVEL_ERROR,
+                         (pEcLogContext, EC_LOG_LEVEL_ERROR, (EC_T_CHAR *) "myAppPrepare failed: %s (0x%lx))\n", ecatGetText(
+                                 dwRes), dwRes));
+                dwRetVal = dwRes;
+                goto Exit;
+            }
+
+        }
+        else if (pEcatConfig->ecatBus->next_expected_state == eEcatState_PREOP) { // set state to PREOP
+            /* set master and bus state to PREOP */
+            dwRes = ecatSetMasterState(ETHERCAT_STATE_CHANGE_TIMEOUT, eEcatState_PREOP); // 切换到Preop状态  by think
+            pAppContext->pNotificationHandler->ProcessNotificationJobs();
+            if (dwRes != EC_E_NOERROR) {
+                EcLogMsg(EC_LOG_LEVEL_ERROR,
+                         (pEcLogContext, EC_LOG_LEVEL_ERROR, "Cannot start set master state to PREOP: %s (0x%lx))\n", ecatGetText(
+                                 dwRes), dwRes));
+                dwRetVal = dwRes;
+                goto Exit;
+            }
+
+            /////////////    MY OWN CODE     /////////////////
+            ///////////// Setup Application /////////////////
+            dwRes = myAppSetup(pAppContext); // mapping相应的变量指针到PDO by think
+            if (EC_E_NOERROR != dwRes) {
+                EcLogMsg(EC_LOG_LEVEL_ERROR,
+                         (pEcLogContext, EC_LOG_LEVEL_ERROR, (EC_T_CHAR *) "myAppSetup failed: %s (0x%lx))\n", ecatGetText(
+                                 dwRes), dwRes));
+                dwRetVal = dwRes;
+                goto Exit;
+            }
+
+        }
+        else if (pEcatConfig->ecatBus->next_expected_state == eEcatState_SAFEOP) { // set state to SAFEOP
+            /* set master and bus state to SAFEOP */
+            dwRes = ecatSetMasterState(ETHERCAT_STATE_CHANGE_TIMEOUT, eEcatState_SAFEOP); // 切换到Safeop状态  by think
+            pAppContext->pNotificationHandler->ProcessNotificationJobs();
+            if (dwRes != EC_E_NOERROR) {
+                EcLogMsg(EC_LOG_LEVEL_ERROR,
+                         (pEcLogContext, EC_LOG_LEVEL_ERROR, "Cannot start set master state to SAFEOP: %s (0x%lx))\n", ecatGetText(
+                                 dwRes), dwRes));
+
+                /* most of the time SAFEOP is not reachable due to DCM */
+                if ((eDcmMode_Off != pAppParms->eDcmMode) && (eDcmMode_LinkLayerRefClock != pAppParms->eDcmMode)) {
+                    EC_T_DWORD dwStatus = 0;
+                    EC_T_INT nDiffCur = 0, nDiffAvg = 0, nDiffMax = 0;
+
+                    dwRes = ecatDcmGetStatus(&dwStatus, &nDiffCur, &nDiffAvg, &nDiffMax);
+                    if (dwRes == EC_E_NOERROR) {
+                        if (dwStatus != EC_E_NOERROR) {
+                            EcLogMsg(EC_LOG_LEVEL_ERROR,
+                                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "DCM Status: %s (0x%08X)\n", ecatGetText(
+                                             dwStatus), dwStatus));
+                        }
+                    } else {
+                        EcLogMsg(EC_LOG_LEVEL_ERROR,
+                                 (pEcLogContext, EC_LOG_LEVEL_ERROR, "Cannot get DCM status! %s (0x%08X)\n", ecatGetText(
+                                         dwRes), dwRes));
+                    }
+                }
+                dwRetVal = dwRes;
+                goto Exit;
+            }
+
+        }
+        else if (pEcatConfig->ecatBus->next_expected_state == eEcatState_OP) { // set state to OP
+            /* set master and bus state to OP */
+            dwRes = ecatSetMasterState(ETHERCAT_STATE_CHANGE_TIMEOUT, eEcatState_OP); // 切换到Op状态 by think
+            pAppContext->pNotificationHandler->ProcessNotificationJobs();
+            if (dwRes != EC_E_NOERROR) {
+                EcLogMsg(EC_LOG_LEVEL_ERROR,
+                         (pEcLogContext, EC_LOG_LEVEL_ERROR, "Cannot start set master state to OP: %s (0x%lx))\n", ecatGetText(
+                                 dwRes), dwRes));
+                dwRetVal = dwRes;
+                goto Exit;
+            }
+
+            if (pAppContext->dwPerfMeasLevel > 0)
+            {
+                EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "\nJob times during startup <INIT> to <%s>:\n", ecatStateToStr(ecatGetMasterState())));
+                PRINT_PERF_MEAS();
+                EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "\n"));
+                /* clear job times of startup phase */
+                ecatPerfMeasAppReset(pAppContext->pvPerfMeas, EC_PERF_MEAS_ALL);
+                ecatPerfMeasReset(EC_PERF_MEAS_ALL);
+            }
+
+#if (defined DEBUG) && (defined XENOMAI)
+            /* Enabling mode switch warnings for shadowed task */
+        dwRes = rt_task_set_mode(0, T_WARNSW, NULL);
+        if (0 != dwRes)
+        {
+            EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "EnableRealtimeEnvironment: rt_task_set_mode returned error 0x%lx\n", dwRes));
+            OsDbgAssert(EC_FALSE);
+        }
+#endif
+
+            /* run the demo */
+            if (pAppParms->dwDemoDuration != 0)
+            {
+                EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "%s will stop in %ds...\n", EC_DEMO_APP_NAME, pAppParms->dwDemoDuration / 1000));
+                oAppDuration.Start(pAppParms->dwDemoDuration);
+            }
+            bRun = EC_TRUE;
+            {
+                CEcTimer oPerfMeasPrintTimer;
+
+                if (pAppParms->bPerfMeasShowCyclic)
+                {
+                    oPerfMeasPrintTimer.Start(2000);
+                }
+
+                while ((pEcatConfig->ecatBus->request_state == eEcatState_OP) && bRun) // while op 其实运行到这里时，实时任务已经在tEcJobTask中运行了，这里只是在运行过程中做一些检查
+                {
+                    if (oPerfMeasPrintTimer.IsElapsed())
+                    {
+                        PRINT_PERF_MEAS();
+                        oPerfMeasPrintTimer.Restart();
+                    }
+
+                    /* check if demo shall terminate */
+                    bRun = !(OsTerminateAppRequest() || oAppDuration.IsElapsed());
+
+                    myAppDiagnosis(pAppContext);
+
+                    if (EC_NULL != pAppParms->pbyCnfData)
+                    {
+                        if ((eDcmMode_Off != pAppParms->eDcmMode) && (eDcmMode_LinkLayerRefClock != pAppParms->eDcmMode))
+                        {
+                            EC_T_DWORD dwStatus = 0;
+                            EC_T_BOOL  bWriteDiffLog = EC_FALSE;
+                            EC_T_INT   nDiffCur = 0, nDiffAvg = 0, nDiffMax = 0;
+
+                            if (!oDcmStatusTimer.IsStarted() || oDcmStatusTimer.IsElapsed())
+                            {
+                                bWriteDiffLog = EC_TRUE;
+                                oDcmStatusTimer.Start(5000);
+                            }
+
+                            dwRes = ecatDcmGetStatus(&dwStatus, &nDiffCur, &nDiffAvg, &nDiffMax);
+                            if (dwRes == EC_E_NOERROR)
+                            {
+                                if (bFirstDcmStatus)
+                                {
+                                    EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "DCM during startup (<INIT> to <%s>)\n", ecatStateToStr(ecatGetMasterState())));
+                                }
+                                if ((dwStatus != EC_E_NOTREADY) && (dwStatus != EC_E_BUSY) && (dwStatus != EC_E_NOERROR))
+                                {
+                                    EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "DCM Status: %s (0x%08X)\n", ecatGetText(dwStatus), dwStatus));
+                                }
+                                if (bWriteDiffLog && pAppParms->bDcmLogEnabled)
+                                {
+                                    EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "DCM Diff (cur/avg/max) [nsec]: %7d/ %7d/ %7d\n", nDiffCur, nDiffAvg, nDiffMax));
+                                }
+                            }
+                            else
+                            {
+                                if ((eEcatState_OP == ecatGetMasterState()) || (eEcatState_SAFEOP == ecatGetMasterState()))
+                                {
+                                    EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "Cannot get DCM status! %s (0x%08X)\n", ecatGetText(dwRes), dwRes));
+                                }
+                            }
+#if (defined INCLUDE_DCX)
+                            if (eDcmMode_Dcx == pAppParms->eDcmMode && EC_E_NOERROR == dwRes)
+                            {
+                                EC_T_INT64 nTimeStampDiff = 0;
+                                dwRes = ecatDcxGetStatus(&dwStatus, &nDiffCur, &nDiffAvg, &nDiffMax, &nTimeStampDiff);
+                                if (EC_E_NOERROR == dwRes)
+                                {
+                                    if (bFirstDcmStatus)
+                                    {
+                                        EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "DCX during startup (<INIT> to <%s>)\n", ecatStateToStr(ecatGetMasterState())));
+                                    }
+                                    if ((dwStatus != EC_E_NOTREADY) && (dwStatus != EC_E_BUSY) && (dwStatus != EC_E_NOERROR))
+                                    {
+                                        EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "DCX Status: %s (0x%08X)\n", ecatGetText(dwStatus), dwStatus));
+                                    }
+                                    if (bWriteDiffLog && pAppParms->bDcmLogEnabled)
+                                    {
+                                        EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "DCX Diff(ns): Cur=%7d, Avg=%7d, Max=%7d, TimeStamp=%7d\n", nDiffCur, nDiffAvg, nDiffMax, nTimeStampDiff));
+                                    }
+                                }
+                                else
+                                {
+                                    if ((eEcatState_OP == ecatGetMasterState()) || (eEcatState_SAFEOP == ecatGetMasterState()))
+                                    {
+                                        EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "Cannot get DCX status! %s (0x%08X)\n", ecatGetText(dwRes), dwRes));
+                                    }
+                                }
+                            }
+#endif
+                            if (bFirstDcmStatus && (EC_E_NOERROR == dwRes))
+                            {
+                                bFirstDcmStatus = EC_FALSE;
+                                ecatDcmResetStatus();
+                            }
+                        }
+                    }
+                    /* process notification jobs */
+                    pAppContext->pNotificationHandler->ProcessNotificationJobs();
+
+                    OsSleep(5);
+                } // end while op
+
+            }
+
+        }
+
+        OsSleep(50);
+    } // end while process
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1093,6 +1397,9 @@ static EC_T_VOID EcMasterJobTask(EC_T_VOID* pvAppContext)
         {
             EC_T_STATE eMasterState = ecatGetMasterState();
 
+            /***********Record Ec-Master State by think**************/
+            pEcatConfig->ecatBus->current_state = eMasterState;
+
             if ((eEcatState_SAFEOP == eMasterState) || (eEcatState_OP == eMasterState))
             {
                 myAppWorkpd(pAppContext);
@@ -1136,6 +1443,16 @@ static EC_T_VOID EcMasterJobTask(EC_T_VOID* pvAppContext)
         {
             EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "ERROR: ecatExecJob(eUsrJob_StopTask): %s (0x%lx)\n", ecatGetText(dwRes), dwRes));
         }
+
+        ////============== semphore update by think =================////
+        // 通知其他进程可以更新这个周期的数据了 by think
+        for (auto &sem: pEcatConfig->sem_mutex) {
+            int val = 0;
+            sem_getvalue(sem, &val);
+            if (val < 1)
+                sem_post(sem);
+        }
+
 #if !(defined NO_OS)
     } while (!pAppContext->bJobTaskShutdown);
 
@@ -1460,7 +1777,7 @@ static EC_T_DWORD myAppSetup(T_EC_DEMO_APP_CONTEXT* pAppContext)
 
     }
 
-    ecatPerfMeasReset(0xFFFFFFFF); /* clear job times of startup phase */
+    ecatPerfMeasReset(EC_PERF_MEAS_ALL); /* clear job times of startup phase */
 
     return EC_E_NOERROR;
 
