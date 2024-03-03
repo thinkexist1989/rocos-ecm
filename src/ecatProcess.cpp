@@ -25,7 +25,7 @@
 #include <cmath>
 #include <cstring>
 #include <termcolor/termcolor.hpp>
-#include <EcFlags.h>
+#include "Main/Common/EcFlags.h"
 
 /*-License Key -------------------------------------------------------------*/
 //#define LICENSE_KEY "FB3B37E5-014B554C-F51CA7DF"
