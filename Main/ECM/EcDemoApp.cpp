@@ -24,13 +24,16 @@ static timeval tv; //! timestamp by think 2024.03.03
 
 #define PERF_myAppWorkpd       0
 #define PERF_DCM_Logfile       1
-#define MAX_JOB_NUM            2
+#define PERF_CycleTime         2 //! by think 2024.03.04
+
+#define MAX_JOB_NUM            3
 
 /*-LOCAL VARIABLES-----------------------------------------------------------*/
 static EC_T_PERF_MEAS_INFO_PARMS S_aPerfMeasInfos[MAX_JOB_NUM] =
 {
     {"myAppWorkPd                    ", 0},
-    {"Write DCM logfile              ", 0}
+    {"Write DCM logfile              ", 0},
+    {"CycleTime                      ",  0} //! by think 2024.03.04
 };
 
 /*-FUNCTION DECLARATIONS-----------------------------------------------------*/
@@ -957,7 +960,6 @@ EC_T_DWORD EcDemoApp(T_EC_DEMO_APP_CONTEXT* pAppContext)
     } // end while process
 
 
-
     if (pAppParms->dwAppLogLevel >= EC_LOG_LEVEL_VERBOSE)
     {
         EC_T_DWORD dwCurrentUsage = 0;
@@ -1094,6 +1096,14 @@ static EC_T_VOID EcMasterJobTask(EC_T_VOID* pvAppContext)
 
     /* demo loop */
     pAppContext->bJobTaskRunning = EC_TRUE;
+
+
+    ////////////===========My Own Code============/////////// by think
+    EC_T_PERF_MEAS_INFO perfMeasInfo;
+    ecatPerfMeasAppGetInfo(pAppContext->pvPerfMeas, PERF_CycleTime, &perfMeasInfo, 1);
+    EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "Cycle Time Frequency: %ld\n", perfMeasInfo.qwFrequency));
+
+
     do
     {
         /* wait for next cycle (event from scheduler task) */
@@ -1104,6 +1114,32 @@ static EC_T_VOID EcMasterJobTask(EC_T_VOID* pvAppContext)
             EcLogMsg(EC_LOG_LEVEL_ERROR, (pEcLogContext, EC_LOG_LEVEL_ERROR, "ERROR: OsWaitForEvent(): %s (0x%lx)\n", ecatGetText(dwRes), dwRes));
             OsSleep(500);
         }
+
+
+        ////////===========My Own Code============/////////
+        // 更新时间戳 by think
+        gettimeofday(&tv, nullptr);
+        pEcatConfig->ecatBus->timestamp = tv.tv_sec * 1000000 + tv.tv_usec; // us
+
+        if (pAppContext->dwPerfMeasLevel > 0)
+        {
+            ecatPerfMeasAppEnd(pAppContext->pvPerfMeas, PERF_CycleTime);
+        }
+
+        EC_T_PERF_MEAS_VAL perfMeasVal;
+        ecatPerfMeasAppGetRaw(pAppContext->pvPerfMeas, PERF_CycleTime, &perfMeasVal, EC_NULL, 1);
+        pEcatConfig->ecatBus->min_cycle_time = perfMeasVal.qwMinTicks * 1000000.0 /  perfMeasInfo.qwFrequency;
+        pEcatConfig->ecatBus->max_cycle_time = perfMeasVal.qwMaxTicks * 1000000.0 /  perfMeasInfo.qwFrequency;
+        pEcatConfig->ecatBus->avg_cycle_time = perfMeasVal.qwAvgTicks * 1000000.0 /  perfMeasInfo.qwFrequency;
+        pEcatConfig->ecatBus->current_cycle_time = perfMeasVal.qwCurrTicks * 1000000.0 /  perfMeasInfo.qwFrequency;
+
+
+        if (pAppContext->dwPerfMeasLevel > 0)
+        {
+            ecatPerfMeasAppStart(pAppContext->pvPerfMeas, PERF_CycleTime);
+        }
+
+        ////////////////////////////////////////////////
 
         /* start Task (required for enhanced performance measurement) */
         dwRes = ecatExecJob(eUsrJob_StartTask, EC_NULL);
