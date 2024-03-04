@@ -144,94 +144,94 @@ configure_file(config/ecm.flagfile.in ecm.flagfile) # because in ecm.flagfile.in
 #############
 ## Install ##
 #############
-#
-## Add support for installation
-#include(CMakePackageConfigHelpers)
-#
-#install(FILES ${CMAKE_BINARY_DIR}/ver.h include/rocos_ecm/ecat_config.h include/rocos_ecm/ecat_type.h
-#        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocos_ecm
-#        )
-#
-## Install binaries
-#install(TARGETS ${PROJECT_NAME}
-#        EXPORT ${PROJECT_NAME}-targets
-#        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}  # 动态库安装路径
-#        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}  # 静态库安装路径
-#        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}  # 可执行文件安装路径
-#        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}  # 头文件安装路径
-#        )
-#
-#install(TARGETS ecat_config
-#        EXPORT ecat_config-targets
-#        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}  # 动态库安装路径
-#        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}  # 静态库安装路径
-#        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}  # 可执行文件安装路径
-#        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}  # 头文件安装路径
-#        )
-#
-## Install config files
-#file(GLOB SO_FILES  ${CMAKE_BINARY_DIR}/bin/*.so)
-#file(GLOB KO_FILES  ${CMAKE_BINARY_DIR}/bin/*.ko)
-#file(GLOB SH_FILES  ${CMAKE_BINARY_DIR}/bin/*.sh)
-#install(FILES ${SO_FILES} ${KO_FILES} ${SH_FILES}
-#        DESTINATION ${CMAKE_INSTALL_BINDIR}
-#        )
-#
-#install(FILES  ${ENI_FILE} ${CONFIG_FILE}
-#        DESTINATION ${${PROJECT_NAME}_INSTALL_CONFIGDIR}
-#        )
-#
-## install gflags config file
-#install(FILES ${CMAKE_BINARY_DIR}/ecm.flagfile
-#        DESTINATION ${${PROJECT_NAME}_INSTALL_CONFIGDIR}
-#        )
-#
-## install CMake config files
-#install(EXPORT ${PROJECT_NAME}-targets
-#        FILE ${PROJECT_NAME}-targets.cmake
-#        NAMESPACE rocos::
-#        DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
-#        )
-#
-#install(EXPORT ecat_config-targets
-#        FILE ecat_config-targets.cmake
-#        NAMESPACE rocos::
-#        DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
-#        )
-#
-## install rocos_ecm.service
-#install(FILES ${CMAKE_BINARY_DIR}/rocos-ecm.service
-#        DESTINATION ${${PROJECT_NAME}_INSTALL_CONFIGDIR}
-#        )
-#
-#
-## 生成并安装配置文件
-#configure_package_config_file(
-#        cmake/${PROJECT_NAME}-config.cmake.in
-#        ${PROJECT_NAME}-config.cmake
-#        INSTALL_DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
-#)
-#
-## 写入库的版本信息
-#write_basic_package_version_file(
-#        ${PROJECT_NAME}-config-version.cmake
-#        VERSION ${PACKAGE_VERSION}
-#        COMPATIBILITY AnyNewerVersion  # 表示该函数库向下兼容
-#)
-#
-#install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
-#        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
-#        DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
-#        )
+
+# Add support for installation
+include(CMakePackageConfigHelpers)
+
+install(FILES ${CMAKE_BINARY_DIR}/ver.h include/rocos_ecm/ecat_config.h include/rocos_ecm/ecat_type.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocos_ecm
+        )
+
+# Install binaries
+install(TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}-targets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}  # 动态库安装路径
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}  # 静态库安装路径
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}  # 可执行文件安装路径
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}  # 头文件安装路径
+        )
+
+install(TARGETS ecat_config
+        EXPORT ecat_config-targets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}  # 动态库安装路径
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}  # 静态库安装路径
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}  # 可执行文件安装路径
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}  # 头文件安装路径
+        )
+
+# Install config files
+file(GLOB SO_FILES  ${CMAKE_BINARY_DIR}/bin/*.so)
+file(GLOB KO_FILES  ${CMAKE_BINARY_DIR}/bin/*.ko)
+file(GLOB SH_FILES  ${CMAKE_BINARY_DIR}/bin/*.sh)
+install(FILES ${SO_FILES} ${KO_FILES} ${SH_FILES}
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        )
+
+install(FILES  ${ENI_FILE} ${CONFIG_FILE}
+        DESTINATION ${${PROJECT_NAME}_INSTALL_CONFIGDIR}
+        )
+
+# install gflags config file
+install(FILES ${CMAKE_BINARY_DIR}/ecm.flagfile
+        DESTINATION ${${PROJECT_NAME}_INSTALL_CONFIGDIR}
+        )
+
+# install CMake config files
+install(EXPORT ${PROJECT_NAME}-targets
+        FILE ${PROJECT_NAME}-targets.cmake
+        NAMESPACE rocos::
+        DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
+        )
+
+install(EXPORT ecat_config-targets
+        FILE ecat_config-targets.cmake
+        NAMESPACE rocos::
+        DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
+        )
+
+# install rocos_ecm.service
+install(FILES ${CMAKE_BINARY_DIR}/rocos-ecm.service
+        DESTINATION ${${PROJECT_NAME}_INSTALL_CONFIGDIR}
+        )
+
+
+# 生成并安装配置文件
+configure_package_config_file(
+        cmake/${PROJECT_NAME}-config.cmake.in
+        ${PROJECT_NAME}-config.cmake
+        INSTALL_DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
+)
+
+# 写入库的版本信息
+write_basic_package_version_file(
+        ${PROJECT_NAME}-config-version.cmake
+        VERSION ${PACKAGE_VERSION}
+        COMPATIBILITY AnyNewerVersion  # 表示该函数库向下兼容
+)
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+        DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
+        )
 
 #############
 ## Testing ##
 #############
 
-#enable_testing()
-#add_executable(unit_test test/unit_test.cpp)
-#target_link_libraries(unit_test
-#        PRIVATE
-#        ecat_config
-#        )
-#add_test(NAME unit_test COMMAND unit_test)
+enable_testing()
+add_executable(unit_test test/unit_test.cpp)
+target_link_libraries(unit_test
+        PRIVATE
+        ecat_config
+        )
+add_test(NAME unit_test COMMAND unit_test)
