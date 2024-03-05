@@ -870,12 +870,8 @@ EC_T_DWORD EcDemoApp(T_EC_DEMO_APP_CONTEXT* pAppContext)
                     if (oPerfMeasPrintTimer.IsElapsed())
                     {
                         PRINT_PERF_MEAS();
-                        oPerfMeasPrintTimer.Restart();
-                    }
-
-                    if(pAppParms->dwPerfMeasLevel > 0)
-                    {
-                        PRINT_PERF_MEAS();
+//                        oPerfMeasPrintTimer.Restart();
+                        oPerfMeasPrintTimer.Start(2000);
                     }
 
                     /* check if demo shall terminate */
