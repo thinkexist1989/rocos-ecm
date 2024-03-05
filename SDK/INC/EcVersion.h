@@ -29,7 +29,7 @@
     #define EC_FILEVERSIONSTR        "3.2.1.02 (Protected)\0"
     #define EC_VERSION_TYPE_STR      "Protected"
 
-#define EC_COPYRIGHT "Copyright acontis technologies GmbH @ 2023\0"
+#define EC_COPYRIGHT "Copyright Landau Robotics @ 2023\0" // by think 2024.03.05
 
 #define EC_VERSION_SINCE(a,b,c,d) (EC_VERSION >= EC_VERSION_MAKE(a,b,c,d))
 #define EC_VERSION_WITHIN_2(a,b) ((a <= EC_VERSION) && (EC_VERSION <= b))

@@ -26,7 +26,7 @@
 #include "EcSlaveInfo.h"
 
 /*-DEFINES-------------------------------------------------------------------*/
-#define EC_DEMO_APP_NAME (EC_T_CHAR*)"EcMasterDemoDc"
+#define EC_DEMO_APP_NAME (EC_T_CHAR*)"ROCOS-ECM" // by think 2024.03.05
 
 /* the RAS server is necessary to support the EC-Engineer or other remote applications */
 #if (!defined INCLUDE_RAS_SERVER) && (defined EC_SOCKET_SUPPORTED)

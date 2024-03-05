@@ -31,7 +31,7 @@ extern struct _EC_T_LOG_PARMS G_aLogParms[];
 #endif
 
 #if (!defined INCLUDE_FILE_LOGGING) && (!defined EXCLUDE_FILE_LOGGING)
-#define INCLUDE_FILE_LOGGING
+//#define INCLUDE_FILE_LOGGING  //! 屏蔽文件日志 by think 2023.12.2
 #endif
 
 #if (!defined NO_OS)

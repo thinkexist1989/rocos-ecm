@@ -127,6 +127,7 @@ EC_T_DWORD SetAppParmsFromFlags(T_EC_DEMO_APP_CONTEXT* pAppContext, T_EC_DEMO_AP
 
     // -perf
     pAppParms->dwPerfMeasLevel = FLAGS_perf; // 将perf保存到bEnaPerfJobs中
+    pAppParms->bPerfMeasShowCyclic = EC_TRUE;
 
     // -sp
 #if (defined INCLUDE_RAS_SERVER)
@@ -479,8 +480,8 @@ int main(int nArgc, char* ppArgv[])
     }
     OsMemcpy(G_pEcLogParms, &AppContext.LogParms, sizeof(EC_T_LOG_PARMS));
 
-    EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "%s V%s for %s %s\n", EC_DEMO_APP_NAME, EC_FILEVERSIONSTR, ATECAT_PLATFORMSTR, EC_COPYRIGHT));
-    EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "Full command line: %s\n", szCommandLine));
+    //EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "%s V%s for %s %s\n", EC_DEMO_APP_NAME, EC_FILEVERSIONSTR, ATECAT_PLATFORMSTR, EC_COPYRIGHT));
+    //EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "Full command line: %s\n", szCommandLine));
 
     /* adjust linklayer parameters */
     for (dwIdx = 0; dwIdx < MAX_LINKLAYER; dwIdx++)
@@ -551,7 +552,9 @@ int main(int nArgc, char* ppArgv[])
 Exit:
     if (EC_E_INVALIDPARM == dwRetVal)
     {
-        ShowSyntax(&AppContext);
+//        ShowSyntax(&AppContext);
+        EcLogMsg(EC_LOG_LEVEL_ERROR,
+                 (pEcLogContext, EC_LOG_LEVEL_ERROR, "\033[31m\033[1mInvalid flags to start ROCOS-ECM.\033[0m\n" )); // Add by think 2024.03.04
     }
 
     EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "%s stop.\n", EC_DEMO_APP_NAME));
