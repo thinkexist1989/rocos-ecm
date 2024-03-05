@@ -868,6 +868,11 @@ EC_T_DWORD EcDemoApp(T_EC_DEMO_APP_CONTEXT* pAppContext)
                         oPerfMeasPrintTimer.Restart();
                     }
 
+                    if(pAppParms->dwPerfMeasLevel > 0)
+                    {
+                        PRINT_PERF_MEAS();
+                    }
+
                     /* check if demo shall terminate */
                     bRun = !(OsTerminateAppRequest() || oAppDuration.IsElapsed());
 
