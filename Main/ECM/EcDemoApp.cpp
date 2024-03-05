@@ -19,6 +19,11 @@
 static EcatConfigMaster *pEcatConfig = nullptr; //! by think 2024.03.03
 static timeval tv; //! timestamp by think 2024.03.03
 
+inline EC_T_UINT64 RoundedDivisionMiddle(EC_T_UINT64 dividend, EC_T_UINT64 divisor)
+{
+    return (dividend + (divisor / 2)) / divisor;
+}
+
 /*-DEFINES-------------------------------------------------------------------*/
 //#define DCM_ENABLE_LOGFILE            //! by think 2024.03.03
 
@@ -1107,6 +1112,7 @@ static EC_T_VOID EcMasterJobTask(EC_T_VOID* pvAppContext)
     EC_T_PERF_MEAS_INFO perfMeasInfo;
     ecatPerfMeasAppGetInfo(pAppContext->pvPerfMeas, PERF_CycleTime, &perfMeasInfo, 1);
     EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "Cycle Time Frequency: %ld\n", perfMeasInfo.qwFrequency));
+    EC_T_UINT64 qwFrequency = RoundedDivisionMiddle(perfMeasInfo.qwFrequency, (EC_T_UINT64)10000); /* 1/10 usec */
 
 
     do
@@ -1133,11 +1139,18 @@ static EC_T_VOID EcMasterJobTask(EC_T_VOID* pvAppContext)
 
         EC_T_PERF_MEAS_VAL perfMeasVal;
         ecatPerfMeasAppGetRaw(pAppContext->pvPerfMeas, PERF_CycleTime, &perfMeasVal, EC_NULL, 1);
-        pEcatConfig->ecatBus->min_cycle_time = perfMeasVal.qwMinTicks * 1000000.0 /  perfMeasInfo.qwFrequency;
-        pEcatConfig->ecatBus->max_cycle_time = perfMeasVal.qwMaxTicks * 1000000.0 /  perfMeasInfo.qwFrequency;
-        pEcatConfig->ecatBus->avg_cycle_time = perfMeasVal.qwAvgTicks * 1000000.0 /  perfMeasInfo.qwFrequency;
-        pEcatConfig->ecatBus->current_cycle_time = perfMeasVal.qwCurrTicks * 1000000.0 /  perfMeasInfo.qwFrequency;
-
+        EC_T_UINT64 qwMin = RoundedDivisionMiddle(perfMeasVal.qwMinTicks * 1000, qwFrequency);
+        EC_T_UINT64 qwAvg = RoundedDivisionMiddle(perfMeasVal.qwAvgTicks * 1000, qwFrequency);
+        EC_T_UINT64 qwMax = RoundedDivisionMiddle(perfMeasVal.qwMaxTicks * 1000, qwFrequency);
+        EC_T_UINT64 qwCurr = RoundedDivisionMiddle(perfMeasVal.qwCurrTicks * 1000, qwFrequency);
+        pEcatConfig->ecatBus->min_cycle_time     = qwMin / 10.0;
+        pEcatConfig->ecatBus->max_cycle_time     = qwMax / 10.0;
+        pEcatConfig->ecatBus->avg_cycle_time     = qwAvg / 10.0;
+        pEcatConfig->ecatBus->current_cycle_time = qwCurr / 10.0;
+//        pEcatConfig->ecatBus->min_cycle_time = perfMeasVal.qwMinTicks * 1000000.0 /  perfMeasInfo.qwFrequency;
+//        pEcatConfig->ecatBus->max_cycle_time = perfMeasVal.qwMaxTicks * 1000000.0 /  perfMeasInfo.qwFrequency;
+//        pEcatConfig->ecatBus->avg_cycle_time = perfMeasVal.qwAvgTicks * 1000000.0 /  perfMeasInfo.qwFrequency;
+//        pEcatConfig->ecatBus->current_cycle_time = perfMeasVal.qwCurrTicks * 1000000.0 /  perfMeasInfo.qwFrequency;
 
         if (pAppContext->dwPerfMeasLevel > 0)
         {
