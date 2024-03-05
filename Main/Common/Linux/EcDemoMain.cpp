@@ -392,8 +392,6 @@ static EC_T_VOID ShowSyntax(T_EC_DEMO_APP_CONTEXT* pAppContext)
 */
 int main(int nArgc, char* ppArgv[])
 {
-    PrepareFlags(nArgc, ppArgv); // Add by think 2024.03.02
-
     EC_T_DWORD               dwRetVal = EC_E_ERROR;
     EC_T_DWORD               dwRes = EC_E_ERROR;
     EC_T_DWORD               dwIdx = 0;
