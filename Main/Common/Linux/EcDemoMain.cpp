@@ -57,7 +57,7 @@ EC_T_DWORD PrepareFlags(int nArgc, char* ppArgv[]) // Add by think 2024.03.02
     std::cout << termcolor::blue << "== EtherCAT network information file(-eni): " << termcolor::reset
               << termcolor::bold << FLAGS_eni << termcolor::reset << std::endl;
     std::cout << termcolor::blue << "== Performance measure: " << termcolor::reset << termcolor::bold
-              << (FLAGS_perf ? "true" : "false") << termcolor::reset << std::endl;
+              << FLAGS_perf << termcolor::reset << std::endl;
     std::cout << termcolor::blue << "== Running duration(ms): " << termcolor::reset << termcolor::bold
               << (FLAGS_duration ? std::to_string(FLAGS_duration) : "forever") << termcolor::reset << std::endl;
     std::cout << termcolor::blue << "== Bus cycle time(us): " << termcolor::reset << termcolor::bold << FLAGS_cycle
@@ -66,8 +66,6 @@ EC_T_DWORD PrepareFlags(int nArgc, char* ppArgv[]) // Add by think 2024.03.02
               << termcolor::reset << std::endl;
     std::cout << termcolor::blue << "== CPU index: " << termcolor::reset << termcolor::bold << FLAGS_cpuidx
               << termcolor::reset << std::endl;
-    std::cout << termcolor::blue << "== Clock period(us): " << termcolor::reset << termcolor::bold
-              << (FLAGS_auxclk ? std::to_string(FLAGS_auxclk) : "disabled") << termcolor::reset << std::endl;
     std::cout << termcolor::blue << "== Remote API server port: " << termcolor::reset << termcolor::bold << FLAGS_sp
               << termcolor::reset << std::endl;
     std::cout << termcolor::blue << "== link layer: " << termcolor::reset << termcolor::bold << FLAGS_link
@@ -76,8 +74,6 @@ EC_T_DWORD PrepareFlags(int nArgc, char* ppArgv[]) // Add by think 2024.03.02
               << termcolor::reset << std::endl;
     std::cout << termcolor::blue << "== mode: " << termcolor::reset << termcolor::bold << FLAGS_mode << termcolor::reset
               << std::endl;
-    std::cout << termcolor::blue << "== Log file prefix: " << termcolor::reset << termcolor::bold << FLAGS_log
-              << termcolor::reset << std::endl;
 
     std::cout << termcolor::on_bright_blue << termcolor::blink
               << "=======================================================" << termcolor::reset << std::endl;
