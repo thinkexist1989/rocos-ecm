@@ -1,0 +1,2 @@
+#!/bin/sh
+pkexec "/opt/rocos/ecm/bin/rocos_ecm" "$@"

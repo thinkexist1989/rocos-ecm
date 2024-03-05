@@ -11,15 +11,16 @@
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/format.hpp>
+#include <map>
 
 namespace rocos {
     class EcatConfig {
     private:
-        EcatConfig();
+        EcatConfig(int id = 0);
         ~EcatConfig();
 
     public:
-        static EcatConfig* getInstance();
+        static EcatConfig* getInstance(int id = 0);
 
         void wait();
 
@@ -73,7 +74,7 @@ namespace rocos {
         }
 
         template<typename T>
-        void setSlaveInputVarValue(int slaveId, int varId, T& value) {
+        void setSlaveInputVarValue(int slaveId, int varId, T value) {
             if (sizeof(T) != ecatBus->slaves[slaveId].input_vars[varId].size) {
                 print_message("Size of Var is not equal", MessageLevel::WARNING);
             }
@@ -89,7 +90,7 @@ namespace rocos {
         }
 
         template<typename T>
-        void setSlaveOutputVarValue(int slaveId, int varId, T& value) {
+        void setSlaveOutputVarValue(int slaveId, int varId, T value) {
             if (sizeof(T) != ecatBus->slaves[slaveId].output_vars[varId].size) {
                 print_message("Size of Var is not equal", MessageLevel::WARNING);
             }
@@ -110,7 +111,7 @@ namespace rocos {
         }
 
         template<typename T>
-        void setSlaveInputVarValueByName(int slaveId, const std::string &varName, T& value) {
+        void setSlaveInputVarValueByName(int slaveId, const std::string &varName, T value) {
             for (int i = 0; i < ecatBus->slaves[slaveId].input_var_num; ++i) {
                 if (strcmp(ecatBus->slaves[slaveId].input_vars[i].name, varName.c_str()) == 0) {
                     if (sizeof(T) != ecatBus->slaves[slaveId].input_vars[i].size) {
@@ -135,7 +136,7 @@ namespace rocos {
         }
 
         template<typename T>
-        void setSlaveOutputVarValueByName(int slaveId, const std::string &varName, T& value) {
+        void setSlaveOutputVarValueByName(int slaveId, const std::string &varName, T value) {
             for (int i = 0; i < ecatBus->slaves[slaveId].output_var_num; ++i) {
                 if (strcmp(ecatBus->slaves[slaveId].output_vars[i].name, varName.c_str()) == 0) {
                     if (sizeof(T) != ecatBus->slaves[slaveId].output_vars[i].size) {
@@ -190,6 +191,8 @@ namespace rocos {
 
 
     private:
+        static std::map<int, EcatConfig*> instances;
+
         void init();
 
         bool getSharedMemory();
@@ -198,6 +201,11 @@ namespace rocos {
 
 
         std::vector<std::thread::id> threadId;
+
+        std::string ecmName {EC_SHM};
+        std::string mutexName {EC_SEM_MUTEX};
+        std::string pdInputName {"pd_input"};
+        std::string pdOutputName {"pd_output"};
 
         boost::interprocess::managed_shared_memory *managedSharedMemory = nullptr;
 

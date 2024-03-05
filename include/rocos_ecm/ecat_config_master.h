@@ -64,7 +64,7 @@ Yang Luo, PHD
 class EcatConfigMaster {
 public:
 
-    explicit EcatConfigMaster();
+    explicit EcatConfigMaster(int id = 0);
     virtual ~EcatConfigMaster();
 
 public:
@@ -108,6 +108,11 @@ public:
 protected:
 
     std::vector<std::thread::id> threadId;
+    std::string ecmName {EC_SHM};
+    std::string mutexName {EC_SEM_MUTEX};
+    std::string pdInputName {"pd_input"};
+    std::string pdOutputName {"pd_output"};
+
 
 
 

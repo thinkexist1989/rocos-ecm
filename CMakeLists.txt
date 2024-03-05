@@ -22,7 +22,7 @@ email: luoyang@sia.cn
 ]]
 
 cmake_minimum_required(VERSION 3.10)
-project(rocos_ecm VERSION 1.0.3 DESCRIPTION "ROCOS EtherCAT Master")
+project(rocos_ecm VERSION 1.1.0 DESCRIPTION "ROCOS EtherCAT Master")
 
 # add_compile_options(-std=c++11)
 set(CMAKE_CXX_STANDARD 11)
@@ -60,20 +60,25 @@ set(${PROJECT_NAME}_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAM
 include_directories(
         include
         include/${PROJECT_NAME}
-        include/sdk
+        Main/Common
+        Main/Common/Linux
+        Main/ECM
+        SDK/INC
+        SDK/INC/Linux
+        Sources/Common
 )
 
 link_directories(
-        lib
+        SDK/LIB/Linux/x64
 )
 
-file(GLOB_RECURSE SRCS src/*.cpp EXCLUDE src/ecat_config.cpp)
-file(GLOB_RECURSE HDRS include/*.h include/*.hpp)
-file(GLOB_RECURSE ENI_FILE config/*.xml)
-file(GLOB_RECURSE CONFIG_FILE config/*.yaml)
-
+#file(GLOB_RECURSE SRCS src/*.cpp EXCLUDE src/ecat_config.cpp)
+#file(GLOB_RECURSE HDRS include/*.h include/*.hpp)
+#file(GLOB_RECURSE ENI_FILE config/*.xml)
+#file(GLOB_RECURSE CONFIG_FILE config/*.yaml)
+#
 # ecat_config library
-add_library(ecat_config SHARED src/ecat_config.cpp)
+add_library(ecat_config SHARED Main/ECM/ecat_config.cpp)
 add_library(${PROJECT_NAME}::ecat_config ALIAS ecat_config)
 target_include_directories(ecat_config
         PUBLIC
@@ -90,15 +95,16 @@ target_link_libraries(ecat_config
         rt
         )
 
-# rocos_ecm executable
-add_executable(${PROJECT_NAME} ${SRCS})
+
+## rocos_ecm executable
+file(GLOB_RECURSE MAIN_SRC Main/*.cpp)
+file(GLOB_RECURSE COMMON_SRC Sources/Common/*.cpp)
+add_executable(${PROJECT_NAME} ${MAIN_SRC} ${COMMON_SRC})
 target_link_libraries(${PROJECT_NAME}
         PRIVATE
-        AtemRasSrv
         EcMaster
-        emllI8254x
+        EcMasterRasServer
         dl
-        rt
         Threads::Threads
         gflags::gflags
         ecat_config
@@ -106,11 +112,11 @@ target_link_libraries(${PROJECT_NAME}
         termcolor::termcolor
         )
 
+# Kernel module atemsys.ko
+add_subdirectory(Sources/LinkOsLayer/Linux/atemsys)
 
-
-add_subdirectory(lib/LinkOsLayer/atemsys)
-
-file(COPY lib/libemllI8254x.so DESTINATION ${CMAKE_BINARY_DIR}/bin)
+file(COPY Bin/Linux/x64/libemllI8254x.so DESTINATION ${CMAKE_BINARY_DIR}/bin)
+file(COPY Bin/Linux/x64/libemllIntelGbe.so DESTINATION ${CMAKE_BINARY_DIR}/bin)
 file(COPY ${ENI_FILE} ${CONFIG_FILE} DESTINATION ${CMAKE_BINARY_DIR}/bin)
 
 configure_file(scripts/initECM.sh.in ${CMAKE_BINARY_DIR}/initECM.sh @ONLY)
@@ -132,6 +138,8 @@ file(COPY ${CMAKE_BINARY_DIR}/rocos-ecm.service
         )
 
 configure_file(include/ver.h.in ver.h) # Version Definition
+configure_file(config/ecm.flagfile.in ecm.flagfile) # because in ecm.flagfile.in, ${${PROJECT_NAME}_INSTALL_CONFIGDIR} must be defined
+
 
 #############
 ## Install ##
@@ -139,17 +147,6 @@ configure_file(include/ver.h.in ver.h) # Version Definition
 
 # Add support for installation
 include(CMakePackageConfigHelpers)
-
-# Install headers
-#install(DIRECTORY include/rocos_ecm
-#        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-#        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
-#        )
-
-#install(DIRECTORY include/sdk
-#        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-#        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
-#        )
 
 install(FILES ${CMAKE_BINARY_DIR}/ver.h include/rocos_ecm/ecat_config.h include/rocos_ecm/ecat_type.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rocos_ecm
@@ -185,7 +182,6 @@ install(FILES  ${ENI_FILE} ${CONFIG_FILE}
         )
 
 # install gflags config file
-configure_file(config/ecm.flagfile.in ecm.flagfile) # because in ecm.flagfile.in, ${${PROJECT_NAME}_INSTALL_CONFIGDIR} must be defined
 install(FILES ${CMAKE_BINARY_DIR}/ecm.flagfile
         DESTINATION ${${PROJECT_NAME}_INSTALL_CONFIGDIR}
         )
@@ -238,4 +234,10 @@ target_link_libraries(unit_test
         PRIVATE
         ecat_config
         )
+add_executable(ecm_test test/ecm_test.cpp)
+target_link_libraries(ecm_test
+                PRIVATE
+                ecat_config
+                )
 add_test(NAME unit_test COMMAND unit_test)
+add_test(NAME ecm_test COMMAND ecm_test)

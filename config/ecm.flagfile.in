@@ -1,9 +1,10 @@
---config=${${PROJECT_NAME}_INSTALL_CONFIGDIR}/ecat_config_4.yaml
---time=0
+--eni=${${PROJECT_NAME}_INSTALL_CONFIGDIR}/eni7.yaml
+--id=0
+--duration=0
 --cycle=1000
---perf
---auxclk=0
+--perf=1
 --sp=6000
---link=0
+--link=2
 --instance=1
 --mode=1
+--license=2A183B38-9F93C32D-B25DDBCD
