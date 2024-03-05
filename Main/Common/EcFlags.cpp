@@ -47,7 +47,7 @@ DEFINE_int32(dcmmode, 1, "Set DCM mode. 0 = off, 1 = busshift, 2 = mastershift, 
 DEFINE_bool(ctloff, false, "Disable DCM control loop for diagnosis. ");
 
 //! @brief Intel network card instances and mode
-DEFINE_int32(link, 0, "Link layer selection: 0 = Intel 8254x, 1 = Intel 8255x, 2 = Intel Gbe. The link layer selection specifies which link layer is used by the demo application. The default is Intel 8254x. ");
+DEFINE_int32(link, 2, "Link layer selection: 0 = Intel 8254x, 1 = Intel 8255x, 2 = Intel Gbe. The link layer selection specifies which link layer is used by the demo application. The default is Intel Gbe. ");
 DEFINE_int32(instance, 1, "Device instance 1=first, 2=second. The device instance specifies which network card is used by the demo application. The default is the first network card. ");
 DEFINE_int32(mode, 1, "Mode 0 = Interrupt mode, 1= Polling mode. The mode specifies which mode is used by the demo application. The default is interrupt mode. ");
 
