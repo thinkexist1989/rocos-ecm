@@ -1427,11 +1427,8 @@ static EC_T_DWORD myAppSetup(T_EC_THREAD_PARAM *pEcThreadParam) {
                 lastp = p;
                 p = strtok(nullptr, ".");
             }
-            // p = strtok(nullptr, "."); // Slave_1001 [Elmo Drive ]
-            // p = strtok(nullptr, "."); // Inputs
-//            p = strtok(nullptr, "."); // Status word
 
-            memcpy(pInpVar->name, lastp, sizeof(pInpVar->name)); /// Input Var Name
+            memcpy(pInpVar->name, lastp, strlen(lastp)); /// Input Var Name
 
             pInpVar->offset = pSlaveInpVarInfoEntries[j].nBitOffs / 8; /// Input Var Offset
             pInpVar->size = pSlaveInpVarInfoEntries[j].nBitSize / 8;   /// Input Var Size
@@ -1472,11 +1469,8 @@ static EC_T_DWORD myAppSetup(T_EC_THREAD_PARAM *pEcThreadParam) {
                 lastp = p;
                 p = strtok(nullptr, ".");
             }
-            // p = strtok(nullptr, "."); // Slave_1001 [Elmo Drive ]
-            // p = strtok(nullptr, "."); // Inputs
-//            p = strtok(nullptr, "."); // Status word
 
-            memcpy(pOutpVar->name, lastp, sizeof(pOutpVar->name)); /// Input Var Name
+            memcpy(pOutpVar->name, lastp, strlen(lastp)); /// Output Var Name
 
             pOutpVar->offset = pSlaveOutpVarInfoEntries[j].nBitOffs / 8; /// Input Var Offset
             pOutpVar->size = pSlaveOutpVarInfoEntries[j].nBitSize / 8;   /// Input Var Size
