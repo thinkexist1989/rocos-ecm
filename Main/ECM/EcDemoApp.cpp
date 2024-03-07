@@ -1550,9 +1550,6 @@ static EC_T_DWORD myAppSetup(T_EC_DEMO_APP_CONTEXT* pAppContext)
                 lastp = p;
                 p = strtok(nullptr, ".");
             }
-            // p = strtok(nullptr, "."); // Slave_1001 [Elmo Drive ]
-            // p = strtok(nullptr, "."); // Inputs
-//            p = strtok(nullptr, "."); // Status word
 
             memcpy(pInpVar->name, lastp, strlen(lastp)); /// Input Var Name
 
@@ -1590,13 +1587,16 @@ static EC_T_DWORD myAppSetup(T_EC_DEMO_APP_CONTEXT* pAppContext)
             memset(pOutpVar->name, '\0', sizeof(pOutpVar->name)); /// Slave Name
 
             char* p = strtok(pSlaveOutpVarInfoEntries[j].szName, "."); //分割字符串，只要最后的变量名
-            p = strtok(nullptr, "."); // Slave_1001 [Elmo Drive ]
-            p = strtok(nullptr, "."); // Inputs
-//            p = strtok(nullptr, "."); // Status word
+            char* lastp = nullptr;
+            while (p != nullptr) {
+                lastp = p;
+                p = strtok(nullptr, ".");
+            }
 
-            memcpy(pOutpVar->name, p, strlen(p)); /// Input Var Name
-            pOutpVar->offset = pSlaveOutpVarInfoEntries[j].nBitOffs / 8; /// Input Var Offset
-            pOutpVar->size = pSlaveOutpVarInfoEntries[j].nBitSize / 8;   /// Input Var Size
+            memcpy(pOutpVar->name, lastp, strlen(lastp)); /// Output Var Name
+
+            pOutpVar->offset = pSlaveOutpVarInfoEntries[j].nBitOffs / 8; /// Output Var Offset
+            pOutpVar->size = pSlaveOutpVarInfoEntries[j].nBitSize / 8;   /// Output Var Size
 
             EcLogMsg(EC_LOG_LEVEL_INFO,
                      (pEcLogContext, EC_LOG_LEVEL_INFO, "[%02d] ...............: %s, %d offs, %d size\n", j+1, pOutpVar->name, pOutpVar->offset, pOutpVar->size));
