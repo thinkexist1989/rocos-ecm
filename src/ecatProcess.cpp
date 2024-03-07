@@ -1467,11 +1467,17 @@ static EC_T_DWORD myAppSetup(T_EC_THREAD_PARAM *pEcThreadParam) {
             memset(pOutpVar->name, '\0', sizeof(pOutpVar->name)); /// Slave Name
 
             char* p = strtok(pSlaveOutpVarInfoEntries[j].szName, "."); //分割字符串，只要最后的变量名
-            p = strtok(nullptr, "."); // Slave_1001 [Elmo Drive ]
-            p = strtok(nullptr, "."); // Inputs
+            char* lastp = nullptr;
+            while (p != nullptr) {
+                lastp = p;
+                p = strtok(nullptr, ".");
+            }
+            // p = strtok(nullptr, "."); // Slave_1001 [Elmo Drive ]
+            // p = strtok(nullptr, "."); // Inputs
 //            p = strtok(nullptr, "."); // Status word
 
-            memcpy(pOutpVar->name, p, strlen(p)); /// Input Var Name
+            memcpy(pOutpVar->name, lastp, sizeof(pOutpVar->name)); /// Input Var Name
+
             pOutpVar->offset = pSlaveOutpVarInfoEntries[j].nBitOffs / 8; /// Input Var Offset
             pOutpVar->size = pSlaveOutpVarInfoEntries[j].nBitSize / 8;   /// Input Var Size
 
