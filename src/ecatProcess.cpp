@@ -316,6 +316,19 @@ EC_T_DWORD ecatProcess(
             goto Exit;
         }
     }
+
+    ////////////////    502 custom code    ///////////////////////
+    {
+        EC_T_IOCTLPARMS oIoCtlParms = {0};
+        oIoCtlParms.pbyInBuf        = (EC_T_BYTE*)EC_NULL + (0x01 /* bAutonegotiation */ | 0x02 /* bFullDuplex */ | 0x100 /* bHardCodedPhySettings */ | 0x20000 /* 100 MBit/s */);
+        oIoCtlParms.dwInBufSize     = sizeof(EC_T_DWORD);
+        ecatIoControl(EC_IOCTL_LINKLAYER_MAIN + EC_LINKIOCTL_FORCELINKMODE, &oIoCtlParms);
+    }
+
+    ////////////////   502 custom code end   ///////////////////////
+
+
+
     /* Print MAC address */
     if (nVerbose > 0) {
         ETHERNET_ADDRESS oSrcMacAddress;
@@ -1154,15 +1167,20 @@ static EC_T_VOID tEcJobTask(EC_T_VOID *pvThreadParamDesc) {
         }
         PERF_JOB_END(JOB_MasterTimer);
 
-        /* send queued acyclic EtherCAT frames */
-        PERF_JOB_START(JOB_SendAcycFrames);
-        dwRes = ecatExecJob(eUsrJob_SendAcycFrames, EC_NULL);
-        if (EC_E_NOERROR != dwRes && EC_E_INVALIDSTATE != dwRes && EC_E_LINK_DISCONNECTED != dwRes) {
-            EcLogMsg(EC_LOG_LEVEL_ERROR,
-                     (pEcLogContext, EC_LOG_LEVEL_ERROR, "ecatExecJob(eUsrJob_SendAcycFrames, EC_NULL): %s (0x%lx)\n", ecatGetText(
-                             dwRes), dwRes));
+
+        ////////////////    502 custom code    ///////////////////////
+        EC_T_STATE eMasterState = ecatGetMasterState();
+        if (eEcatState_OP != eMasterState) { // 注意：SDO不能直接屏蔽，否则启动状态就出问题，502的驱动器在OP模式下应该是acycFrame处理会有问题
+            /* send queued acyclic EtherCAT frames */
+            PERF_JOB_START(JOB_SendAcycFrames);
+            dwRes = ecatExecJob(eUsrJob_SendAcycFrames, EC_NULL);
+            if (EC_E_NOERROR != dwRes && EC_E_INVALIDSTATE != dwRes && EC_E_LINK_DISCONNECTED != dwRes) {
+                EcLogMsg(EC_LOG_LEVEL_ERROR,
+                         (pEcLogContext, EC_LOG_LEVEL_ERROR, "ecatExecJob(eUsrJob_SendAcycFrames, EC_NULL): %s (0x%lx)\n", ecatGetText(
+                                 dwRes), dwRes));
+            }
+            PERF_JOB_END(JOB_SendAcycFrames);
         }
-        PERF_JOB_END(JOB_SendAcycFrames);
 
     ////============== semphore update =================////
     // 通知其他进程可以更新这个周期的数据了 by think
