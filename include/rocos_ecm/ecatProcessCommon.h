@@ -28,8 +28,8 @@
 #endif
 
 /*-DEFINES-------------------------------------------------------------------*/
-#define ETHERCAT_STATE_CHANGE_TIMEOUT   15000   /* master state change timeout in ms */
-#define ETHERCAT_SCANBUS_TIMEOUT        10000   /* scanbus timeout in ms, see also EC_SB_DEFAULTTIMEOUT */
+#define ETHERCAT_STATE_CHANGE_TIMEOUT   55000   /* master state change timeout in ms */
+#define ETHERCAT_SCANBUS_TIMEOUT        50000   /* scanbus timeout in ms, see also EC_SB_DEFAULTTIMEOUT */
 
 #define ETHERCAT_DC_TIMEOUT             12000   /* DC initialization timeout in ms */
 #define ETHERCAT_DC_ARMW_BURSTCYCLES    10000   /* DC burst cycles (static drift compensation) */
