@@ -1,4 +1,4 @@
---eni=${${PROJECT_NAME}_INSTALL_CONFIGDIR}/eni7.yaml
+--eni=${${PROJECT_NAME}_INSTALL_CONFIGDIR}/eni7.xml
 --id=0
 --duration=0
 --cycle=1000
