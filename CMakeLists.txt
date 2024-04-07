@@ -83,7 +83,9 @@ add_library(${PROJECT_NAME}::ecat_config ALIAS ecat_config)
 target_include_directories(ecat_config
         PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}>
         $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
         )
 
 target_link_libraries(ecat_config
