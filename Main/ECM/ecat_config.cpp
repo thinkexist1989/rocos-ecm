@@ -2,7 +2,7 @@
 // Created by think on 2023/12/11.
 //
 
-#include "include/rocos_ecm/ecat_config.h"
+#include <ecat_config.h>
 #include <algorithm>
 #include <iostream>
 

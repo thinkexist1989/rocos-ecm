@@ -2,10 +2,10 @@
 // Created by think on 2023/12/11.
 //
 
-#ifndef ROCOS_ECM_ECAT_CONFIG_H
-#define ROCOS_ECM_ECAT_CONFIG_H
+#ifndef ECAT_CONFIG_H_INCLUDED
+#define ECAT_CONFIG_H_INCLUDED
 
-#include <rocos_ecm/ecat_type.h>
+#include <ecat_type.h>
 #include <thread>
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
