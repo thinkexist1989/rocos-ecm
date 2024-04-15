@@ -2,7 +2,7 @@
 // Created by Yang Luo on 3/27/23.
 //
 
-#include "include/rocos_ecm/ecat_config_master.h"
+#include <ecat_config_master.h>
 
 
 using namespace rocos;
@@ -183,5 +183,16 @@ bool EcatConfigMaster::getPdDataMemoryProvider() {
     pdOutputPtr = static_cast<char *>(pdOutputRegion->get_address());
 
     return true;
+}
+
+void EcatConfigMaster::updateSempahore() {
+    ////============== semphore update by think =================////
+    // 通知其他进程可以更新这个周期的数据了 by think
+    for (auto &sem: this->sem_mutex) {
+        int val = 0;
+        sem_getvalue(sem, &val);
+        if (val < 1)
+            sem_post(sem);
+    }
 }
 

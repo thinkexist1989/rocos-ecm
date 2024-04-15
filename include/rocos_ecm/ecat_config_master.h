@@ -56,7 +56,7 @@ Yang Luo, PHD
 #include <thread>
 
 
-#include <rocos_ecm/ecat_type.h>
+#include <ecat_type.h>
 
 /** Class RobotConfig contains all configurations of the robot
  * 
@@ -65,6 +65,7 @@ class EcatConfigMaster {
 public:
 
     explicit EcatConfigMaster(int id = 0);
+
     virtual ~EcatConfigMaster();
 
 public:
@@ -83,7 +84,131 @@ public:
 
     void wait();
 
+    void updateSempahore();
 
+    template<typename T>
+    T getSlaveInputVarValue(int slaveId, int varId) {
+        if (sizeof(T) != ecatBus->slaves[slaveId].input_vars[varId].size) {
+            print_message("Size of Var is not equal", MessageLevel::WARNING);
+        }
+        return *(T *) ((char *) pdInputPtr + ecatBus->slaves[slaveId].input_vars[varId].offset);
+    }
+
+    template<typename T>
+    void setSlaveInputVarValue(int slaveId, int varId, T value) {
+        if (sizeof(T) != ecatBus->slaves[slaveId].input_vars[varId].size) {
+            print_message("Size of Var is not equal", MessageLevel::WARNING);
+        }
+        *(T *) ((char *) pdInputPtr + ecatBus->slaves[slaveId].input_vars[varId].offset) = value;
+    }
+
+    template<typename T>
+    T getSlaveOutputVarValue(int slaveId, int varId) {
+        if (sizeof(T) != ecatBus->slaves[slaveId].output_vars[varId].size) {
+            print_message("Size of Var is not equal", MessageLevel::WARNING);
+        }
+        return *(T *) ((char *) pdOutputPtr + ecatBus->slaves[slaveId].output_vars[varId].offset);
+    }
+
+    template<typename T>
+    void setSlaveOutputVarValue(int slaveId, int varId, T value) {
+        if (sizeof(T) != ecatBus->slaves[slaveId].output_vars[varId].size) {
+            print_message("Size of Var is not equal", MessageLevel::WARNING);
+        }
+        *(T *) ((char *) pdOutputPtr + ecatBus->slaves[slaveId].output_vars[varId].offset) = value;
+    }
+
+    template<typename T>
+    T getSlaveInputVarValueByName(int slaveId, const std::string &varName) {
+        for (int i = 0; i < ecatBus->slaves[slaveId].input_var_num; ++i) {
+            if (strcmp(ecatBus->slaves[slaveId].input_vars[i].name, varName.c_str()) == 0) {
+                if (sizeof(T) != ecatBus->slaves[slaveId].input_vars[i].size) {
+                    print_message("Size of Var is not equal", MessageLevel::WARNING);
+                }
+                return *(T *) ((char *) pdInputPtr + ecatBus->slaves[slaveId].input_vars[i].offset);
+            }
+        }
+        return std::numeric_limits<T>::max();
+    }
+
+    template<typename T>
+    void setSlaveInputVarValueByName(int slaveId, const std::string &varName, T value) {
+        for (int i = 0; i < ecatBus->slaves[slaveId].input_var_num; ++i) {
+            if (strcmp(ecatBus->slaves[slaveId].input_vars[i].name, varName.c_str()) == 0) {
+                if (sizeof(T) != ecatBus->slaves[slaveId].input_vars[i].size) {
+                    print_message("Size of Var is not equal", MessageLevel::WARNING);
+                }
+                *(T *) ((char *) pdInputPtr + ecatBus->slaves[slaveId].input_vars[i].offset) = value;
+            }
+        }
+    }
+
+    template<typename T>
+    T getSlaveOutputVarValueByName(int slaveId, const std::string &varName) {
+        for (int i = 0; i < ecatBus->slaves[slaveId].output_var_num; ++i) {
+            if (strcmp(ecatBus->slaves[slaveId].output_vars[i].name, varName.c_str()) == 0) {
+                if (sizeof(T) != ecatBus->slaves[slaveId].output_vars[i].size) {
+                    print_message("Size of Var is not equal", MessageLevel::WARNING);
+                }
+                return *(T *) ((char *) pdOutputPtr + ecatBus->slaves[slaveId].output_vars[i].offset);
+            }
+        }
+        return std::numeric_limits<T>::max();
+    }
+
+    template<typename T>
+    void setSlaveOutputVarValueByName(int slaveId, const std::string &varName, T value) {
+        for (int i = 0; i < ecatBus->slaves[slaveId].output_var_num; ++i) {
+            if (strcmp(ecatBus->slaves[slaveId].output_vars[i].name, varName.c_str()) == 0) {
+                if (sizeof(T) != ecatBus->slaves[slaveId].output_vars[i].size) {
+                    print_message("Size of Var is not equal", MessageLevel::WARNING);
+                }
+                *(T *) ((char *) pdOutputPtr + ecatBus->slaves[slaveId].output_vars[i].offset) = value;
+            }
+        }
+    }
+
+    template<typename T>
+    T *getSlaveInputVarPtr(int slaveId, int varId) {
+        if (sizeof(T) != ecatBus->slaves[slaveId].input_vars[varId].size) {
+            print_message("Size of Var is not equal", MessageLevel::WARNING);
+        }
+        return (T *) ((char *) pdInputPtr + ecatBus->slaves[slaveId].input_vars[varId].offset);
+    }
+
+    template<typename T>
+    T *getSlaveOutputVarPtr(int slaveId, int varId) {
+        if (sizeof(T) != ecatBus->slaves[slaveId].output_vars[varId].size) {
+            print_message("Size of Var is not equal", MessageLevel::WARNING);
+        }
+        return (T *) ((char *) pdOutputPtr + ecatBus->slaves[slaveId].output_vars[varId].offset);
+    }
+
+    template<typename T>
+    T *findSlaveInputVarPtrByName(int slaveId, const std::string &varName) {
+        for (int i = 0; i < ecatBus->slaves[slaveId].input_var_num; ++i) {
+            if (strcmp(ecatBus->slaves[slaveId].input_vars[i].name, varName.c_str()) == 0) {
+                if (sizeof(T) != ecatBus->slaves[slaveId].input_vars[i].size) {
+                    print_message("Size of Var is not equal", MessageLevel::WARNING);
+                }
+                return (T *) ((char *) pdInputPtr + ecatBus->slaves[slaveId].input_vars[i].offset);
+            }
+        }
+        return nullptr;
+    }
+
+    template<typename T>
+    T *findSlaveOutputVarPtrByName(int slaveId, const std::string &varName) {
+        for (int i = 0; i < ecatBus->slaves[slaveId].output_var_num; ++i) {
+            if (strcmp(ecatBus->slaves[slaveId].output_vars[i].name, varName.c_str()) == 0) {
+                if (sizeof(T) != ecatBus->slaves[slaveId].output_vars[i].size) {
+                    print_message("Size of Var is not equal", MessageLevel::WARNING);
+                }
+                return (T *) ((char *) pdOutputPtr + ecatBus->slaves[slaveId].output_vars[i].offset);
+            }
+        }
+        return nullptr;
+    }
 
     ///////////// Format robot info /////////////////
     std::string to_string();
@@ -99,21 +224,19 @@ public:
     boost::interprocess::shared_memory_object *pdOutputShm = nullptr;
     boost::interprocess::mapped_region *pdInputRegion = nullptr;
     boost::interprocess::mapped_region *pdOutputRegion = nullptr;
-    void* pdInputPtr = nullptr;
-    void* pdOutputPtr = nullptr;
+    void *pdInputPtr = nullptr;
+    void *pdOutputPtr = nullptr;
 
 
-    sem_t* sem_mutex[EC_SEM_NUM];
+    sem_t *sem_mutex[EC_SEM_NUM];
 
 protected:
 
     std::vector<std::thread::id> threadId;
-    std::string ecmName {EC_SHM};
-    std::string mutexName {EC_SEM_MUTEX};
-    std::string pdInputName {"pd_input"};
-    std::string pdOutputName {"pd_output"};
-
-
+    std::string ecmName{EC_SHM};
+    std::string mutexName{EC_SEM_MUTEX};
+    std::string pdInputName{"pd_input"};
+    std::string pdOutputName{"pd_output"};
 
 
     //////////// OUTPUT FORMAT SETTINGS ////////////////////
