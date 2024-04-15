@@ -1564,7 +1564,7 @@ static EC_T_DWORD myAppSetup(T_EC_DEMO_APP_CONTEXT* pAppContext)
 
 
             EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[%02d] %04d.%02d........: %s, %d offs, %d size\n", j+1, pInpVar->index, pInpVar->sub_index, pInpVar->name, pInpVar->offset, pInpVar->size));
+                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[%02d] %04x.%02x........: %s, %d offs, %d size\n", j+1, pInpVar->index, pInpVar->sub_index, pInpVar->name, pInpVar->offset, pInpVar->size));
         }
 
 
@@ -1609,7 +1609,7 @@ static EC_T_DWORD myAppSetup(T_EC_DEMO_APP_CONTEXT* pAppContext)
             pOutpVar->sub_index = pSlaveOutpVarInfoEntries[j].wSubIndex; /// Output Var SubIndex
 
             EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[%02d] %04d.%02d........: %s, %d offs, %d size\n", j+1, pOutpVar->index, pOutpVar->sub_index, pOutpVar->name, pOutpVar->offset, pOutpVar->size));
+                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[%02d] %04x.%02x........: %s, %d offs, %d size\n", j+1, pOutpVar->index, pOutpVar->sub_index, pOutpVar->name, pOutpVar->offset, pOutpVar->size));
         }
 
 
