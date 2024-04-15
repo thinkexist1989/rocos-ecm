@@ -29,16 +29,14 @@ inline EC_T_UINT64 RoundedDivisionMiddle(EC_T_UINT64 dividend, EC_T_UINT64 divis
 
 #define PERF_myAppWorkpd       0
 #define PERF_DCM_Logfile       1
-#define PERF_CycleTime         2 //! by think 2024.03.04
 
-#define MAX_JOB_NUM            3
+#define MAX_JOB_NUM            2
 
 /*-LOCAL VARIABLES-----------------------------------------------------------*/
 static EC_T_PERF_MEAS_INFO_PARMS S_aPerfMeasInfos[MAX_JOB_NUM] =
 {
     {"myAppWorkPd                    ", 0},
     {"Write DCM logfile              ", 0},
-    {"CycleTime                      ",  0} //! by think 2024.03.04
 };
 
 /*-FUNCTION DECLARATIONS-----------------------------------------------------*/
@@ -1105,8 +1103,22 @@ static EC_T_VOID EcMasterJobTask(EC_T_VOID* pvAppContext)
 
 
     ////////////===========My Own Code============/////////// by think
+    EC_T_DWORD dwCycleTimeIdx = 0;
+    EC_T_DWORD dwMeasNum = 0;
+    dwRes = ecatPerfMeasGetNumOf(&dwMeasNum);
+
+    for(EC_T_DWORD i = 0; i < dwMeasNum; i++) {
+        EC_T_PERF_MEAS_INFO PerfMeasInfo;
+        dwRes = ecatPerfMeasGetInfo(i, &PerfMeasInfo, 1);
+
+        if (0 == OsStrncmp("Cycle Time", PerfMeasInfo.szName, OsStrlen("Cycle Time") + 1)) {
+            dwCycleTimeIdx = i;
+            break;
+        }
+    }
+
     EC_T_PERF_MEAS_INFO perfMeasInfo;
-    ecatPerfMeasAppGetInfo(pAppContext->pvPerfMeas, PERF_CycleTime, &perfMeasInfo, 1);
+    ecatPerfMeasGetInfo(dwCycleTimeIdx, &perfMeasInfo, 1);
     EcLogMsg(EC_LOG_LEVEL_INFO, (pEcLogContext, EC_LOG_LEVEL_INFO, "Cycle Time Frequency: %ld\n", perfMeasInfo.qwFrequency));
     EC_T_UINT64 qwFrequency = RoundedDivisionMiddle(perfMeasInfo.qwFrequency, (EC_T_UINT64)10000); /* 1/10 usec */
 
@@ -1128,13 +1140,9 @@ static EC_T_VOID EcMasterJobTask(EC_T_VOID* pvAppContext)
         gettimeofday(&tv, nullptr);
         pEcatConfig->ecatBus->timestamp = tv.tv_sec * 1000000 + tv.tv_usec; // us
 
-        if (pAppContext->dwPerfMeasLevel > 0)
-        {
-            ecatPerfMeasAppEnd(pAppContext->pvPerfMeas, PERF_CycleTime);
-        }
 
         EC_T_PERF_MEAS_VAL perfMeasVal;
-        ecatPerfMeasAppGetRaw(pAppContext->pvPerfMeas, PERF_CycleTime, &perfMeasVal, EC_NULL, 1);
+        ecatPerfMeasGetRaw(dwCycleTimeIdx, &perfMeasVal, EC_NULL, 1);
         EC_T_UINT64 qwMin = RoundedDivisionMiddle(perfMeasVal.qwMinTicks * 1000, qwFrequency);
         EC_T_UINT64 qwAvg = RoundedDivisionMiddle(perfMeasVal.qwAvgTicks * 1000, qwFrequency);
         EC_T_UINT64 qwMax = RoundedDivisionMiddle(perfMeasVal.qwMaxTicks * 1000, qwFrequency);
@@ -1147,11 +1155,6 @@ static EC_T_VOID EcMasterJobTask(EC_T_VOID* pvAppContext)
 //        pEcatConfig->ecatBus->max_cycle_time = perfMeasVal.qwMaxTicks * 1000000.0 /  perfMeasInfo.qwFrequency;
 //        pEcatConfig->ecatBus->avg_cycle_time = perfMeasVal.qwAvgTicks * 1000000.0 /  perfMeasInfo.qwFrequency;
 //        pEcatConfig->ecatBus->current_cycle_time = perfMeasVal.qwCurrTicks * 1000000.0 /  perfMeasInfo.qwFrequency;
-
-        if (pAppContext->dwPerfMeasLevel > 0)
-        {
-            ecatPerfMeasAppStart(pAppContext->pvPerfMeas, PERF_CycleTime);
-        }
 
         ////////////////////////////////////////////////
 
@@ -1525,9 +1528,9 @@ static EC_T_DWORD myAppSetup(T_EC_DEMO_APP_CONTEXT* pAppContext)
 
         pSlave->input_var_num = SlaveInfo.wNumProcessVarsInp; /// Input Var Num
 
-        EC_T_PROCESS_VAR_INFO pSlaveInpVarInfoEntries[SlaveInfo.wNumProcessVarsInp]; // 存储Input Vars
+        EC_T_PROCESS_VAR_INFO_EX pSlaveInpVarInfoEntries[SlaveInfo.wNumProcessVarsInp]; // 存储Input Vars
         EC_T_WORD pwInpReadEntries;
-        if(ecatGetSlaveInpVarInfo(EC_TRUE, slave_addr, SlaveInfo.wNumProcessVarsInp, pSlaveInpVarInfoEntries, &pwInpReadEntries) != EC_E_NOERROR) {
+        if(ecatGetSlaveInpVarInfoEx(EC_TRUE, slave_addr, SlaveInfo.wNumProcessVarsInp, pSlaveInpVarInfoEntries, &pwInpReadEntries) != EC_E_NOERROR) {
             EcLogMsg(EC_LOG_LEVEL_ERROR,
                      (pEcLogContext, EC_LOG_LEVEL_ERROR, "ecatGetSlaveInpVarInfo() Error!!\n"));
             goto Exit;
@@ -1556,8 +1559,12 @@ static EC_T_DWORD myAppSetup(T_EC_DEMO_APP_CONTEXT* pAppContext)
             pInpVar->offset = pSlaveInpVarInfoEntries[j].nBitOffs / 8; /// Input Var Offset
             pInpVar->size = pSlaveInpVarInfoEntries[j].nBitSize / 8;   /// Input Var Size
 
+            pInpVar->index = pSlaveInpVarInfoEntries[j].wIndex; /// Input Var Index
+            pInpVar->sub_index = pSlaveInpVarInfoEntries[j].wSubIndex; /// Input Var SubIndex
+
+
             EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[%02d] ...............: %s, %d offs, %d size\n", j+1, pInpVar->name, pInpVar->offset, pInpVar->size));
+                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[%02d] %04d.%02d........: %s, %d offs, %d size\n", j+1, pInpVar->index, pInpVar->sub_index, pInpVar->name, pInpVar->offset, pInpVar->size));
         }
 
 
@@ -1568,9 +1575,9 @@ static EC_T_DWORD myAppSetup(T_EC_DEMO_APP_CONTEXT* pAppContext)
 
         pSlave->output_var_num = SlaveInfo.wNumProcessVarsOutp; /// Input Var Num
 
-        EC_T_PROCESS_VAR_INFO pSlaveOutpVarInfoEntries[SlaveInfo.wNumProcessVarsOutp]; // 存储Input Vars
+        EC_T_PROCESS_VAR_INFO_EX pSlaveOutpVarInfoEntries[SlaveInfo.wNumProcessVarsOutp]; // 存储Input Vars
         EC_T_WORD pwOutpReadEntries;
-        if(ecatGetSlaveOutpVarInfo(EC_TRUE, slave_addr, SlaveInfo.wNumProcessVarsOutp, pSlaveOutpVarInfoEntries, &pwOutpReadEntries) != EC_E_NOERROR) {
+        if(ecatGetSlaveOutpVarInfoEx(EC_TRUE, slave_addr, SlaveInfo.wNumProcessVarsOutp, pSlaveOutpVarInfoEntries, &pwOutpReadEntries) != EC_E_NOERROR) {
             EcLogMsg(EC_LOG_LEVEL_ERROR,
                      (pEcLogContext, EC_LOG_LEVEL_ERROR, "ecatGetSlaveOutpVarInfo() Error!!\n"));
             goto Exit;
@@ -1598,8 +1605,11 @@ static EC_T_DWORD myAppSetup(T_EC_DEMO_APP_CONTEXT* pAppContext)
             pOutpVar->offset = pSlaveOutpVarInfoEntries[j].nBitOffs / 8; /// Output Var Offset
             pOutpVar->size = pSlaveOutpVarInfoEntries[j].nBitSize / 8;   /// Output Var Size
 
+            pOutpVar->index = pSlaveOutpVarInfoEntries[j].wIndex; /// Output Var Index
+            pOutpVar->sub_index = pSlaveOutpVarInfoEntries[j].wSubIndex; /// Output Var SubIndex
+
             EcLogMsg(EC_LOG_LEVEL_INFO,
-                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[%02d] ...............: %s, %d offs, %d size\n", j+1, pOutpVar->name, pOutpVar->offset, pOutpVar->size));
+                     (pEcLogContext, EC_LOG_LEVEL_INFO, "[%02d] %04d.%02d........: %s, %d offs, %d size\n", j+1, pOutpVar->index, pOutpVar->sub_index, pOutpVar->name, pOutpVar->offset, pOutpVar->size));
         }
 
 
