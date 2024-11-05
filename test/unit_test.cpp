@@ -90,7 +90,7 @@ TEST_CASE("Digital IO") {
 
     for(int i = 0; i < 20; i++) {
 
-        auto di = ecatConfig->getSlaveInputVarValueByName<int32_t>(0, "Digital inputs");
+        auto di = ecatConfig->getSlaveInputVarValueByName<int32_t>(0, "Digital Inputs");
 
         bool di_1 = (di & (1 << 16)) > 0;
 
@@ -109,21 +109,25 @@ TEST_CASE("Digital IO") {
     // 红灯
     do_bits.reset(17);
     do_bits.set(19);
+    ecatConfig->setSlaveOutputVarValueByName(0, "Digital Outputs", do_bits);
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
     // 绿灯
     do_bits.set(17);
     do_bits.reset(19);
+    ecatConfig->setSlaveOutputVarValueByName(0, "Digital Outputs", do_bits);
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
     //黄灯
     do_bits.set(17);
     do_bits.set(19);
+    ecatConfig->setSlaveOutputVarValueByName(0, "Digital Outputs", do_bits);
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
     // 灭
     do_bits.reset(17);
     do_bits.reset(19);
+    ecatConfig->setSlaveOutputVarValueByName(0, "Digital Outputs", do_bits);
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
