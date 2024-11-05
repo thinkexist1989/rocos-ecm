@@ -83,6 +83,51 @@ TEST_CASE("reset cycle time") {
 
 }
 
+#include <bitset>
+
+TEST_CASE("Digital IO") {
+    auto ecatConfig = rocos::EcatConfig::getInstance();
+
+    for(int i = 0; i < 20; i++) {
+
+        auto di = ecatConfig->getSlaveInputVarValueByName<int32_t>(0, "Digital inputs");
+
+        bool di_1 = (di & (1 << 16)) > 0;
+
+        std::cout << "Digital inputs: " << di << " ; Digital input 1: " << di_1 << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+
+    // 设置IO do2 --> bit17 do4 --> bit19
+    // 灭： do2 = 0, do4 = 0
+    // 红灯： do2 = 0, do4 = 1
+    // 绿灯： do2 = 1, do4 = 0
+    // 黄灯： do2 = 1, do4 = 1
+    bool do_2, do_4;
+
+    std::bitset<32> do_bits;
+    // 红灯
+    do_bits.reset(17);
+    do_bits.set(19);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    // 绿灯
+    do_bits.set(17);
+    do_bits.reset(19);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    //黄灯
+    do_bits.set(17);
+    do_bits.set(19);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    // 灭
+    do_bits.reset(17);
+    do_bits.reset(19);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
+
 TEST_CASE("kunwei") {
     // auto ecatConfig = rocos::EcatConfig::getInstance();
 
